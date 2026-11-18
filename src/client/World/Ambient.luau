@@ -29,11 +29,12 @@ local AudioController = require(script.Parent.Parent.Audio.AudioController)
 local ClientState = require(script.Parent.Parent.ClientState)
 local Curtains = require(script.Parent.Curtains)
 local MannequinAnimator = require(script.Parent.MannequinAnimator)
+local Quality = require(script.Parent.Parent.Quality)
 
 local Ambient = {}
 
 local LOGIC_INTERVAL = 1 / 12
-local SWING_RANGE = 150 -- pendulums are skipped beyond this from the camera
+-- Pendulum cull distance comes from the quality level (Quality.settings.SwingRange).
 local CREAK_RANGE = 7 -- how close a foot must be to set a loose board off
 local CREAK_COOLDOWN = 6 -- seconds before the same board can creak again
 local RIPPLE_RANGE = 16
@@ -162,7 +163,7 @@ end
 local function updateSwings(now: number, eye: Vector3)
 	for _, swing in swings do
 		local first = swing.parts[1]
-		if first.part.Parent and (first.part.Position - eye).Magnitude <= SWING_RANGE then
+		if first.part.Parent and (first.part.Position - eye).Magnitude <= Quality.settings.SwingRange then
 			local angle = math.sin(now * swing.speed + swing.phase) * swing.amplitude
 			local rotation = swing.pivot * CFrame.Angles(0, 0, angle)
 			for _, piece in swing.parts do
@@ -191,7 +192,8 @@ end
 
 local function updateLamps(now: number, tension: number)
 	for _, lamp in lamps do
-		if not lamp.light.Parent then
+		-- A lamp a scare has put out stays out until the scare ends.
+		if not lamp.light.Parent or not lamp.light.Enabled then
 			continue
 		end
 		if now < lamp.dipUntil then

@@ -284,6 +284,49 @@ Config.Audio = {
 	SfxVolume = 0.7,
 }
 
+--- Quality presets. "Auto" picks Low on touch devices and High elsewhere.
+--- Every value is a plain number/boolean so this stays unit-testable offline.
+Config.Quality = {
+	Default = "Auto",
+	Order = { "Low", "Medium", "High" },
+	Levels = {
+		Low = {
+			-- Big transparent light volumes are pure overdraw: off entirely.
+			LightShafts = false,
+			ParticleScale = 0,
+			Shadows = false,
+			Bloom = false,
+			Vignette = 0.6,
+			-- Mannequin limb animation and pendulums stop sooner.
+			AnimationRange = 80,
+			SwingRange = 70,
+			CurtainSway = false,
+		},
+		Medium = {
+			LightShafts = true,
+			ShaftFade = 0.04,
+			ParticleScale = 0.55,
+			Shadows = true,
+			Bloom = true,
+			Vignette = 0.85,
+			AnimationRange = 130,
+			SwingRange = 110,
+			CurtainSway = true,
+		},
+		High = {
+			LightShafts = true,
+			ShaftFade = 0,
+			ParticleScale = 1,
+			Shadows = true,
+			Bloom = true,
+			Vignette = 1,
+			AnimationRange = 170,
+			SwingRange = 150,
+			CurtainSway = true,
+		},
+	},
+}
+
 Config.Performance = {
 	-- Hard ceiling for everything under Workspace.Map. Checked by the smoke tests so the
 	-- map can never quietly grow past what a phone can draw.

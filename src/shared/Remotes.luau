@@ -39,6 +39,7 @@ Remotes.ClientToServer = {
 	"RequestStart", -- ()
 	"RequestLobby", -- ()
 	"SetSetting", -- (key: string, value: boolean)
+	"SetQuality", -- (level: string) one of Config.Quality.Order, or "Auto"
 	"EquipSkin", -- (skinId: string)
 	"SetTrailEnabled", -- (enabled: boolean)
 	"ScareSkipped", -- (stage: number) analytics only

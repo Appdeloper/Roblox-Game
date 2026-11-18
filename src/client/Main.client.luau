@@ -21,6 +21,8 @@ local CameraEffects = require(Client.Camera.CameraEffects)
 local Vignette = require(Client.Camera.Vignette)
 local Captions = require(Client.UI.Captions)
 local ClientState = require(Client.ClientState)
+local Quality = require(Client.Quality)
+local DebugOverlay = require(Client.UI.DebugOverlay)
 local MobileJump = require(Client.Input.MobileJump)
 local FinishTicket = require(Client.UI.FinishTicket)
 local Hud = require(Client.UI.Hud)
@@ -36,6 +38,8 @@ local Hazards = require(Client.World.Hazards)
 local MannequinAnimator = require(Client.World.MannequinAnimator)
 local Scares = require(Client.World.Scares)
 
+-- Quality first: other controllers read its settings as they start up.
+Quality.init()
 UIRoot.init()
 AudioController.init()
 AmbienceController.init()
@@ -70,6 +74,7 @@ Scares.init()
 Curtains.init()
 Ambient.init()
 ProximityFX.init()
+DebugOverlay.init()
 
 -- ── Run flow ──────────────────────────────────────────────────────────────────────────────
 
@@ -107,6 +112,10 @@ end)
 Remotes.get("ProfileUpdated").OnClientEvent:Connect(function(snapshot: Types.ProfileSnapshot)
 	ClientState.set("profile", snapshot)
 	ClientState.set("reducedScares", snapshot.reducedScares)
+	-- The graphics level this player chose last time they played.
+	if snapshot.quality and snapshot.quality ~= Quality.requested then
+		Quality.set(snapshot.quality)
+	end
 end)
 
 Remotes.get("Notify").OnClientEvent:Connect(function(message: string)
