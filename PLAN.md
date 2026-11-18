@@ -34,6 +34,9 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
 - [x] **M11 — Analytics**: stage_started, stage_cleared, caught, quit_stage, finished (print sink).
 - [x] **M12 — Polish**: moonlit teal lighting + warm spots, footlights, dust, curtain sway, creaks, proximity heartbeat.
 - [x] **M13 — Docs**: README, ARCHITECTURE, TESTING (Studio + 2 Players + mobile emulator), LAUNCH_CHECKLIST.
+- [x] **M14 — Sync-ready hardening**: map raised to y=400, template effects removed at runtime, threaded
+      Signals (no zone-loop stalls), AwardBadgeAsync, client waits for the map, module-coverage check.
+- [x] **M15 — PC docs**: PC_SYNC_GUIDE, FIRST_PLAYTEST, KNOWN_RISKS.
 
 Each milestone ends with: `stylua --check`, `selene`, `luau tests/run.luau`, `rojo build`, then a commit.
 

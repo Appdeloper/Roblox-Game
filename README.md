@@ -20,6 +20,11 @@ title **Opening Night**.
 Everything is built from Luau in this repo: the map, the mannequin rig, the UI and the lighting.
 There's no hand-made `.rbxl` to keep in sync.
 
+> **New to Rojo, or setting up from scratch on a PC?** Follow
+> **[docs/PC_SYNC_GUIDE.md](docs/PC_SYNC_GUIDE.md)** (step by step), then
+> **[docs/FIRST_PLAYTEST.md](docs/FIRST_PLAYTEST.md)**, and check
+> **[docs/KNOWN_RISKS.md](docs/KNOWN_RISKS.md)** for what to verify first.
+
 ---
 
 ## Quick start
@@ -50,9 +55,9 @@ You can also install **Rojo** by *rojo-rbx* from the Creator Store, inside Studi
 rojo build default.project.json -o DontLookBackstage.rbxl
 ```
 
-Open `DontLookBackstage.rbxl` in Roblox Studio. Starting from this file is cleaner than starting
-from the Baseplate template. (If you do use a template, MapBuilder disables any stray
-SpawnLocation it finds and warns you in Output.)
+Open `DontLookBackstage.rbxl` in Roblox Studio, or start from Studio's **Baseplate** template;
+both work. The map is built 400 studs up, so template parts never get in the way. MapBuilder
+also switches off the template's SpawnLocation and its post-effects at runtime.
 
 ### 4. Live-sync with `rojo serve`
 
