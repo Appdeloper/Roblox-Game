@@ -10,6 +10,9 @@
 	                  behind arch corners and the five-point brass stars.
 ]]
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local Builders = require(script.Parent.Builders)
 
 local SetPieces = {}
@@ -239,13 +242,15 @@ end
 --- Some seats are tipped up (rng) so rows look lived-in rather than copy-pasted.
 function SetPieces.seat(parent: Instance, cf: CFrame, rng: Random, tag: string?)
 	local folded = rng:NextNumber() < 0.18
+	-- A third of the house has faded, so the rows read as dusty rather than new.
+	local velvet = if rng:NextNumber() < 0.34 then "VelvetDusty" else "Velvet"
 	if folded then
 		Builders.part({
 			name = "SeatCushion",
 			size = Vector3.new(1.7, 1.4, 0.4),
 			cframe = cf * CFrame.new(0, 1.2, 0.35),
 			parent = parent,
-			surface = "Velvet",
+			surface = velvet,
 			decor = true,
 		})
 	else
@@ -254,7 +259,7 @@ function SetPieces.seat(parent: Instance, cf: CFrame, rng: Random, tag: string?)
 			size = Vector3.new(1.7, 0.45, 1.5),
 			cframe = cf * CFrame.new(0, 0.75, 0),
 			parent = parent,
-			surface = "Velvet",
+			surface = velvet,
 			decor = true,
 		})
 	end
@@ -263,7 +268,7 @@ function SetPieces.seat(parent: Instance, cf: CFrame, rng: Random, tag: string?)
 		size = Vector3.new(1.7, 1.8, 0.3),
 		cframe = cf * CFrame.new(0, 1.65, 0.8) * CFrame.Angles(math.rad(8), 0, 0),
 		parent = parent,
-		surface = "Velvet",
+		surface = velvet,
 		decor = true,
 		tag = tag,
 	})
@@ -650,6 +655,207 @@ function SetPieces.lightSpill(parent: Instance, base: CFrame, tag: string, attri
 		for key, value in attributes do
 			part:SetAttribute(key, value)
 		end
+	end
+end
+
+-- ── Volumetric-looking light ──────────────────────────────────────────────────────────────
+
+--- A shaft of light from `from` to `to`: one long faint Neon box plus the pool it casts.
+--- No real light source, so it costs nothing but overdraw — Quality can switch it off.
+function SetPieces.lightShaft(
+	parent: Instance,
+	from: Vector3,
+	to: Vector3,
+	width: number,
+	surface: string,
+	poolSurface: string?
+)
+	local length = (to - from).Magnitude
+	if length < 1 then
+		return
+	end
+	Builders.part({
+		name = "LightShaft",
+		size = Vector3.new(width, width * 0.55, length),
+		cframe = CFrame.lookAt((from + to) / 2, to),
+		parent = parent,
+		surface = surface,
+		decor = true,
+		tag = "LightShaft",
+	})
+	-- The pool where it lands, flattened onto the floor.
+	local pool = Builders.cylinder({
+		name = "LightPool",
+		size = Vector3.new(0.08, width * 1.5, width * 1.5),
+		cframe = CFrame.new(to) * CFrame.Angles(0, 0, math.rad(90)),
+		parent = parent,
+		surface = poolSurface or surface,
+		decor = true,
+		tag = "LightShaft",
+	})
+	pool.Transparency = math.max((Builders.surfaceTransparency(poolSurface or surface)) - 0.22, 0)
+end
+
+--- A beam that narrows toward its target, built from stacked cylinders (Roblox has no cone).
+--- Reads as a spotlight picking something out; `segments` keeps the part count honest.
+function SetPieces.narrowingBeam(
+	parent: Instance,
+	apex: Vector3,
+	target: Vector3,
+	startRadius: number,
+	endRadius: number,
+	segments: number,
+	surface: string
+)
+	local axis = target - apex
+	local length = axis.Magnitude
+	if length < 1 then
+		return
+	end
+	local step = length / segments
+	for i = 1, segments do
+		local alpha = (i - 0.5) / segments
+		local radius = startRadius + (endRadius - startRadius) * alpha
+		local centre = apex + axis.Unit * (step * (i - 0.5))
+		local segment = Builders.cylinder({
+			name = "BeamSegment",
+			size = Vector3.new(step * 1.02, radius * 2, radius * 2),
+			cframe = CFrame.lookAt(centre, centre + axis.Unit) * CFrame.Angles(0, math.rad(90), 0),
+			parent = parent,
+			surface = surface,
+			decor = true,
+			tag = "LightShaft",
+		})
+		-- Fades out along its length so the far end dissolves instead of stopping flat.
+		segment.Transparency = math.clamp(Builders.surfaceTransparency(surface) + alpha * 0.07, 0, 1)
+	end
+end
+
+-- ── Painted scenery ───────────────────────────────────────────────────────────────────────
+
+--- The painted moon on a scenery flat: a glowing disc, a painted ring and a few craters.
+function SetPieces.paintedMoon(parent: Instance, cf: CFrame, radius: number, rng: Random)
+	Builders.cylinder({
+		name = "PaintedMoonRing",
+		size = Vector3.new(0.12, radius * 2.3, radius * 2.3),
+		cframe = cf * CFrame.Angles(0, math.rad(90), 0),
+		parent = parent,
+		surface = "MoonRing",
+		decor = true,
+	})
+	Builders.cylinder({
+		name = "PaintedMoon",
+		size = Vector3.new(0.3, radius * 2, radius * 2),
+		cframe = cf * CFrame.new(0, 0, -0.12) * CFrame.Angles(0, math.rad(90), 0),
+		parent = parent,
+		surface = "PaintedMoon",
+		decor = true,
+	})
+	for _ = 1, 4 do
+		local angle = rng:NextNumber() * math.pi * 2
+		local distance = radius * 0.55 * math.sqrt(rng:NextNumber())
+		local size = radius * rng:NextNumber(0.12, 0.24)
+		Builders.cylinder({
+			name = "MoonCrater",
+			size = Vector3.new(0.1, size, size),
+			cframe = cf
+				* CFrame.new(math.cos(angle) * distance, math.sin(angle) * distance, -0.3)
+				* CFrame.Angles(0, math.rad(90), 0),
+			parent = parent,
+			surface = "MoonRing",
+			decor = true,
+		})
+	end
+end
+
+--- A brick chimney with a slow smoke plume. `rate` is capped by the caller for mobile.
+function SetPieces.chimney(parent: Instance, base: CFrame, height: number, rate: number)
+	local stack = Builders.part({
+		name = "Chimney",
+		size = Vector3.new(2.2, height, 2.2),
+		cframe = base * CFrame.new(0, height / 2, 0),
+		parent = parent,
+		surface = "FacadeRose",
+		decor = true,
+	})
+	Builders.part({
+		name = "ChimneyCap",
+		size = Vector3.new(2.8, 0.4, 2.8),
+		cframe = base * CFrame.new(0, height, 0),
+		parent = parent,
+		surface = "DarkWood",
+		decor = true,
+	})
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "Smoke"
+	emitter.Rate = rate
+	emitter.Lifetime = NumberRange.new(4, 7)
+	emitter.Speed = NumberRange.new(2.5, 4)
+	emitter.SpreadAngle = Vector2.new(14, 14)
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1.4),
+		NumberSequenceKeypoint.new(1, 5.5),
+	})
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.55),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Color = ColorSequence.new(Theme.Surfaces.Smoke.Color)
+	emitter.LightEmission = 0.15
+	emitter.Acceleration = Vector3.new(0.6, 1.2, 0)
+	emitter.Rotation = NumberRange.new(0, 360)
+	emitter.RotSpeed = NumberRange.new(-12, 12)
+	emitter.Parent = stack
+	-- Emit from the top of the stack only.
+	emitter.EmissionDirection = Enum.NormalId.Top
+	return stack
+end
+
+-- ── Floor litter ──────────────────────────────────────────────────────────────────────────
+
+local CONFETTI_SURFACES = { "PaintRed", "PaintBlue", "PaintYellow", "Gilt", "Paper" }
+
+--- Confetti and torn paper settled on the floor after a performance that never happened.
+--- Flat enough that the clearance test treats it as paint (it cannot obstruct anything).
+function SetPieces.confetti(parent: Instance, rng: Random, centre: Vector3, radius: Vector2, count: number)
+	for _ = 1, count do
+		local pos = centre + Vector3.new(rng:NextNumber(-radius.X, radius.X), 0, rng:NextNumber(-radius.Y, radius.Y))
+		local long = rng:NextNumber(0.4, 1.1)
+		Builders.part({
+			name = "Confetti",
+			size = Vector3.new(long, 0.04, long * rng:NextNumber(0.3, 0.7)),
+			cframe = CFrame.new(pos) * CFrame.Angles(0, rng:NextNumber() * math.pi * 2, 0),
+			parent = parent,
+			surface = CONFETTI_SURFACES[rng:NextInteger(1, #CONFETTI_SURFACES)],
+			decor = true,
+		})
+	end
+end
+
+--- A carpet runner that has been walked threadbare: segments with torn gaps between them.
+function SetPieces.tornCarpet(parent: Instance, rng: Random, from: Vector3, to: Vector3, width: number)
+	local axis = to - from
+	local length = axis.Magnitude
+	if length < 2 then
+		return
+	end
+	local direction = axis.Unit
+	local travelled = 0
+	while travelled < length do
+		local piece = math.min(rng:NextNumber(5, 11), length - travelled)
+		if piece > 1.5 then
+			local centre = from + direction * (travelled + piece / 2)
+			Builders.part({
+				name = "AisleCarpet",
+				size = Vector3.new(piece, 0.06, width * rng:NextNumber(0.86, 1)),
+				cframe = CFrame.lookAt(centre, centre + direction) * CFrame.Angles(0, math.rad(90), 0),
+				parent = parent,
+				surface = if rng:NextNumber() < 0.35 then "CarpetWorn" else "Carpet",
+				decor = true,
+			})
+		end
+		-- A torn gap before the next piece.
+		travelled += piece + rng:NextNumber(0.6, 2.2)
 	end
 end
 

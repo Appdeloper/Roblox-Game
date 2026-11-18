@@ -9,6 +9,7 @@
 	(tests/smoke/clearance.spec.luau proves it).
 ]]
 
+local Theme = require(game:GetService("ReplicatedStorage").Shared.Theme)
 local SetPieces = require(script.Parent.Parent.SetPieces)
 local Builders = require(script.Parent.Parent.Builders)
 
@@ -34,14 +35,7 @@ local function seating(ctx: Ctx)
 		maxZ = o.Z + 24,
 	}, { o.Z - 9, o.Z + 9 })
 	for _, z in { -9, 9 } do
-		Builders.part({
-			name = "AisleCarpet",
-			size = Vector3.new(100, 0.06, 2.2),
-			cframe = CFrame.new(L(ctx, 46, 1.03, z)),
-			parent = ctx.set,
-			surface = "Carpet",
-			decor = true,
-		})
+		SetPieces.tornCarpet(ctx.set, ctx.rng, L(ctx, -4, 1.03, z), L(ctx, 96, 1.03, z), 2.4)
 	end
 end
 
@@ -105,6 +99,34 @@ local function operaBox(ctx: Ctx, x: number, side: number)
 	end
 end
 
+--- Three high windows on the house-left wall, each throwing a shaft of moonlight down into
+--- the seats. The shafts land BEHIND the row of platforms (z < -13) so they never wash over
+--- the jump path or hide a landing.
+local function moonlight(ctx: Ctx)
+	for _, x in { 26, 56, 86 } do
+		local sill = L(ctx, x, 38, -25.8)
+		local facing = CFrame.lookAt(sill, sill + Vector3.zAxis)
+		SetPieces.windowFrame(ctx.set, facing, 7, 9, false)
+		Builders.part({
+			name = "MoonPane",
+			size = Vector3.new(7, 9, 0.12),
+			cframe = facing * CFrame.new(0, 0, -0.06),
+			parent = ctx.set,
+			surface = "MoonGlow",
+			decor = true,
+		})
+		SetPieces.lightShaft(ctx.set, sill, L(ctx, x + 9, 1.1, -15), 7, "MoonShaft")
+	end
+end
+
+--- The one seat in the front row someone should have been sitting in, picked out by a
+--- narrow warm spot. Sits in the house, clear of the orchestra rail above it.
+local function emptySeat(ctx: Ctx)
+	local pos = L(ctx, 94, 1, -3)
+	SetPieces.seat(ctx.set, CFrame.lookAt(pos, Vector3.new(ctx.origin.X + 128, pos.Y, pos.Z)), ctx.rng)
+	SetPieces.narrowingBeam(ctx.set, L(ctx, 94, 26, -3), L(ctx, 94, 4.5, -3), 3.2, 1.7, 4, "WarmBeam")
+end
+
 local function wallPanels(ctx: Ctx)
 	local o = ctx.origin
 	-- Left wall (z = -26): skip the opera boxes at x 40 and 72.
@@ -161,6 +183,20 @@ function Auditorium.build(ctx: Ctx)
 	wallPanels(ctx)
 	proscenium(ctx)
 	stageFloor(ctx)
+	moonlight(ctx)
+	emptySeat(ctx)
+	-- Signature fill: the house reads cold and teal, so the warm stage pops against it.
+	for _, x in { 30, 74 } do
+		local fill = Builders.part({
+			name = "HouseFill",
+			size = Vector3.one,
+			cframe = CFrame.new(L(ctx, x, 30, -6)),
+			parent = ctx.set,
+			surface = "Invisible",
+			decor = true,
+		})
+		Builders.pointLight(fill, Theme.Colors.MoonTeal, 60, 0.75)
+	end
 end
 
 return Auditorium
