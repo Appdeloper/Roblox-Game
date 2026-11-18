@@ -13,8 +13,8 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
 
 ## Milestones
 
-- [ ] **M0 — Scaffold & tooling**: `default.project.json`, `rokit.toml`, `selene.toml`, `stylua.toml`, `.gitignore`, CI workflow.
-- [ ] **M1 — Shared foundation**: `Config`, `Types`, `Theme`, `Assets`, `Remotes`, `Signal`, `JumpMath`, `TimeFormat`, `Zone`.
+- [x] **M0 — Scaffold & tooling**: `default.project.json`, `rokit.toml`, `selene.toml`, `stylua.toml`, `.gitignore`, CI workflow.
+- [x] **M1 — Shared foundation**: `Config`, `Types`, `Theme`, `Assets`, `Remotes`, `Signal`, `JumpMath`, `TimeFormat`, `Zone`.
 - [ ] **M2 — MapBuilder**: lobby (rehearsal stage + leaderboard wall), Stage 1 Auditorium, Stage 2 Painted Street,
       Stage 3 Curtain Call. Data-driven layouts, jump-gap validation (< 70 % of max jump), spawns, kill nets,
       TrussPart ladders, slide mat, descending backdrop, collapsing staircase, two exits. Offline layout tests.
@@ -30,10 +30,10 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
       autosave + BindToClose.
 - [ ] **M8 — Leaderboard**: OrderedDataStore of best times + lobby SurfaceGui board.
 - [ ] **M9 — Badges**: First Escape, Opening Night, Spotted the Door (placeholder IDs in Config).
-- [ ] **M10 — Monetization**: cosmetic gamepasses + dev products, idempotent ProcessReceipt with recorded purchase IDs.
-- [ ] **M11 — Analytics**: stage_started, stage_cleared, caught, quit_stage, finished (print sink).
-- [ ] **M12 — Polish**: moonlit teal lighting + warm spots, footlights, dust, curtain sway, creaks, proximity heartbeat.
-- [ ] **M13 — Docs**: README, ARCHITECTURE, TESTING (Studio + 2 Players + mobile emulator), LAUNCH_CHECKLIST.
+- [x] **M10 — Monetization**: cosmetic gamepasses + dev products, idempotent ProcessReceipt with recorded purchase IDs.
+- [x] **M11 — Analytics**: stage_started, stage_cleared, caught, quit_stage, finished (print sink).
+- [x] **M12 — Polish**: moonlit teal lighting + warm spots, footlights, dust, curtain sway, creaks, proximity heartbeat.
+- [x] **M13 — Docs**: README, ARCHITECTURE, TESTING (Studio + 2 Players + mobile emulator), LAUNCH_CHECKLIST.
 
 Each milestone ends with: `stylua --check`, `selene`, `luau tests/run.luau`, `rojo build`, then a commit.
 
