@@ -16,6 +16,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Quality = require(script.Parent.Parent.Quality)
 
 local MannequinAnimator = {}
 
@@ -122,7 +123,7 @@ local function step(dt: number)
 	for model, t in tracked do
 		if not model.Parent or not t.root.Parent then
 			tracked[model] = nil
-		elseif (t.root.Position - eye).Magnitude <= Config.Effects.AnimationRange then
+		elseif (t.root.Position - eye).Magnitude <= Quality.settings.AnimationRange then
 			animate(t, dt)
 		end
 	end

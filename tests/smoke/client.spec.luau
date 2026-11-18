@@ -139,6 +139,13 @@ return function(placePath, check)
 		r.fromServer("FakeExit")
 	end)
 	c.tick(6)
+	-- The harness reports a touch device, so "Auto" quality resolves to Low — which
+	-- deliberately switches off curtain sway and other effects. Test the full-fat path.
+	local Quality = c.require(h.place:GetService("StarterPlayer").StarterPlayerScripts.Client.Quality)
+	check(Quality.resolve("Auto") == "Low", "Auto quality picks Low on a touch device")
+	check(Quality.resolve("High") == "High", "an explicit level is respected")
+	Quality.set("High")
+
 	-- ── Room sound ────────────────────────────────────────────────────────────────────────
 	print("\n== Smoke: room sound")
 	local soundService = h.place:GetService("SoundService")
@@ -173,7 +180,8 @@ return function(placePath, check)
 		local count = 0
 		for _, part in tags:GetTagged("FlickerLamp") do
 			local light = part:FindFirstChildWhichIsA("Light")
-			if light and light.Brightness > 0.05 then
+			-- A disabled light emits nothing, whatever its Brightness happens to read.
+			if light and light.Enabled and light.Brightness > 0.05 then
 				count += 1
 			end
 		end
@@ -186,6 +194,16 @@ return function(placePath, check)
 	c.tick(3.5)
 	check(litLamps() < lampsBefore, "Act II scare puts a street lamp out")
 	c.tick(5)
+
+	-- A scare beat is story, not an effect: it must still happen on the lowest setting.
+	Quality.set("Low")
+	local lowBefore = litLamps()
+	r.fromServer("StageStarted", stageInfo(2, false, 2))
+	r.fromServer("Scare", 2)
+	c.tick(3.5)
+	check(litLamps() < lowBefore, "the Act II lamp still dies on Low quality")
+	c.tick(5)
+	Quality.set("High")
 
 	r.fromServer("StageStarted", stageInfo(3, false, 2))
 	r.fromServer("Scare", 3)
@@ -287,17 +305,26 @@ return function(placePath, check)
 	local lampPart = serverTags:GetTagged("FlickerLamp")[1]
 	check(lampPart ~= nil, "lamps exist to flicker")
 	if lampPart then
-		local light = lampPart:FindFirstChildWhichIsA("Light")
-		local original = light.Brightness
-		local dipped = false
+		-- Watch every working lamp for variation. Comparing one lamp to one snapshot is
+		-- unreliable: the sample could land mid-dip, or on a lamp a scare has put out.
+		local swing = 0
 		for _ = 1, 40 do
+			local before: { [any]: number } = {}
+			for _, part in tags:GetTagged("FlickerLamp") do
+				local light = part:FindFirstChildWhichIsA("Light")
+				if light and light.Enabled then
+					before[light] = light.Brightness
+				end
+			end
 			c.tick(0.5)
-			if light.Brightness < original then
-				dipped = true
+			for light, was in before do
+				swing = math.max(swing, math.abs(light.Brightness - was))
+			end
+			if swing > 0.01 then
 				break
 			end
 		end
-		check(dipped, "lamps flicker on their own")
+		check(swing > 0.01, string.format("lamps flicker on their own (swing %.2f)", swing))
 	end
 
 	local swinging = serverTags:GetTagged("SwingProp")[1]

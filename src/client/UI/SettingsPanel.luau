@@ -7,6 +7,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Quality = require(script.Parent.Parent.Quality)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local AudioController = require(script.Parent.Parent.Audio.AudioController)
@@ -74,6 +75,52 @@ local function buildToggleRow(parent: Frame)
 	end)
 end
 
+local qualityButtons: { [string]: TextButton } = {}
+
+local function renderQuality()
+	for name, button in qualityButtons do
+		local chosen = Quality.requested == name
+		button.BackgroundColor3 = if chosen then Theme.Colors.UiAccent else Theme.Colors.UiPanel
+		button.TextColor3 = if chosen then Theme.Colors.Ink else Theme.Colors.Paper
+	end
+end
+
+--- Auto + the three levels. Auto is first because it is the right answer for most players.
+local function buildQualityRow(parent: Frame)
+	Widgets.label({
+		name = "QualityLabel",
+		parent = parent,
+		text = "Graphics",
+		size = UDim2.new(0.6, 0, 0, 36),
+		position = UDim2.fromOffset(24, 186),
+		align = Enum.TextXAlignment.Left,
+		font = Theme.Fonts.Bold,
+	})
+	local options = { "Auto" }
+	for _, name in Config.Quality.Order do
+		table.insert(options, name)
+	end
+	local width = 104
+	for index, name in options do
+		local button = Widgets.button({
+			name = "Quality_" .. name,
+			parent = parent,
+			text = name,
+			size = UDim2.fromOffset(width, 60),
+			position = UDim2.fromOffset(24 + (index - 1) * (width + 8), 224),
+			color = Theme.Colors.UiPanel,
+			textColor = Theme.Colors.Paper,
+		}, function()
+			AudioController.play("UiClick")
+			Quality.set(name)
+			Remotes.get("SetQuality"):FireServer(name)
+			renderQuality()
+		end)
+		qualityButtons[name] = button
+	end
+	renderQuality()
+end
+
 function SettingsPanel.init()
 	local modal = UIRoot.get("Modal")
 	layer = Widgets.frame("SettingsLayer", modal, UDim2.fromScale(1, 1), nil, Theme.Colors.Black, 1)
@@ -90,7 +137,7 @@ function SettingsPanel.init()
 	backdrop.Activated:Connect(SettingsPanel.close)
 
 	panel =
-		Widgets.frame("Settings", layer, UDim2.fromOffset(500, 330), UDim2.fromScale(0.5, 0.5), Theme.Colors.UiPanel)
+		Widgets.frame("Settings", layer, UDim2.fromOffset(500, 440), UDim2.fromScale(0.5, 0.5), Theme.Colors.UiPanel)
 	panel.AnchorPoint = Vector2.new(0.5, 0.5)
 	panel.ZIndex = 2
 	panel.Active = true
@@ -116,6 +163,7 @@ function SettingsPanel.init()
 		textColor = Theme.Colors.Paper,
 	}, SettingsPanel.close)
 	buildToggleRow(panel)
+	buildQualityRow(panel)
 	leaveButton = Widgets.button({
 		name = "Leave",
 		parent = panel,
@@ -140,8 +188,8 @@ end
 function SettingsPanel.open()
 	leaveButton.Visible = ClientState.phase == "Running"
 	layer.Visible = true
-	panel.Size = UDim2.fromOffset(440, 290)
-	Widgets.tween(panel, Config.UI.TweenMedium, { Size = UDim2.fromOffset(500, 330) }, Enum.EasingStyle.Back)
+	panel.Size = UDim2.fromOffset(440, 390)
+	Widgets.tween(panel, Config.UI.TweenMedium, { Size = UDim2.fromOffset(500, 440) }, Enum.EasingStyle.Back)
 end
 
 function SettingsPanel.close()

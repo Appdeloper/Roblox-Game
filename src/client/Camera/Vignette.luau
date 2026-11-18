@@ -9,6 +9,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Theme = require(ReplicatedStorage.Shared.Theme)
+local Quality = require(script.Parent.Parent.Quality)
 local UIRoot = require(script.Parent.Parent.UI.UIRoot)
 
 local Vignette = {}
@@ -41,6 +42,8 @@ function Vignette.init()
 		table.insert(strips, strip)
 	end
 	Vignette.setStrength(Theme.Lighting.VignetteStrength)
+	-- Quality dims the vignette on weaker devices.
+	Quality.bindVignette(Vignette.setStrength)
 end
 
 --- 0 = off, 1 = heavy. Applied as the opacity at the very edge of the screen.

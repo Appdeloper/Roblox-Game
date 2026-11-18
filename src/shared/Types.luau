@@ -41,6 +41,7 @@ export type ProfileSnapshot = {
 	ownsSpotlightTrail: boolean,
 	trailEnabled: boolean,
 	reducedScares: boolean,
+	quality: string,
 	savingEnabled: boolean,
 }
 
@@ -55,7 +56,7 @@ export type ProfileData = {
 	OwnedSkins: { [string]: boolean },
 	EquippedSkin: string,
 	TrailEnabled: boolean,
-	Settings: { ReducedScares: boolean },
+	Settings: { ReducedScares: boolean, Quality: string },
 	-- purchaseId -> os.time() when granted. Guards ProcessReceipt against double credit.
 	ProcessedReceipts: { [string]: number },
 }

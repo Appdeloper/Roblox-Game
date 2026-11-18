@@ -93,6 +93,7 @@ function DataService.snapshot(player: Player): Types.ProfileSnapshot?
 		ownsSpotlightTrail = profile.ownsSpotlightTrail,
 		trailEnabled = data.TrailEnabled,
 		reducedScares = data.Settings.ReducedScares,
+		quality = data.Settings.Quality,
 		savingEnabled = profile.loaded and not profile.loadFailed,
 	}
 end
@@ -300,6 +301,15 @@ local function connectRemotes()
 			end
 		end
 	)
+	-- Purely visual, but stored so a player's choice survives rejoining.
+	RemoteGuard.connect("SetQuality", RemoteGuard.args("string"), function(player, level: string)
+		local profile = profiles[player]
+		local known = level == "Auto" or (Config.Quality.Levels :: any)[level] ~= nil
+		if profile and known then
+			profile.data.Settings.Quality = level
+			DataService.push(player)
+		end
+	end)
 	RemoteGuard.connect("EquipSkin", RemoteGuard.args("string"), function(player, skinId: string)
 		local profile = profiles[player]
 		if profile and ProfileSchema.ownsSkin(profile.data, skinId) then
