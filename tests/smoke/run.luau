@@ -60,6 +60,10 @@ if ok then
 	end
 end
 
+if ok then
+	require("./mannequin.spec")(h, map, check)
+end
+
 if failures > 0 then
 	error(string.format("%d smoke checks failed", failures), 0)
 end
