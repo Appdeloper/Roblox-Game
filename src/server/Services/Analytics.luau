@@ -4,8 +4,17 @@
 	Today it prints; flip Config.Analytics.UseRobloxAnalytics to also forward to
 	AnalyticsService:LogCustomEvent. Swap the sink here, not at call sites.
 
-	Events: stage_started, stage_cleared, caught, quit_stage, finished
-	(plus fell, fake_exit, scare_skipped, purchase for extra insight).
+	Events and payloads (every event also carries the player's UserId):
+	  stage_started  { stage }                         first entry into a stage (not retakes)
+	  stage_cleared  { stage, time, retakes }          time/retakes for that stage only
+	  caught         { stage, retakes, reason }        mannequin caught the player
+	  quit_stage     { stage, retakes, reason }        "requested" (Leave button) | "left_game"
+	  finished       { time, retakes, verified }       whole run; verified = passed anti-cheat
+	  fell           { stage, retakes, reason }        "fell" (kill line) | "died" (reset/death)
+	  fake_exit      { stage }                         touched the painted stage-3 exit
+	  scare_skipped  { stage }                         pressed Skip during a scare
+	  purchase       { product } | { pass }            cosmetic purchase granted
+	Useful funnels: stage_started → stage_cleared per stage; caught per stage = difficulty.
 ]]
 
 local AnalyticsService = game:GetService("AnalyticsService")
