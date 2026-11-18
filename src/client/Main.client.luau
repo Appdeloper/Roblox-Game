@@ -14,6 +14,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Types = require(ReplicatedStorage.Shared.Types)
 
 local Client = script.Parent
+local AmbienceController = require(Client.Audio.AmbienceController)
 local AudioController = require(Client.Audio.AudioController)
 local ProximityFX = require(Client.Audio.ProximityFX)
 local CameraEffects = require(Client.Camera.CameraEffects)
@@ -37,6 +38,7 @@ local Scares = require(Client.World.Scares)
 
 UIRoot.init()
 AudioController.init()
+AmbienceController.init()
 CameraEffects.init()
 Vignette.init()
 Captions.init()

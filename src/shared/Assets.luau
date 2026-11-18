@@ -35,6 +35,12 @@ Assets.Sounds = {
 	FloorCreak = { Id = 0, Volume = 0.5, Looped = false, Note = "PLACEHOLDER: single floorboard creak underfoot" },
 	RiggingCreak = { Id = 0, Volume = 0.4, Looped = false, Note = "PLACEHOLDER: rope + timber creak overhead" },
 	LampBuzz = { Id = 0, Volume = 0.3, Looped = false, Note = "PLACEHOLDER: filament buzz / pop as a lamp dies" },
+	-- Layered 3D ambience (AmbienceService places these around each stage).
+	AmbientDrip = { Id = 0, Volume = 0.35, Looped = true, Note = "PLACEHOLDER: slow water drip in a far corner" },
+	AmbientWind = { Id = 0, Volume = 0.3, Looped = true, Note = "PLACEHOLDER: wind moving through the rafters" },
+	AmbientWood = { Id = 0, Volume = 0.3, Looped = true, Note = "PLACEHOLDER: old timber settling and creaking" },
+	AmbientPiano = { Id = 0, Volume = 0.18, Looped = true, Note = "PLACEHOLDER: faint out-of-tune piano, far off" },
+	AmbientApplause = { Id = 0, Volume = 0.14, Looped = true, Note = "PLACEHOLDER: muffled applause behind a wall" },
 }
 
 Assets.Images = {

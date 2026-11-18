@@ -138,8 +138,22 @@ or use free sounds from the Creator Store. Copy the number from the audio's page
 | 32 | `BackdropRumble` | Rope and pulley rumble |
 | 33 | `ShadowBow` | Soft violin swell |
 | 34 | `UiClick` | Ticket punch click |
+| 35 | `FloorCreak` | One floorboard creaking underfoot |
+| 36 | `RiggingCreak` | Rope and timber creaking overhead |
+| 37 | `LampBuzz` | Filament buzz / pop as a lamp dies |
 
-Optional images (same file): line **38** `DustParticle` (a soft round dot). Line **39**
+**Ambience** — looping 3D sounds placed around each stage. These are what make the building
+feel alive, so they are worth getting right. Keep them quiet and seamless.
+
+| Line | Sound | What it should sound like |
+| --- | --- | --- |
+| 39 | `AmbientDrip` | A slow water drip in a far corner |
+| 40 | `AmbientWind` | Wind moving through the rafters |
+| 41 | `AmbientWood` | Old timber settling and creaking |
+| 42 | `AmbientPiano` | A faint, slightly out-of-tune piano, far off |
+| 43 | `AmbientApplause` | Muffled applause behind a wall |
+
+Optional images (same file): line **47** `DustParticle` (a soft round dot). Line **48**
 `Vignette` is reserved and currently unused, so you can leave it as `0`.
 
 The game is fully playable while these are `0`. It's just silent, and captions show every cue.
