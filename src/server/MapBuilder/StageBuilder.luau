@@ -239,15 +239,30 @@ local function buildRoute(ctx: Ctx): { [string]: BasePart }
 end
 
 local function buildTrusses(ctx: Ctx)
+	local decor = Builders.folder("LadderMarks", ctx.model)
 	for i, box in ctx.layout.trusses do
+		local centre = w(ctx, box.center)
+		local size = Builders.v(box.size)
 		Builders.truss({
 			name = "Ladder" .. i,
-			size = Builders.v(box.size),
-			cframe = CFrame.new(w(ctx, box.center)),
+			size = size,
+			cframe = CFrame.new(centre),
 			parent = ctx.model,
 			surface = "Ladder",
 			tag = "SceneryLadder",
 		})
+		-- Glow bands at the foot and the head of the climb, so "you go up here" and
+		-- "this is where you get off" both read from across the room.
+		for _, offset in { -size.Y / 2 + 0.6, size.Y / 2 - 0.6 } do
+			Builders.part({
+				name = "LadderMark",
+				size = Vector3.new(size.X + 0.5, 0.3, size.Z + 0.5),
+				cframe = CFrame.new(centre + Vector3.new(0, offset, 0)),
+				parent = decor,
+				surface = "GlowTape",
+				decor = true,
+			})
+		end
 	end
 end
 

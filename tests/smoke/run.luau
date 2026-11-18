@@ -23,6 +23,7 @@ local map = require("./map.spec")(h, check)
 if map then
 	require("./mannequin.spec")(h, map, check)
 	require("./clearance.spec")(h, map, check)
+	require("./readability.spec")(h, check)
 end
 require("./ambience.spec")(h, check)
 require("./round.spec")(placePath, check)
