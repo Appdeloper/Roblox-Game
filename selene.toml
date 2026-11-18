@@ -1,0 +1,11 @@
+# Roblox standard library (selene generates roblox.yml on first run).
+std = "roblox"
+
+exclude = ["build/*"]
+
+[lints]
+# Luau type annotations make some shadowing patterns intentional (e.g. `local x: T = x`).
+shadowing = "allow"
+# Mobile perf rule of thumb: keep the codebase noisy about these.
+unused_variable = "warn"
+global_usage = "deny"

@@ -1,0 +1,28 @@
+# Rojo build output — the place is always regenerated from source
+build/
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+*.rbxl.lock
+*.rbxlx.lock
+
+# Generated tooling files
+roblox.yml
+sourcemap.json
+globalTypes.d.luau
+
+# Editors / OS
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Local env / secrets (Open Cloud keys etc. must never be committed)
+.env
+.env.*
+*.key

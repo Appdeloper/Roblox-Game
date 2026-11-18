@@ -1,0 +1,7 @@
+# Toolchain pinned for everyone working on the project.
+# Install Rokit (https://github.com/rojo-rbx/rokit) and run `rokit install`.
+# Aftman users can copy this file to aftman.toml — the format is identical.
+[tools]
+rojo = "rojo-rbx/rojo@7.4.4"
+selene = "Kampfkarren/selene@0.28.0"
+stylua = "JohnnyMorganz/StyLua@2.0.2"
