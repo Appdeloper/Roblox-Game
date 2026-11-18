@@ -104,6 +104,10 @@ If you were already past that door: **"You outran the painted door!"**
 
 ---
 
-All 10 pass? Next steps:
+All 10 pass? Next: walk the **[visual checklist](VISUAL_CHECKLIST.md)** — it covers the
+environment in detail (lighting, the story props, each act, the living theatre, the scares,
+performance and mobile).
+
+Then:
 - Do **Test → Clients and Servers → 2 Players** ([TESTING.md](TESTING.md) section 2).
 - Turn on DataStores ([PC_SYNC_GUIDE.md](PC_SYNC_GUIDE.md) step 6).

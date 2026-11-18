@@ -16,6 +16,39 @@ Every push runs CI. Locally I also checked every API call against the current Ro
   - Full runs are simulated: escape, catch, fall, death, fake exit, two players, disconnects,
     bad remotes, DataStore outages and merges, purchase retries, and every UI screen.
 
+## Environment risks (added by the visual/environment work)
+
+These are the ones to look at first with [VISUAL_CHECKLIST.md](VISUAL_CHECKLIST.md) open.
+
+| # | Risk | Why it could not be tested | What you would see | Where to fix |
+| --- | --- | --- | --- | --- |
+| E1 | **Transparent light volumes.** Moonlight shafts and the Act III beams are large faint Neon parts. Their look depends entirely on how Roblox blends them. | No renderer offline | Shafts look like solid milky slabs, or are invisible | `Theme.Surfaces.MoonShaft` / `WarmBeam` transparency; or set Graphics to Low, which removes them |
+| E2 | **Overdraw on phones.** Those same volumes, the vignette and the particles all cost fill rate. | No device profiling | FPS drops looking down a shaft or at the two beams | Auto already picks **Low** on mobile (shafts off). Tune `Config.Quality.Levels` |
+| E3 | **Cylinder and wedge orientation.** Beams, the painted moon, the door rose and the arch corners are rotated primitives. I verified the maths by hand, not by eye. | No renderer | A beam points sideways, the moon faces into the wall, an arch corner sits inverted | `SetPieces.narrowingBeam` / `paintedMoon` / `rightTriangle` |
+| E4 | **SurfaceGui text layout.** Every lore board, the countdown and the step stencils are text drawn on part faces. Font metrics are a Roblox runtime thing. | No text renderer | Text clipped, overflowing, or too small to read | `LoreProps.luau` (board padding / `UITextSizeConstraint`), `Lore.luau` for shorter lines |
+| E5 | **Which face is which on a step.** The cardboard step tape/stencils use Top/Left/Right faces; I outlined all four top edges so it reads whichever way the face maps. | No renderer | Tape or stencil on the wrong face | `Set/CurtainCall.luau` → `dressStep` |
+| E6 | **Curtain pivot direction.** Strips sway about their top edge, choosing an axis from their shape. | No renderer | A curtain swings sideways, or rotates about its middle | `client/World/Curtains.luau` → `rollAxis` |
+| E7 | **Density.** Seats, confetti and props are placed by a seeded random. The numbers look sensible but I have never seen them. | No renderer | Too sparse, or too busy to read the route | `Config.Map.VisualSeed` to reshuffle; counts in `Set/*.luau` |
+| E8 | **Ambient sound mix.** Five layered loops plus room reverb. Levels and rolloff are judged by ear. | No audio, and all IDs are placeholders | A layer dominates, or the reverb sounds like a cave | `Config.Ambience.Layers` volumes, `Config.Ambience.Reverb` |
+| E9 | **Chimney smoke near the ceiling.** Act II chimneys sit on the facade roofline, close to the room ceiling. | No renderer | Smoke visibly clips through the ceiling | Lower the chimneys in `Set/Street.luau` → `skyline` |
+| E10 | **Reverb switching.** Each client retunes a shared SoundGroup locally. Correct by Roblox's rules, but untested live. | No audio engine | Reverb does not change between acts | `client/Audio/AmbienceController.luau` |
+
+### What *was* proven about the environment, automatically
+
+- **Nothing decorative blocks the route.** `clearance.spec` checks standing room above every
+  walking lane, the flight path of every jump, and the openings of exits and doors. It caught
+  nine real placement mistakes during this work.
+- **The route stays visible.** `readability.spec` checks every platform is styled as a walkable
+  surface and is measurably brighter than the set within 22 studs of it. Verified to fail when a
+  platform is darkened, so it is not a rubber stamp.
+- **Sound cannot bleed between rooms.** Every ambience layer falls silent before the next stage begins.
+- **Budgets hold.** 3,203 parts of 12,000; 15–18 lights and 1–4 emitters per stage.
+- **The story is consistent.** Acts match stage names, exactly one cast member is crossed out,
+  every line is short enough to read at a glance, and the tone stays kid-safe.
+- **Scares survive Low quality.** The Act II lamp death still happens on the cheapest setting.
+
+---
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.
