@@ -15,6 +15,7 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local MapBuilder = require(ServerScriptService.MapBuilder)
 local Services = ServerScriptService.Services
 local CheckpointService = require(Services.CheckpointService)
+local DataService = require(Services.DataService)
 local MannequinService = require(Services.MannequinService)
 local RemoteGuard = require(Services.RemoteGuard)
 local RoundService = require(Services.RoundService)
@@ -24,9 +25,11 @@ Remotes.init()
 local map = MapBuilder.build()
 
 RemoteGuard.init()
+DataService.init()
 MannequinService.init()
 CheckpointService.init(map)
 RoundService.init(map)
+RoundService.setTicketEnricher(DataService.enrichTicket)
 ScareService.init()
 
 if RunService:IsStudio() then

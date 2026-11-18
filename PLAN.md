@@ -26,7 +26,7 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
       Telegraphed, captioned, once per run, skippable, catch paused while they play.
 - [x] **M6 — Client UI**: title cards, retake counter, timer, big jump button, theatre-ticket finish screen,
       Reduced Scares toggle, lobby panel. All built in code with tweens.
-- [ ] **M7 — DataService**: versioned profiles, UpdateAsync merge-saves, retries with backoff, failed-load lockout,
+- [x] **M7 — DataService**: versioned profiles, UpdateAsync merge-saves, retries with backoff, failed-load lockout,
       autosave + BindToClose.
 - [ ] **M8 — Leaderboard**: OrderedDataStore of best times + lobby SurfaceGui board.
 - [ ] **M9 — Badges**: First Escape, Opening Night, Spotted the Door (placeholder IDs in Config).

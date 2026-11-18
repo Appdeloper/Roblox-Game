@@ -42,10 +42,15 @@ local function makeSignal()
 		end)
 		return conn
 	end
+	-- Like Roblox, each handler runs on its own thread (so it may yield); errors are re-raised.
 	function signal:Fire(...)
 		for _, entry in table.clone(handlers) do
 			if entry.conn.Connected then
-				entry.fn(...)
+				local co = coroutine.create(entry.fn)
+				local ok, err = coroutine.resume(co, ...)
+				if not ok then
+					error(err, 0)
+				end
 			end
 		end
 	end
@@ -200,7 +205,89 @@ local function stubServices(place)
 	stubs.AnalyticsService = {
 		LogCustomEvent = function() end,
 	}
+	stubs.DataStoreService = Harness.fakeDataStores()
 	return stubs
+end
+
+-- ── Fake DataStores ───────────────────────────────────────────────────────────────────────
+
+local function deepCopy(v)
+	if type(v) ~= "table" then
+		return v
+	end
+	local out = {}
+	for k, x in v do
+		out[k] = deepCopy(x)
+	end
+	return out
+end
+
+--- In-memory DataStoreService. Values are deep-copied (like real serialization) and each
+--- store can be told to fail its next N reads/writes to exercise retry + lockout paths.
+function Harness.fakeDataStores()
+	local service = { stores = {} }
+	local function makeStore(name)
+		local store = { name = name, data = {}, failGets = 0, failUpdates = 0, gets = 0, updates = 0 }
+		function store.GetAsync(self, key)
+			self.gets += 1
+			if self.failGets > 0 then
+				self.failGets -= 1
+				error("fake DataStore outage")
+			end
+			return deepCopy(self.data[key])
+		end
+		function store.UpdateAsync(self, key, transform)
+			self.updates += 1
+			if self.failUpdates > 0 then
+				self.failUpdates -= 1
+				error("fake DataStore outage")
+			end
+			local new = transform(deepCopy(self.data[key]))
+			if new ~= nil then
+				self.data[key] = deepCopy(new)
+			end
+			return new
+		end
+		function store.SetAsync(self, key, value)
+			self.data[key] = deepCopy(value)
+		end
+		function store.GetSortedAsync(self, ascending, pageSize)
+			if self.failGets > 0 then
+				self.failGets -= 1
+				error("fake DataStore outage")
+			end
+			local rows = {}
+			for k, v in self.data do
+				table.insert(rows, { key = k, value = v })
+			end
+			table.sort(rows, function(a, b)
+				if ascending then
+					return a.value < b.value
+				end
+				return a.value > b.value
+			end)
+			local page = {}
+			for i = 1, math.min(pageSize, #rows) do
+				page[i] = rows[i]
+			end
+			return {
+				GetCurrentPage = function()
+					return page
+				end,
+				IsFinished = true,
+			}
+		end
+		return store
+	end
+	function service.GetDataStore(_, name)
+		service.stores[name] = service.stores[name] or makeStore(name)
+		return service.stores[name]
+	end
+	service.GetOrderedDataStore = service.GetDataStore
+	function service.GetRequestBudgetForRequestType()
+		return 100
+	end
+	return service
 end
 
 -- ── Loader ────────────────────────────────────────────────────────────────────────────────
@@ -213,7 +300,11 @@ function Harness.load(placePath: string)
 	local mocks = {}
 	local env
 
+	local closeHandlers = {}
 	local gameProxy = setmetatable({
+		BindToClose = function(_, fn)
+			table.insert(closeHandlers, fn)
+		end,
 		GetService = function(_, name)
 			if stubs[name] then
 				return stubs[name]
@@ -289,6 +380,7 @@ function Harness.load(placePath: string)
 		stubs = stubs,
 		game = gameProxy,
 		sched = sched,
+		closeHandlers = closeHandlers,
 		signal = makeSignal,
 	}
 end
