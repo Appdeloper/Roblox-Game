@@ -206,6 +206,14 @@ local function stubServices(place)
 		LogCustomEvent = function() end,
 	}
 	stubs.DataStoreService = Harness.fakeDataStores()
+	stubs.MarketplaceService = {
+		owned = {},
+		ProcessReceipt = nil,
+		PromptGamePassPurchaseFinished = makeSignal(),
+		UserOwnsGamePassAsync = function(self, _userId, passId)
+			return self.owned[passId] == true
+		end,
+	}
 	stubs.BadgeService = {
 		awarded = {},
 		AwardBadge = function(self, userId, badgeId)

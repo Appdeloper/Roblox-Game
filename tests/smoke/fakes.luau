@@ -70,6 +70,9 @@ local function fakePart(name, cf)
 	function part:IsA(class)
 		return class == "BasePart" or class == "Part" or class == "Instance"
 	end
+	function part:FindFirstChild()
+		return nil
+	end
 	return setmetatable(part, {
 		__index = function(t, key)
 			if key == "Position" then
@@ -96,8 +99,17 @@ local function fakeHumanoid(makeSignal)
 	return humanoid
 end
 
-function Fakes.character(makeSignal, cf)
-	local root = fakePart("HumanoidRootPart", cf or CFrame.new())
+--- `realRoot`: use a real Lune Part (supports children like Trails) — lobby-only tests,
+--- since Lune can't read the derived BasePart.Position the run code uses.
+function Fakes.character(makeSignal, cf, realRoot)
+	local root
+	if realRoot then
+		root = roblox.Instance.new("Part")
+		root.Name = "HumanoidRootPart"
+		root.CFrame = cf or CFrame.new()
+	else
+		root = fakePart("HumanoidRootPart", cf or CFrame.new())
+	end
 	local humanoid = fakeHumanoid(makeSignal)
 	local children = { HumanoidRootPart = root, Humanoid = humanoid }
 	local character = { Name = "Character", ClassName = "Model", root = root, humanoid = humanoid }
@@ -145,8 +157,8 @@ function Fakes.player(makeSignal, name)
 		return class == "Player"
 	end
 	--- Spawns a fresh character at `cf` and fires CharacterAdded (like Roblox does).
-	function player:spawn(cf)
-		local character = Fakes.character(makeSignal, cf)
+	function player:spawn(cf, realRoot)
+		local character = Fakes.character(makeSignal, cf, realRoot)
 		player.Character = character
 		player.CharacterAdded:Fire(character)
 		return character

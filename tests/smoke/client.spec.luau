@@ -51,6 +51,20 @@ return function(placePath, check)
 			savingEnabled = true,
 		})
 	end)
+	step("wardrobe opens and renders cards", function()
+		c.find("Wardrobe").Activated:Fire()
+		c.tick(0.2)
+	end)
+	check(c.find("WardrobeLayer").Visible and c.find("Card_Golden Ticket") ~= nil, "wardrobe shows ticket skins")
+	step("wardrobe equip + buy buttons", function()
+		for _, cardName in
+			{ "Card_Classic Stub", "Card_Opening Night", "Card_Moonlit", "Card_Spotlight Trail", "Card_Velvet Curtain" }
+		do
+			c.find(cardName).Action.Activated:Fire()
+		end
+		c.find("CloseWardrobe").Activated:Fire()
+	end)
+	check(r.sent("EquipSkin") == 1, "equipping an owned skin asks the server")
 	step("lobby start button fires RequestStart", function()
 		c.find("Start").Activated:Fire()
 	end)

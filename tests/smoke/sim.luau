@@ -71,11 +71,11 @@ return function(placePath, check, hooks)
 		end
 	end
 
-	local function join(name)
+	local function join(name, realRoot)
 		local player = Fakes.player(h.signal, name)
 		table.insert(Players._list, player)
 		Players.PlayerAdded:Fire(player)
-		player:spawn(roblox.CFrame.new(0, 10, -220))
+		player:spawn(roblox.CFrame.new(0, 10, -220), realRoot)
 		tick(0.2)
 		return player
 	end
