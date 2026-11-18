@@ -52,34 +52,37 @@ end
 
 function LightingSetup.apply()
 	removeForeignEffects()
-	Lighting.ClockTime = 0
-	Lighting.Brightness = 1
-	Lighting.Ambient = Theme.Colors.AmbientTeal
-	Lighting.OutdoorAmbient = Theme.Colors.DeepTeal
-	Lighting.EnvironmentDiffuseScale = 0.25
-	Lighting.EnvironmentSpecularScale = 0.3
-	Lighting.ExposureCompensation = 0.25
+	local L = Theme.Lighting
+	Lighting.ClockTime = L.ClockTime
+	Lighting.Brightness = L.Brightness
+	Lighting.Ambient = L.Ambient
+	Lighting.OutdoorAmbient = L.OutdoorAmbient
+	Lighting.EnvironmentDiffuseScale = L.EnvironmentDiffuseScale
+	Lighting.EnvironmentSpecularScale = L.EnvironmentSpecularScale
+	Lighting.ExposureCompensation = L.ExposureCompensation
 	Lighting.GlobalShadows = true
-	Lighting.ShadowSoftness = 0.4
+	Lighting.ShadowSoftness = L.ShadowSoftness
 
+	-- Atmosphere doubles as the light moonlit fog inside the sealed rooms.
 	local atmosphere = replace("Atmosphere", "TheatreAir") :: Atmosphere
-	atmosphere.Density = 0.28
+	atmosphere.Density = L.AtmosphereDensity
 	atmosphere.Offset = 0
-	atmosphere.Color = Theme.Colors.DeepTeal
-	atmosphere.Decay = Theme.Colors.DeepTeal
+	atmosphere.Color = L.AtmosphereColor
+	atmosphere.Decay = L.AtmosphereDecay
 	atmosphere.Glare = 0
-	atmosphere.Haze = 1.2
+	atmosphere.Haze = L.AtmosphereHaze
 
+	-- Soft grade: teal ambient keeps shadows cool, the warm tint lifts amber highlights.
 	local grade = replace("ColorCorrectionEffect", "TealGrade") :: ColorCorrectionEffect
-	grade.TintColor = Color3.fromRGB(228, 246, 248)
-	grade.Contrast = 0.12
-	grade.Saturation = -0.05
-	grade.Brightness = 0.02
+	grade.TintColor = L.GradeTint
+	grade.Contrast = L.GradeContrast
+	grade.Saturation = L.GradeSaturation
+	grade.Brightness = L.GradeBrightness
 
 	local bloom = replace("BloomEffect", "SoftBloom") :: BloomEffect
-	bloom.Intensity = 0.55
-	bloom.Size = 22
-	bloom.Threshold = 1.4
+	bloom.Intensity = L.BloomIntensity
+	bloom.Size = L.BloomSize
+	bloom.Threshold = L.BloomThreshold
 end
 
 return LightingSetup

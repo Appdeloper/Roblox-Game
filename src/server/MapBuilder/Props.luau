@@ -27,8 +27,7 @@ local function doorFrame(model: Model, base: CFrame)
 			size = jambSize,
 			cframe = base * CFrame.new(side * (DOOR_WIDTH / 2 + 0.25), jambSize.Y / 2, 0),
 			parent = model,
-			color = Theme.Colors.DarkWood,
-			material = Enum.Material.Wood,
+			surface = "DarkWood",
 		})
 	end
 	Builders.part({
@@ -36,21 +35,19 @@ local function doorFrame(model: Model, base: CFrame)
 		size = Vector3.new(DOOR_WIDTH + 1, 0.5, 0.7),
 		cframe = base * CFrame.new(0, DOOR_HEIGHT + UNDER_GAP + 0.25, 0),
 		parent = model,
-		color = Theme.Colors.DarkWood,
-		material = Enum.Material.Wood,
+		surface = "DarkWood",
 	})
 end
 
 --- The door leaf (panel, star, handle) lives in its own model so clients can swing it on the hinge.
-local function doorLeaf(model: Model, base: CFrame, starred: boolean, panelColor: Color3): Model
+local function doorLeaf(model: Model, base: CFrame, starred: boolean, panelSurface: string): Model
 	local leaf = Builders.model("Leaf", model)
 	local panel = Builders.part({
 		name = "Panel",
 		size = Vector3.new(DOOR_WIDTH, DOOR_HEIGHT, 0.3),
 		cframe = base * CFrame.new(0, UNDER_GAP + DOOR_HEIGHT / 2, 0),
 		parent = leaf,
-		color = panelColor,
-		material = Enum.Material.WoodPlanks,
+		surface = panelSurface,
 	})
 	leaf.PrimaryPart = panel
 
@@ -60,12 +57,12 @@ local function doorLeaf(model: Model, base: CFrame, starred: boolean, panelColor
 			size = Vector3.new(1.8, 1.8, 0.08),
 			cframe = base * CFrame.new(0, UNDER_GAP + DOOR_HEIGHT * 0.72, -0.19),
 			parent = leaf,
-			transparency = 1,
-			collide = false,
+			surface = "Invisible",
+			decor = true,
 		})
 		local _, label = Builders.surfaceText(plaque, Enum.NormalId.Front, "★", Theme.Colors.Brass, Theme.Fonts.Bold)
 		label.TextStrokeTransparency = 0.4
-		label.TextStrokeColor3 = Theme.Colors.DarkWood
+		label.TextStrokeColor3 = Theme.Surfaces.DarkWood.Color
 	end
 
 	local handle = Builders.part({
@@ -73,9 +70,8 @@ local function doorLeaf(model: Model, base: CFrame, starred: boolean, panelColor
 		size = Vector3.new(0.9, 0.22, 0.22),
 		cframe = base * CFrame.new(DOOR_WIDTH / 2 - 0.8, UNDER_GAP + 3.8, -0.3),
 		parent = leaf,
-		color = Theme.Colors.Brass,
-		material = Enum.Material.Metal,
-		collide = false,
+		surface = "Brass",
+		decor = true,
 	})
 	handle.Reflectance = 0.2
 	return leaf
@@ -88,10 +84,9 @@ local function underGlow(model: Model, base: CFrame)
 		size = Vector3.new(DOOR_WIDTH, 0.2, 0.15),
 		cframe = base * CFrame.new(0, 0.12, -0.05),
 		parent = model,
-		color = Theme.Colors.DoorGlow,
-		material = Enum.Material.Neon,
+		surface = "DoorGlow",
 		transparency = 1,
-		collide = false,
+		decor = true,
 	})
 	local light = Builders.pointLight(strip, Theme.Colors.DoorGlow, 10, 2.5, false)
 	light.Name = "Glow"
@@ -101,7 +96,7 @@ end
 function Props.paintedDoor(parent: Instance, base: CFrame, doorId: string, role: string): Model
 	local model = Builders.model("PaintedDoor_" .. doorId .. "_" .. role, parent)
 	doorFrame(model, base)
-	doorLeaf(model, base, true, Theme.Colors.PaintedDoor)
+	doorLeaf(model, base, true, "PaintedDoor")
 	underGlow(model, base)
 	model:SetAttribute("DoorId", doorId)
 	model:SetAttribute("Role", role)
@@ -115,16 +110,15 @@ end
 function Props.exitDoor(parent: Instance, base: CFrame, side: string): Model
 	local model = Builders.model("Exit_" .. side, parent)
 	doorFrame(model, base)
-	doorLeaf(model, base, false, Theme.Colors.DarkWood)
+	doorLeaf(model, base, false, "ExitDoor")
 	underGlow(model, base)
 	local sign = Builders.part({
 		name = "ExitSign",
 		size = Vector3.new(3.2, 1.2, 0.3),
 		cframe = base * CFrame.new(0, DOOR_HEIGHT + UNDER_GAP + 1.4, -0.2),
 		parent = model,
-		color = Theme.Colors.UiGood,
-		material = Enum.Material.Neon,
-		collide = false,
+		surface = "ExitSign",
+		decor = true,
 	})
 	Builders.surfaceText(sign, Enum.NormalId.Front, "EXIT", Theme.Colors.UiDark, Theme.Fonts.Bold)
 	model:SetAttribute("Side", side)
@@ -146,9 +140,8 @@ function Props.seatRowDressing(parent: Instance, row: BasePart)
 				* CFrame.new(-row.Size.X / 2 + 0.3, row.Size.Y / 2 + 0.5, z)
 				* CFrame.Angles(0, 0, math.rad(-35)),
 			parent = parent,
-			color = Theme.Colors.SeatVelvet,
-			material = Enum.Material.Fabric,
-			collide = false,
+			surface = "Velvet",
+			decor = true,
 		})
 	end
 end
@@ -169,9 +162,8 @@ function Props.supportPosts(parent: Instance, part: BasePart, floorY: number)
 			size = Vector3.new(thickness, height, thickness),
 			cframe = CFrame.new(base.X, floorY + height / 2, base.Z),
 			parent = parent,
-			color = Theme.Colors.DarkWood,
-			material = Enum.Material.Wood,
-			collide = false,
+			surface = "DarkWood",
+			decor = true,
 		})
 	end
 end
@@ -184,9 +176,8 @@ function Props.spikeMark(parent: Instance, floorCFrame: CFrame)
 			size = Vector3.new(3, 0.05, 0.4),
 			cframe = floorCFrame * CFrame.new(0, 0.03, 0) * CFrame.Angles(0, math.rad(angle), 0),
 			parent = parent,
-			color = Theme.Colors.MoonTeal,
-			material = Enum.Material.Neon,
-			collide = false,
+			surface = "GlowTape",
+			decor = true,
 		})
 	end
 end
@@ -201,9 +192,8 @@ function Props.footlights(parent: Instance, from: Vector3, to: Vector3, count: n
 			size = Vector3.new(0.8, 0.5, 1.4),
 			cframe = CFrame.new(pos),
 			parent = parent,
-			color = Theme.Colors.Footlight,
-			material = Enum.Material.Neon,
-			collide = false,
+			surface = "Footlight",
+			decor = true,
 			tag = "Footlight",
 		})
 		if i % lightEvery == 0 then
@@ -219,24 +209,22 @@ function Props.stageSpot(parent: Instance, position: Vector3, target: Vector3, c
 		size = Vector3.new(1.2, 1.2, 2),
 		cframe = CFrame.lookAt(position, target),
 		parent = parent,
-		color = Theme.Colors.UiDark,
-		material = Enum.Material.Metal,
-		collide = false,
+		surface = "Iron",
+		decor = true,
 	})
 	Builders.spotLight(can, Enum.NormalId.Front, color, range, 40)
 	return can
 end
 
 --- Simple hanging sign with text on its front face.
-function Props.sign(parent: Instance, cframe: CFrame, size: Vector3, text: string, textColor: Color3, color: Color3)
+function Props.sign(parent: Instance, cframe: CFrame, size: Vector3, text: string, textColor: Color3, surface: string)
 	local board = Builders.part({
 		name = "Sign",
 		size = size,
 		cframe = cframe,
 		parent = parent,
-		color = color,
-		material = Enum.Material.Wood,
-		collide = false,
+		surface = surface,
+		decor = true,
 	})
 	Builders.surfaceText(board, Enum.NormalId.Front, text, textColor)
 	return board
@@ -249,8 +237,8 @@ function Props.dust(parent: Instance, center: Vector3, size: Vector3, rate: numb
 		size = size,
 		cframe = CFrame.new(center),
 		parent = parent,
-		transparency = 1,
-		collide = false,
+		surface = "Invisible",
+		decor = true,
 	})
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Name = "Dust"

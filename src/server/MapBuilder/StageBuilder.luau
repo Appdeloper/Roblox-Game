@@ -23,15 +23,17 @@ type RouteBox = LayoutTypes.RouteBox
 
 local StageBuilder = {}
 
-local ROUTE_STYLE: { [string]: { color: Color3, material: Enum.Material } } = {
-	Platform = { color = Theme.Colors.StageWood, material = Enum.Material.WoodPlanks },
-	Landing = { color = Theme.Colors.StageWood, material = Enum.Material.WoodPlanks },
-	Floor = { color = Theme.Colors.StageWood, material = Enum.Material.WoodPlanks },
-	SeatRow = { color = Theme.Colors.DarkWood, material = Enum.Material.Wood },
-	Roof = { color = Theme.Colors.Roof, material = Enum.Material.Plaster },
-	Step = { color = Theme.Colors.Cardboard, material = Enum.Material.Cardboard },
-	Slide = { color = Theme.Colors.SlideMat, material = Enum.Material.Rubber },
+-- Walkable route surfaces (Theme "Route*" = lighter + warmer than the set around them).
+local ROUTE_SURFACE: { [string]: string } = {
+	Platform = "RouteWood",
+	Landing = "RouteWood",
+	Floor = "RouteFloor",
+	SeatRow = "RouteWood",
+	Roof = "RouteRoof",
+	Step = "RouteCardboard",
+	Slide = "RouteSlide",
 }
+local SHOP_FACADES = { "FacadeRose", "FacadeSage", "FacadeOchre" }
 
 local ROOF_CAP = 0.6
 
@@ -65,49 +67,28 @@ function StageBuilder.room(parent: Instance, min: Vector3, max: Vector3)
 	local center = (min + max) / 2
 	local t = 2
 	local shell = Builders.folder("Room", parent)
-	local function slab(name: string, c: Vector3, s: Vector3, color: Color3, material: Enum.Material)
-		Builders.part({
-			name = name,
-			size = s,
-			cframe = CFrame.new(c),
-			parent = shell,
-			color = color,
-			material = material,
-		})
+	local function slab(name: string, c: Vector3, s: Vector3, surface: string)
+		Builders.part({ name = name, size = s, cframe = CFrame.new(c), parent = shell, surface = surface })
 	end
 	slab(
 		"Floor",
 		Vector3.new(center.X, min.Y - t / 2, center.Z),
 		Vector3.new(size.X + 2 * t, t, size.Z + 2 * t),
-		Theme.Colors.DarkWood,
-		Enum.Material.WoodPlanks
+		"AgedWood"
 	)
 	slab(
 		"Ceiling",
 		Vector3.new(center.X, max.Y + t / 2, center.Z),
 		Vector3.new(size.X + 2 * t, t, size.Z + 2 * t),
-		Theme.Colors.Ceiling,
-		Enum.Material.Concrete
+		"Ceiling"
 	)
 	for _, sx in { -1, 1 } do
 		local x = if sx < 0 then min.X - t / 2 else max.X + t / 2
-		slab(
-			"WallX",
-			Vector3.new(x, center.Y, center.Z),
-			Vector3.new(t, size.Y, size.Z + 2 * t),
-			Theme.Colors.Wall,
-			Enum.Material.Plaster
-		)
+		slab("WallX", Vector3.new(x, center.Y, center.Z), Vector3.new(t, size.Y, size.Z + 2 * t), "Plaster")
 	end
 	for _, sz in { -1, 1 } do
 		local z = if sz < 0 then min.Z - t / 2 else max.Z + t / 2
-		slab(
-			"WallZ",
-			Vector3.new(center.X, center.Y, z),
-			Vector3.new(size.X, size.Y, t),
-			Theme.Colors.Wall,
-			Enum.Material.Plaster
-		)
+		slab("WallZ", Vector3.new(center.X, center.Y, z), Vector3.new(size.X, size.Y, t), "Plaster")
 	end
 end
 
@@ -120,8 +101,7 @@ local function buildNet(ctx: Ctx)
 		size = size,
 		cframe = CFrame.new(center),
 		parent = ctx.model,
-		color = Theme.Colors.Net,
-		material = Enum.Material.Fabric,
+		surface = "Net",
 		tag = "SafetyNet",
 	})
 	-- A low translucent fog layer hides the net and reads as "don't fall in".
@@ -130,10 +110,9 @@ local function buildNet(ctx: Ctx)
 		size = Vector3.new(size.X, 0.2, size.Z),
 		cframe = CFrame.new(center + Vector3.new(0, size.Y / 2 + 1.2, 0)),
 		parent = ctx.model,
-		color = Theme.Colors.Fog,
-		material = Enum.Material.SmoothPlastic,
+		surface = "Fog",
 		transparency = 0.82,
-		collide = false,
+		decor = true,
 	})
 end
 
@@ -148,8 +127,7 @@ local function buildSlide(ctx: Ctx, box: RouteBox, parent: Instance): BasePart
 		size = wedgeSize,
 		cframe = Builders.slopeCFrame(w(ctx, box.center), toward),
 		parent = parent,
-		color = ROUTE_STYLE.Slide.color,
-		material = ROUTE_STYLE.Slide.material,
+		surface = ROUTE_SURFACE.Slide,
 		tag = "SlideMat",
 	})
 	wedge.CustomPhysicalProperties = PhysicalProperties.new(0.7, Config.Hazards.SlideFriction, 0, 100, 1)
@@ -164,8 +142,7 @@ local function buildRoof(ctx: Ctx, box: RouteBox, parent: Instance, index: numbe
 		size = size - Vector3.new(0, ROOF_CAP, 0),
 		cframe = CFrame.new(center - Vector3.new(0, ROOF_CAP / 2, 0)),
 		parent = parent,
-		color = Builders.color("Facade", Theme.Colors.Wall, index),
-		material = Enum.Material.Plaster,
+		surface = SHOP_FACADES[(index - 1) % #SHOP_FACADES + 1],
 	})
 	body.CastShadow = true
 	return Builders.part({
@@ -173,8 +150,7 @@ local function buildRoof(ctx: Ctx, box: RouteBox, parent: Instance, index: numbe
 		size = Vector3.new(size.X + 0.4, ROOF_CAP, size.Z + 0.4),
 		cframe = CFrame.new(center + Vector3.new(0, size.Y / 2 - ROOF_CAP / 2, 0)),
 		parent = parent,
-		color = Theme.Colors.Roof,
-		material = Enum.Material.Slate,
+		surface = ROUTE_SURFACE.Roof,
 	})
 end
 
@@ -184,15 +160,13 @@ local function buildRouteBox(ctx: Ctx, box: RouteBox, parent: Instance, order: n
 	elseif box.kind == "Roof" then
 		return buildRoof(ctx, box, parent, order)
 	end
-	local style = ROUTE_STYLE[box.kind] or ROUTE_STYLE.Platform
 	local cframe = CFrame.new(w(ctx, box.center)) * CFrame.Angles(0, 0, math.rad(box.tilt or 0))
 	local part = Builders.part({
 		name = box.id,
 		size = Builders.v(box.size),
 		cframe = cframe,
 		parent = parent,
-		color = Builders.color(box.color, style.color),
-		material = style.material,
+		surface = ROUTE_SURFACE[box.kind] or ROUTE_SURFACE.Platform,
 	})
 	part.CastShadow = true
 	if box.collapse then
@@ -226,8 +200,7 @@ local function buildTrusses(ctx: Ctx)
 			size = Builders.v(box.size),
 			cframe = CFrame.new(w(ctx, box.center)),
 			parent = ctx.model,
-			color = Theme.Colors.StageWood,
-			material = Enum.Material.Wood,
+			surface = "Ladder",
 			tag = "SceneryLadder",
 		})
 	end
@@ -235,10 +208,8 @@ end
 
 local function buildSolids(ctx: Ctx)
 	local folder = Builders.folder("Set", ctx.model)
-	for i, solid in ctx.layout.solids do
+	for _, solid in ctx.layout.solids do
 		local center, size = w(ctx, solid.center), Builders.v(solid.size)
-		local color = Builders.color(solid.color, Theme.Colors.Wall, i)
-		local material = Builders.material(solid.material, Enum.Material.SmoothPlastic)
 		if solid.windows then
 			local band = {
 				y1 = solid.windows.y1 + ctx.origin.Y,
@@ -248,15 +219,14 @@ local function buildSolids(ctx: Ctx)
 			for _, span in solid.windows.spans do
 				table.insert(band.spans, { span[1] + ctx.origin.X, span[2] + ctx.origin.X })
 			end
-			Builders.wallWithWindows(solid.name, folder, center, size, band, color, material)
+			Builders.wallWithWindows(solid.name, folder, center, size, band, solid.surface)
 		else
 			Builders.part({
 				name = solid.name,
 				size = size,
 				cframe = CFrame.new(center),
 				parent = folder,
-				color = color,
-				material = material,
+				surface = solid.surface,
 				collide = solid.collide,
 				transparency = solid.transparency,
 				tag = solid.tag,
@@ -301,8 +271,7 @@ local function buildBackdrop(ctx: Ctx, routeParts: { [string]: BasePart })
 		size = Builders.v(backdrop.panel.size),
 		cframe = CFrame.new(w(ctx, backdrop.panel.center)),
 		parent = ctx.model,
-		color = Theme.Colors.Backdrop,
-		material = Enum.Material.Fabric,
+		surface = "Backdrop",
 		tag = "Backdrop",
 	})
 	panel.CastShadow = true
@@ -338,8 +307,8 @@ local function buildMarkers(ctx: Ctx)
 			size = Vector3.one,
 			cframe = CFrame.new(w(ctx, layout.windowWalk.from)),
 			parent = ctx.model,
-			transparency = 1,
-			collide = false,
+			surface = "Invisible",
+			decor = true,
 			tag = "WindowWalk",
 		})
 		marker:SetAttribute("From", w(ctx, layout.windowWalk.from))

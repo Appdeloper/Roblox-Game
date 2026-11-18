@@ -36,9 +36,8 @@ local function moonWindow(parent: Instance, position: Vector3, facing: Vector3, 
 		size = Vector3.new(0.4, 9, 9),
 		cframe = CFrame.lookAt(position, position + facing) * CFrame.Angles(0, math.rad(90), 0),
 		parent = parent,
-		color = Theme.Colors.MoonTeal,
-		material = Enum.Material.Neon,
-		collide = false,
+		surface = "MoonGlow",
+		decor = true,
 	})
 	disc.Shape = Enum.PartType.Cylinder
 	Builders.pointLight(disc, Theme.Colors.MoonTeal, range, 1.6)
@@ -51,19 +50,11 @@ local function exitArch(parent: Instance, base: CFrame, label: string)
 			size = Vector3.new(0.4, 9, 0.4),
 			cframe = base * CFrame.new(side * 3.2, 4.5, 0),
 			parent = parent,
-			color = Theme.Colors.WarmSpot,
-			material = Enum.Material.Neon,
-			collide = false,
+			surface = "WarmGlow",
+			decor = true,
 		})
 	end
-	Props.sign(
-		parent,
-		base * CFrame.new(0, 10, 0),
-		Vector3.new(7, 1.6, 0.3),
-		label,
-		Theme.Colors.WarmSpot,
-		Theme.Colors.UiDark
-	)
+	Props.sign(parent, base * CFrame.new(0, 10, 0), Vector3.new(7, 1.6, 0.3), label, Theme.Colors.WarmSpot, "Iron")
 end
 
 function Dressing.stage1(model: Model, layout: Layout, origin: Vector3, _route: { [string]: BasePart })
@@ -88,7 +79,7 @@ function Dressing.stage1(model: Model, layout: Layout, origin: Vector3, _route: 
 		Vector3.new(8, 2, 0.3),
 		"HOP THE SEATS →",
 		Theme.Colors.Paper,
-		Theme.Colors.DarkWood
+		"DarkWood"
 	)
 	dust(model, layout, origin)
 end
@@ -107,7 +98,7 @@ function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: {
 				Vector3.new(math.min(12, roof.Size.X - 2), 2.4, 0.3),
 				SHOP_SIGNS[i],
 				Theme.Colors.Paper,
-				Theme.Colors.DarkWood
+				"DarkWood"
 			)
 		end
 	end
@@ -118,10 +109,9 @@ function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: {
 			size = Vector3.new(6, 7, 0.1),
 			cframe = CFrame.new(origin + Vector3.new(x, 33.5, 12.2)),
 			parent = set,
-			color = Theme.Colors.Window,
-			material = Enum.Material.Glass,
+			surface = "Glass",
 			transparency = 0.75,
-			collide = false,
+			decor = true,
 		})
 	end
 	-- Two street lamps on the roofs, one warm light over the landing.
@@ -131,9 +121,8 @@ function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: {
 			size = Vector3.new(0.8, 0.8, 0.8),
 			cframe = CFrame.new(origin + pos + Vector3.new(0, 6, 0)),
 			parent = set,
-			color = Theme.Colors.WarmSpot,
-			material = Enum.Material.Neon,
-			collide = false,
+			surface = "WarmGlow",
+			decor = true,
 		})
 		Builders.pointLight(lamp, Theme.Colors.WarmSpot, 22, 1.4)
 		Builders.part({
@@ -141,9 +130,8 @@ function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: {
 			size = Vector3.new(0.4, 6, 0.4),
 			cframe = CFrame.new(origin + pos + Vector3.new(0, 3, 0)),
 			parent = set,
-			color = Theme.Colors.UiDark,
-			material = Enum.Material.Metal,
-			collide = false,
+			surface = "Iron",
+			decor = true,
 		})
 	end
 	Props.stageSpot(set, origin + Vector3.new(137, 40, -14), origin + Vector3.new(140, 1, 0), Theme.Colors.WarmSpot, 50)
@@ -154,7 +142,7 @@ function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: {
 		Vector3.new(0.3, 2, 4),
 		"UP ↑",
 		Theme.Colors.Paper,
-		Theme.Colors.DarkWood
+		"DarkWood"
 	)
 	exitArch(set, CFrame.lookAt(origin + Vector3.new(175.8, 1, 0), origin + Vector3.new(0, 1, 0)), "STAGE DOOR")
 	dust(model, layout, origin)
@@ -172,9 +160,8 @@ local function staircaseStringers(set: Instance, origin: Vector3)
 				size = Vector3.new(0.4, 0.8, (pb - pa).Magnitude),
 				cframe = CFrame.lookAt((pa + pb) / 2, pb),
 				parent = set,
-				color = Theme.Colors.DarkWood,
-				material = Enum.Material.Wood,
-				collide = false,
+				surface = "DarkWood",
+				decor = true,
 			})
 		end
 	end
@@ -189,9 +176,8 @@ local function emptyAudience(set: Instance, origin: Vector3)
 				size = Vector3.new(2, 2.5, 10),
 				cframe = CFrame.new(origin + Vector3.new(24 + row * 10, -2.5, z)),
 				parent = set,
-				color = Theme.Colors.SeatVelvet,
-				material = Enum.Material.Fabric,
-				collide = false,
+				surface = "Velvet",
+				decor = true,
 				tag = "AudienceSeat",
 			})
 		end
@@ -212,7 +198,7 @@ function Dressing.stage3(model: Model, layout: Layout, origin: Vector3, _route: 
 		Vector3.new(0.3, 4, 24),
 		"CURTAIN CALL",
 		Theme.Colors.Brass,
-		Theme.Colors.Curtain
+		"Curtain"
 	)
 	dust(model, layout, origin)
 end
