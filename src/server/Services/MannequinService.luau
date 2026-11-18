@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
+local Clock = require(ReplicatedStorage.Shared.Clock)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Types = require(ReplicatedStorage.Shared.Types)
@@ -43,7 +44,7 @@ local function rootCFrame(player: Player): CFrame?
 end
 
 local function step(dt: number)
-	local now = os.clock()
+	local now = Clock.now()
 	for player, mannequin in active do
 		-- A player can leave between frames; PlayerRemoving cleans up, this just guards.
 		if player.Parent then
@@ -99,7 +100,7 @@ function MannequinService.spawn(player: Player, stage: Types.StageInfo)
 		mannequin = Mannequin.new("Mannequin_" .. player.UserId, player.UserId, folder, eventsFor(player))
 		active[player] = mannequin
 	end
-	mannequin:reset(stage, os.clock())
+	mannequin:reset(stage, Clock.now())
 	ensureLoop()
 end
 
@@ -107,7 +108,7 @@ end
 function MannequinService.reset(player: Player, stage: Types.StageInfo)
 	local mannequin = active[player]
 	if mannequin then
-		mannequin:reset(stage, os.clock())
+		mannequin:reset(stage, Clock.now())
 	else
 		MannequinService.spawn(player, stage)
 	end
@@ -124,20 +125,20 @@ end
 
 function MannequinService.tryDoor(player: Player, door: Types.DoorInfo): boolean
 	local mannequin = active[player]
-	return mannequin ~= nil and mannequin:tryDoor(door, os.clock())
+	return mannequin ~= nil and mannequin:tryDoor(door, Clock.now())
 end
 
 function MannequinService.holdForScare(player: Player, seconds: number)
 	local mannequin = active[player]
 	if mannequin then
-		mannequin:holdForScare(seconds, os.clock())
+		mannequin:holdForScare(seconds, Clock.now())
 	end
 end
 
 function MannequinService.bow(player: Player, delay: number, seconds: number)
 	local mannequin = active[player]
 	if mannequin then
-		mannequin:bow(delay, seconds, os.clock())
+		mannequin:bow(delay, seconds, Clock.now())
 	end
 end
 

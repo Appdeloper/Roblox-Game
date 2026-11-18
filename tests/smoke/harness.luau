@@ -1,9 +1,13 @@
 --[[
-	Lune smoke harness — executes the real server modules from the Rojo-built place outside
-	Roblox, so runtime errors (nil indexes, bad property names, wrong enum items) surface in CI.
+	Lune smoke harness — executes the real game modules from the Rojo-built place outside
+	Roblox, so runtime errors (nil indexes, bad property names, wrong enum items, broken flows)
+	surface in CI.
 
-	Not a physics simulation: services Lune doesn't implement are stubbed with just enough
-	behaviour for boot code (tags, attributes, signals, task scheduling).
+	Not a physics simulation. It provides:
+	  * a ModuleScript loader with per-module `script`, and mockable modules
+	  * a deterministic `task` scheduler on a fake clock (task.wait/delay/defer/spawn)
+	  * stubs for services Lune doesn't implement (CollectionService, RunService, Players,
+	    DataStoreService, BadgeService, MarketplaceService, ...)
 
 	Usage: lune run tests/smoke/run build/DontLookBackstage.rbxl
 ]]
@@ -18,17 +22,17 @@ local function makeSignal()
 	local handlers = {}
 	local signal = {}
 	function signal:Connect(fn)
-		table.insert(handlers, fn)
-		return {
-			Connected = true,
-			Disconnect = function(conn)
-				conn.Connected = false
-				local i = table.find(handlers, fn)
-				if i then
-					table.remove(handlers, i)
-				end
-			end,
-		}
+		local conn = { Connected = true }
+		local entry = { fn = fn, conn = conn }
+		function conn.Disconnect(c)
+			c.Connected = false
+			local i = table.find(handlers, entry)
+			if i then
+				table.remove(handlers, i)
+			end
+		end
+		table.insert(handlers, entry)
+		return conn
 	end
 	function signal:Once(fn)
 		local conn
@@ -39,8 +43,10 @@ local function makeSignal()
 		return conn
 	end
 	function signal:Fire(...)
-		for _, fn in table.clone(handlers) do
-			fn(...)
+		for _, entry in table.clone(handlers) do
+			if entry.conn.Connected then
+				entry.fn(...)
+			end
 		end
 	end
 	function signal:Wait()
@@ -50,7 +56,78 @@ local function makeSignal()
 end
 Harness.makeSignal = makeSignal
 
-local function stubServices(game)
+-- ── Scheduler ─────────────────────────────────────────────────────────────────────────────
+
+local function makeScheduler()
+	local sched = { now = 0, queue = {}, errors = {} }
+
+	local function resume(co, ...)
+		local ok, err = coroutine.resume(co, ...)
+		if not ok then
+			table.insert(sched.errors, tostring(err))
+			print("[task error] " .. tostring(err))
+		end
+	end
+
+	local function schedule(at, co, args)
+		table.insert(sched.queue, { at = at, co = co, args = args })
+	end
+
+	sched.task = {
+		wait = function(seconds)
+			local co = coroutine.running()
+			schedule(sched.now + (seconds or 0), co, {})
+			coroutine.yield()
+			return seconds or 0
+		end,
+		spawn = function(fn, ...)
+			local co = if type(fn) == "thread" then fn else coroutine.create(fn)
+			resume(co, ...)
+			return co
+		end,
+		defer = function(fn, ...)
+			local co = coroutine.create(fn)
+			schedule(sched.now, co, table.pack(...))
+			return co
+		end,
+		delay = function(seconds, fn, ...)
+			local co = coroutine.create(fn)
+			schedule(sched.now + (seconds or 0), co, table.pack(...))
+			return co
+		end,
+		cancel = function(co)
+			for i = #sched.queue, 1, -1 do
+				if sched.queue[i].co == co then
+					table.remove(sched.queue, i)
+				end
+			end
+		end,
+	}
+
+	--- Advances the fake clock, running everything that becomes due (in time order).
+	function sched.advance(dt)
+		local target = sched.now + dt
+		while true do
+			table.sort(sched.queue, function(a, b)
+				return a.at < b.at
+			end)
+			local nextItem = sched.queue[1]
+			if not nextItem or nextItem.at > target then
+				break
+			end
+			table.remove(sched.queue, 1)
+			sched.now = math.max(sched.now, nextItem.at)
+			resume(nextItem.co, table.unpack(nextItem.args, 1, nextItem.args.n or #nextItem.args))
+		end
+		sched.now = target
+	end
+
+	return sched
+end
+
+-- ── Service stubs ─────────────────────────────────────────────────────────────────────────
+
+local function stubServices(place)
 	local stubs = {}
 	stubs.CollectionService = {
 		AddTag = function(_, inst, tag)
@@ -67,7 +144,7 @@ local function stubServices(game)
 		end,
 		GetTagged = function(_, tag)
 			local found = {}
-			for _, d in game:GetDescendants() do
+			for _, d in place:GetDescendants() do
 				if d:HasTag(tag) then
 					table.insert(found, d)
 				end
@@ -97,24 +174,43 @@ local function stubServices(game)
 		PreSimulation = makeSignal(),
 		PostSimulation = makeSignal(),
 	}
+	local playerList = {}
 	stubs.Players = {
 		PlayerAdded = makeSignal(),
 		PlayerRemoving = makeSignal(),
 		GetPlayers = function()
-			return {}
+			return table.clone(playerList)
 		end,
+		GetPlayerByUserId = function(_, id)
+			for _, p in playerList do
+				if p.UserId == id then
+					return p
+				end
+			end
+			return nil
+		end,
+		GetNameFromUserIdAsync = function(_, id)
+			return "Player" .. tostring(id)
+		end,
+		_list = playerList,
 		RespawnTime = 5,
 		CharacterAutoLoads = true,
+	}
+	stubs.AnalyticsService = {
+		LogCustomEvent = function() end,
 	}
 	return stubs
 end
 
+-- ── Loader ────────────────────────────────────────────────────────────────────────────────
+
 function Harness.load(placePath: string)
 	local place = roblox.deserializePlace(fs.readFile(placePath))
+	local sched = makeScheduler()
 	local stubs = stubServices(place)
 	local cache = {}
+	local mocks = {}
 	local env
-	local requireModule
 
 	local gameProxy = setmetatable({
 		GetService = function(_, name)
@@ -129,23 +225,22 @@ function Harness.load(placePath: string)
 		end,
 	})
 
-	function requireModule(module)
-		if cache[module] ~= nil then
-			return cache[module]
+	-- Lune returns a fresh userdata per Instance access, so key by full path, not identity.
+	local function requireModule(module)
+		local key = module:GetFullName()
+		if mocks[key] ~= nil then
+			return mocks[key]
+		end
+		if cache[key] ~= nil then
+			return cache[key]
 		end
 		assert(module.ClassName == "ModuleScript", "require expects a ModuleScript, got " .. tostring(module))
-		local source = module.Source
-		local chunk = luau.load(source, {
-			debugName = module:GetFullName(),
-			environment = (function()
-				-- Lune copies the env table (no metatable lookups), so pass a flat one.
-				local moduleEnv = table.clone(env)
-				moduleEnv.script = module
-				return moduleEnv
-			end)(),
-		})
+		-- Lune copies the env table (no metatable lookups), so pass a flat one.
+		local moduleEnv = table.clone(env)
+		moduleEnv.script = module
+		local chunk = luau.load(module.Source, { debugName = module:GetFullName(), environment = moduleEnv })
 		local result = chunk()
-		cache[module] = result
+		cache[key] = result
 		return result
 	end
 
@@ -156,22 +251,15 @@ function Harness.load(placePath: string)
 		warn = function(...)
 			print("[warn]", ...)
 		end,
-		tick = os.clock,
-		task = {
-			wait = function(_)
-				return 0
+		tick = function()
+			return sched.now
+		end,
+		task = sched.task,
+		os = setmetatable({
+			clock = function()
+				return sched.now
 			end,
-			spawn = function(fn, ...)
-				return coroutine.wrap(fn)(...)
-			end,
-			defer = function(fn, ...)
-				return coroutine.wrap(fn)(...)
-			end,
-			delay = function(_, _fn)
-				return nil
-			end,
-			cancel = function() end,
-		},
+		}, { __index = os }),
 	}
 	-- Roblox datatypes and constructors (Vector3, CFrame, Color3, Enum, Instance, ...).
 	for key, value in roblox do
@@ -180,11 +268,27 @@ function Harness.load(placePath: string)
 		end
 	end
 
+	local shared = place:GetService("ReplicatedStorage").Shared
+	-- Game time comes from the scheduler's fake clock.
+	mocks[shared.Clock:GetFullName()] = {
+		now = function()
+			return sched.now
+		end,
+		serverNow = function()
+			return 1000 + sched.now
+		end,
+	}
+
 	return {
 		place = place,
 		require = requireModule,
+		mock = function(module, value)
+			mocks[module:GetFullName()] = value
+		end,
 		stubs = stubs,
 		game = gameProxy,
+		sched = sched,
+		signal = makeSignal,
 	}
 end
 

@@ -20,7 +20,7 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
       TrussPart ladders, slide mat, descending backdrop, collapsing staircase, two exits. Offline layout tests.
 - [x] **M3 — MannequinService**: block rig with blank face, 20 Hz trail recorder + delayed replay, painted-door
       shortcut (warning → preset path → rejoin/ambush), catch detection, respawn grace, one mannequin per player.
-- [ ] **M4 — CheckpointService + RoundService**: stage entrances as checkpoints, retakes, run state machine,
+- [x] **M4 — CheckpointService + RoundService**: stage entrances as checkpoints, retakes, run state machine,
       10 Hz zone watcher (exits, doors, scares, kill nets), analytics wrapper.
 - [ ] **M5 — Scares**: shadow bow (S1), mannequin in the upstairs window + turning handle (S2), knock + applause (S3).
       Telegraphed, captioned, once per run, skippable, catch paused while they play.
