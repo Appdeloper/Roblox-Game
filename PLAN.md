@@ -13,27 +13,27 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
 
 ## Milestones
 
-- [ ] **M0 — Scaffold & tooling**: `default.project.json`, `rokit.toml`, `selene.toml`, `stylua.toml`, `.gitignore`, CI workflow.
-- [ ] **M1 — Shared foundation**: `Config`, `Types`, `Theme`, `Assets`, `Remotes`, `Signal`, `JumpMath`, `TimeFormat`, `Zone`.
-- [ ] **M2 — MapBuilder**: lobby (rehearsal stage + leaderboard wall), Stage 1 Auditorium, Stage 2 Painted Street,
+- [x] **M0 — Scaffold & tooling**: `default.project.json`, `rokit.toml`, `selene.toml`, `stylua.toml`, `.gitignore`, CI workflow.
+- [x] **M1 — Shared foundation**: `Config`, `Types`, `Theme`, `Assets`, `Remotes`, `Signal`, `JumpMath`, `TimeFormat`, `Zone`.
+- [x] **M2 — MapBuilder**: lobby (rehearsal stage + leaderboard wall), Stage 1 Auditorium, Stage 2 Painted Street,
       Stage 3 Curtain Call. Data-driven layouts, jump-gap validation (< 70 % of max jump), spawns, kill nets,
       TrussPart ladders, slide mat, descending backdrop, collapsing staircase, two exits. Offline layout tests.
-- [ ] **M3 — MannequinService**: block rig with blank face, 20 Hz trail recorder + delayed replay, painted-door
+- [x] **M3 — MannequinService**: block rig with blank face, 20 Hz trail recorder + delayed replay, painted-door
       shortcut (warning → preset path → rejoin/ambush), catch detection, respawn grace, one mannequin per player.
-- [ ] **M4 — CheckpointService + RoundService**: stage entrances as checkpoints, retakes, run state machine,
+- [x] **M4 — CheckpointService + RoundService**: stage entrances as checkpoints, retakes, run state machine,
       10 Hz zone watcher (exits, doors, scares, kill nets), analytics wrapper.
-- [ ] **M5 — Scares**: shadow bow (S1), mannequin in the upstairs window + turning handle (S2), knock + applause (S3).
+- [x] **M5 — Scares**: shadow bow (S1), mannequin in the upstairs window + turning handle (S2), knock + applause (S3).
       Telegraphed, captioned, once per run, skippable, catch paused while they play.
-- [ ] **M6 — Client UI**: title cards, retake counter, timer, big jump button, theatre-ticket finish screen,
+- [x] **M6 — Client UI**: title cards, retake counter, timer, big jump button, theatre-ticket finish screen,
       Reduced Scares toggle, lobby panel. All built in code with tweens.
-- [ ] **M7 — DataService**: versioned profiles, UpdateAsync merge-saves, retries with backoff, failed-load lockout,
+- [x] **M7 — DataService**: versioned profiles, UpdateAsync merge-saves, retries with backoff, failed-load lockout,
       autosave + BindToClose.
-- [ ] **M8 — Leaderboard**: OrderedDataStore of best times + lobby SurfaceGui board.
-- [ ] **M9 — Badges**: First Escape, Opening Night, Spotted the Door (placeholder IDs in Config).
-- [ ] **M10 — Monetization**: cosmetic gamepasses + dev products, idempotent ProcessReceipt with recorded purchase IDs.
-- [ ] **M11 — Analytics**: stage_started, stage_cleared, caught, quit_stage, finished (print sink).
-- [ ] **M12 — Polish**: moonlit teal lighting + warm spots, footlights, dust, curtain sway, creaks, proximity heartbeat.
-- [ ] **M13 — Docs**: README, ARCHITECTURE, TESTING (Studio + 2 Players + mobile emulator), LAUNCH_CHECKLIST.
+- [x] **M8 — Leaderboard**: OrderedDataStore of best times + lobby SurfaceGui board.
+- [x] **M9 — Badges**: First Escape, Opening Night, Spotted the Door (placeholder IDs in Config).
+- [x] **M10 — Monetization**: cosmetic gamepasses + dev products, idempotent ProcessReceipt with recorded purchase IDs.
+- [x] **M11 — Analytics**: stage_started, stage_cleared, caught, quit_stage, finished (print sink).
+- [x] **M12 — Polish**: moonlit teal lighting + warm spots, footlights, dust, curtain sway, creaks, proximity heartbeat.
+- [x] **M13 — Docs**: README, ARCHITECTURE, TESTING (Studio + 2 Players + mobile emulator), LAUNCH_CHECKLIST.
 
 Each milestone ends with: `stylua --check`, `selene`, `luau tests/run.luau`, `rojo build`, then a commit.
 
