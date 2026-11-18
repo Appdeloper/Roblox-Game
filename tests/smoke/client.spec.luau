@@ -137,6 +137,43 @@ return function(placePath, check)
 		r.fromServer("FakeExit")
 	end)
 	c.tick(6)
+	-- ── Scare lighting ────────────────────────────────────────────────────────────────────
+	print("\n== Smoke: scare lighting")
+	local tags = h.game:GetService("CollectionService")
+	local function litLamps(): number
+		local count = 0
+		for _, part in tags:GetTagged("FlickerLamp") do
+			local light = part:FindFirstChildWhichIsA("Light")
+			if light and light.Brightness > 0.05 then
+				count += 1
+			end
+		end
+		return count
+	end
+
+	local lampsBefore = litLamps()
+	r.fromServer("StageStarted", stageInfo(2, false, 2))
+	r.fromServer("Scare", 2)
+	c.tick(3.5)
+	check(litLamps() < lampsBefore, "Act II scare puts a street lamp out")
+	c.tick(5)
+
+	r.fromServer("StageStarted", stageInfo(3, false, 2))
+	r.fromServer("Scare", 3)
+	c.tick(2.2)
+	local lightFolder = h.place:GetService("Workspace"):FindFirstChild("LocalStageLight")
+	local spots = 0
+	if lightFolder then
+		for _, child in lightFolder:GetChildren() do
+			if child.Name == "ScareSpot" then
+				spots += 1
+			end
+		end
+	end
+	check(spots == 2, "Act III applause snaps a spotlight onto each door")
+	c.tick(6)
+	check(lightFolder ~= nil and #lightFolder:GetChildren() == 0, "scare lights are cleaned up when the scare ends")
+
 	step("scare skip button", function()
 		r.fromServer("Scare", 3)
 		c.tick(0.2)

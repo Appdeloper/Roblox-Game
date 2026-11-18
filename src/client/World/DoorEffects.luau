@@ -25,6 +25,7 @@ type DoorVisual = {
 	handleBase: CFrame?,
 	panel: BasePart?,
 	glow: BasePart?,
+	spill: { { part: BasePart, opacity: number } },
 	light: Light?,
 	token: number,
 }
@@ -49,7 +50,17 @@ local function register(model: Instance, key: string)
 	end
 	local handle = leaf:FindFirstChild("Handle")
 	local glow = model:FindFirstChild("UnderGlow")
+	-- The floor spill in front of the door: built hidden, revealed with the glow. Each
+	-- panel carries its own target opacity so the light fades out with distance.
+	local spill: { { part: BasePart, opacity: number } } = {}
+	for _, child in model:GetChildren() do
+		if child:IsA("BasePart") and string.sub(child.Name, 1, 5) == "Spill" then
+			local opacity = child:GetAttribute("Opacity")
+			table.insert(spill, { part = child, opacity = if type(opacity) == "number" then opacity else 0.6 })
+		end
+	end
 	doors[key] = {
+		spill = spill,
 		model = model,
 		hinge = hinge,
 		leafParts = parts,
@@ -80,6 +91,11 @@ local function setGlow(door: DoorVisual, on: boolean)
 	end
 	if door.light then
 		door.light.Enabled = on
+	end
+	for _, panel in door.spill do
+		TweenService:Create(panel.part, TweenInfo.new(0.5), {
+			Transparency = if on then 1 - panel.opacity else 1,
+		}):Play()
 	end
 end
 

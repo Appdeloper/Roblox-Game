@@ -178,6 +178,39 @@ local function buildRouteBox(ctx: Ctx, box: RouteBox, parent: Instance, order: n
 	return part
 end
 
+--- Lighting as a signpost. A warm lamp hangs high over every landing and over the first
+--- and last step of a stage, so the safe line through the room is the lit line. Lamps sit
+--- well above head height, outside the jump corridor.
+local function guideLight(part: BasePart, parent: Instance)
+	local host = Builders.part({
+		name = "GuideLight",
+		size = Vector3.one,
+		cframe = CFrame.new(part.CFrame.Position + Vector3.new(0, part.Size.Y / 2 + 9, 0)),
+		parent = parent,
+		surface = "Invisible",
+		decor = true,
+		tag = "GuideLamp",
+	})
+	Builders.pointLight(host, Theme.Colors.WarmSpot, 26, 1.1)
+end
+
+--- The drop is cold and unlit: teal fill far below the route marks the danger.
+local function pitLight(ctx: Ctx, parent: Instance)
+	local net = ctx.layout.net
+	for _, fraction in { 0.3, 0.7 } do
+		local x = net.center[1] + (fraction - 0.5) * net.size[1] * 0.7
+		local host = Builders.part({
+			name = "PitLight",
+			size = Vector3.one,
+			cframe = CFrame.new(w(ctx, { x, net.center[2] + 6, net.center[3] })),
+			parent = parent,
+			surface = "Invisible",
+			decor = true,
+		})
+		Builders.pointLight(host, Theme.Colors.MoonTeal, 50, 0.7)
+	end
+end
+
 local function buildRoute(ctx: Ctx): { [string]: BasePart }
 	local folder = Builders.folder("Route", ctx.model)
 	local decor = Builders.folder("RouteDecor", ctx.model)
@@ -196,7 +229,12 @@ local function buildRoute(ctx: Ctx): { [string]: BasePart }
 		if TAPED[box.kind] then
 			SetPieces.edgeTape(decor, part)
 		end
+		-- Landings and the two ends of the run get a warm lamp overhead.
+		if box.kind == "Landing" or order == 1 or order == #ctx.layout.route then
+			guideLight(part, decor)
+		end
 	end
+	pitLight(ctx, decor)
 	return parts
 end
 
