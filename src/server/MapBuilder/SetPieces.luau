@@ -103,6 +103,8 @@ function SetPieces.plankFloor(parent: Instance, boxCF: CFrame, boxSize: Vector3,
 		local size = if alongX
 			then Vector3.new(length - 0.1, 0.08, actual - 0.08)
 			else Vector3.new(actual - 0.08, 0.08, length - 0.1)
+		-- A few boards are loose: the client gives these a creak and a puff of dust
+		-- when someone steps on them.
 		Builders.part({
 			name = "Plank",
 			size = size,
@@ -110,6 +112,7 @@ function SetPieces.plankFloor(parent: Instance, boxCF: CFrame, boxSize: Vector3,
 			parent = parent,
 			surface = PLANK_SURFACES[rng:NextInteger(1, #PLANK_SURFACES)],
 			decor = true,
+			tag = if rng:NextNumber() < 0.22 then "Creaky" else nil,
 		})
 	end
 end
@@ -619,7 +622,7 @@ function SetPieces.rigging(
 				local bottom = ropeFloor + rng:NextNumber() * (y - 2 - ropeFloor) * 0.6
 				local length = (y - 1.6) - bottom
 				if length > 1 then
-					Builders.part({
+					local rope = Builders.part({
 						name = "Rope",
 						size = Vector3.new(0.16, length, 0.16),
 						cframe = CFrame.new(x + 0.55, bottom + length / 2, z),
@@ -628,6 +631,23 @@ function SetPieces.rigging(
 						decor = true,
 						tag = "RiggingRope",
 					})
+					-- Every so often the rope ends in a counterweight sandbag. The pair is
+					-- tagged as one swinging prop and pivots about the rope's top anchor.
+					if rng:NextNumber() < 0.45 then
+						local bag = Builders.part({
+							name = "Sandbag",
+							size = Vector3.new(1.5, 2.1, 1.5),
+							cframe = CFrame.new(x + 0.55, bottom - 1.05, z),
+							parent = parent,
+							surface = "Sandbag",
+							decor = true,
+						})
+						for index, piece in { rope, bag } do
+							piece:SetAttribute("SwingPivot", Vector3.new(x + 0.55, y - 1.6, z))
+							piece:SetAttribute("SwingIndex", index)
+							piece:AddTag("SwingProp")
+						end
+					end
 				end
 			end
 		end
@@ -662,19 +682,44 @@ end
 
 --- A shaft of light from `from` to `to`: one long faint Neon box plus the pool it casts.
 --- No real light source, so it costs nothing but overdraw — Quality can switch it off.
+--- Slow dust motes drifting inside a shaft of light. One emitter per shaft; callers keep
+--- the per-stage count inside Config.Performance.MaxEmittersPerStage.
+function SetPieces.motes(host: BasePart, rate: number): ParticleEmitter
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "Motes"
+	emitter.Rate = rate
+	emitter.Lifetime = NumberRange.new(5, 9)
+	emitter.Speed = NumberRange.new(0.1, 0.5)
+	emitter.SpreadAngle = Vector2.new(180, 180)
+	emitter.Size = NumberSequence.new(0.16)
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.35, 0.25),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Color = ColorSequence.new(Theme.Colors.Paper)
+	emitter.LightEmission = 0.8
+	emitter.Acceleration = Vector3.new(0.25, -0.12, 0)
+	emitter.Shape = Enum.ParticleEmitterShape.Box
+	emitter.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+	emitter.Parent = host
+	return emitter
+end
+
 function SetPieces.lightShaft(
 	parent: Instance,
 	from: Vector3,
 	to: Vector3,
 	width: number,
 	surface: string,
-	poolSurface: string?
+	poolSurface: string?,
+	moteRate: number?
 )
 	local length = (to - from).Magnitude
 	if length < 1 then
 		return
 	end
-	Builders.part({
+	local shaft = Builders.part({
 		name = "LightShaft",
 		size = Vector3.new(width, width * 0.55, length),
 		cframe = CFrame.lookAt((from + to) / 2, to),
@@ -683,6 +728,9 @@ function SetPieces.lightShaft(
 		decor = true,
 		tag = "LightShaft",
 	})
+	if moteRate then
+		SetPieces.motes(shaft, moteRate)
+	end
 	-- The pool where it lands, flattened onto the floor.
 	local pool = Builders.cylinder({
 		name = "LightPool",

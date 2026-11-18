@@ -92,6 +92,7 @@ local function fakeHumanoid(makeSignal)
 		UseJumpPower = false,
 		JumpPower = 0,
 		WalkSpeed = 0,
+		MoveDirection = Vector3.zero,
 	}
 	function humanoid:IsA(class)
 		return class == "Humanoid" or class == "Instance"

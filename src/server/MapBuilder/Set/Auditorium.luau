@@ -115,7 +115,7 @@ local function moonlight(ctx: Ctx)
 			surface = "MoonGlow",
 			decor = true,
 		})
-		SetPieces.lightShaft(ctx.set, sill, L(ctx, x + 9, 1.1, -15), 7, "MoonShaft")
+		SetPieces.lightShaft(ctx.set, sill, L(ctx, x + 9, 1.1, -15), 7, "MoonShaft", nil, 5)
 	end
 end
 
