@@ -62,30 +62,7 @@ return {
 			collide = true,
 			tag = "ShadowScreen",
 		},
-		-- Proscenium side curtains.
-		{
-			name = "ProsceniumLeft",
-			center = { 104, 34, -21 },
-			size = { 1.5, 24, 8 },
-			surface = "Curtain",
-			collide = false,
-			tag = "Curtain",
-		},
-		{
-			name = "ProsceniumRight",
-			center = { 104, 34, 21 },
-			size = { 1.5, 24, 8 },
-			surface = "Curtain",
-			collide = false,
-			tag = "Curtain",
-		},
-		{
-			name = "ProsceniumArch",
-			center = { 104, 44, 0 },
-			size = { 2, 4, 52 },
-			surface = "Curtain",
-			collide = false,
-		},
+		-- (Proscenium arch, gathered curtains and valance are built by Set/Auditorium.)
 	},
 
 	doors = {

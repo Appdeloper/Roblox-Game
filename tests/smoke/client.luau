@@ -14,6 +14,35 @@ local roblox = require("@lune/roblox")
 
 local Client = {}
 
+--- Roblox's Random datatype (Lune has no equivalent). A small deterministic LCG: the exact
+--- number stream differs from Roblox, but seeding/determinism — what the map relies on —
+--- behaves the same.
+local function makeRandom()
+	local Random = {}
+	Random.__index = Random
+	function Random.new(seed)
+		return setmetatable({ state = (math.floor(seed or 0) % 2147483647 + 2147483647) % 2147483647 + 1 }, Random)
+	end
+	function Random:_next()
+		self.state = (self.state * 48271) % 2147483647
+		return self.state / 2147483647
+	end
+	function Random:NextNumber(min, max)
+		local v = self:_next()
+		if min and max then
+			return min + v * (max - min)
+		end
+		return v
+	end
+	function Random:NextInteger(min, max)
+		return min + math.floor(self:_next() * (max - min + 1 - 1e-9))
+	end
+	function Random:Clone()
+		return setmetatable({ state = self.state }, Random)
+	end
+	return Random
+end
+
 local EVENTS = {
 	Activated = true,
 	Changed = true,
@@ -365,6 +394,7 @@ function Client.boot(h, Fakes)
 	end
 
 	env = table.clone(roblox)
+	env.Random = makeRandom()
 	env.Instance = fakeInstance
 	-- Lune has no TweenInfo datatype; the TweenService stub ignores timing anyway.
 	env.TweenInfo = {

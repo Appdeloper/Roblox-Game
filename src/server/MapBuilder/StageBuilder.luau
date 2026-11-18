@@ -16,6 +16,7 @@ local Types = require(ReplicatedStorage.Shared.Types)
 local LayoutTypes = require(script.Parent.LayoutTypes)
 local Builders = require(script.Parent.Builders)
 local Props = require(script.Parent.Props)
+local SetPieces = require(script.Parent.SetPieces)
 local LayoutValidator = require(script.Parent.LayoutValidator)
 
 type Layout = LayoutTypes.Layout
@@ -34,6 +35,7 @@ local ROUTE_SURFACE: { [string]: string } = {
 	Slide = "RouteSlide",
 }
 local SHOP_FACADES = { "FacadeRose", "FacadeSage", "FacadeOchre" }
+local TAPED: { [string]: boolean } = { Platform = true, Landing = true, SeatRow = true, Roof = true }
 
 local ROOF_CAP = 0.6
 
@@ -189,6 +191,11 @@ local function buildRoute(ctx: Ctx): { [string]: BasePart }
 		if box.kind == "Platform" or box.kind == "Landing" or box.kind == "SeatRow" then
 			Props.supportPosts(decor, part, ctx.floorY)
 		end
+		-- Glow-tape lips on take-off/landing edges (collapsing steps get theirs as a SurfaceGui
+		-- in the dressing, so the tape falls with the step).
+		if TAPED[box.kind] then
+			SetPieces.edgeTape(decor, part)
+		end
 	end
 	return parts
 end
@@ -210,7 +217,9 @@ local function buildSolids(ctx: Ctx)
 	local folder = Builders.folder("Set", ctx.model)
 	for _, solid in ctx.layout.solids do
 		local center, size = w(ctx, solid.center), Builders.v(solid.size)
-		if solid.windows then
+		if solid.tag == "Curtain" then
+			SetPieces.stripCurtain(folder, solid.name, center, size)
+		elseif solid.windows then
 			local band = {
 				y1 = solid.windows.y1 + ctx.origin.Y,
 				y2 = solid.windows.y2 + ctx.origin.Y,
