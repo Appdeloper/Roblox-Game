@@ -48,6 +48,17 @@ local function validate(index: number, layout: any)
 	end
 end
 
+--- Studio templates ship their own SpawnLocation; it would steal spawns from the lobby.
+--- Disable (never delete) any spawn that isn't part of the generated map.
+local function disableStraySpawns(root: Instance)
+	for _, d in Workspace:GetDescendants() do
+		if d:IsA("SpawnLocation") and not d:IsDescendantOf(root) and d.Enabled then
+			d.Enabled = false
+			warn("[MapBuilder] disabled stray SpawnLocation " .. d:GetFullName() .. " (players start in the lobby)")
+		end
+	end
+end
+
 function MapBuilder.build(): BuiltMap
 	local old = Workspace:FindFirstChild("Map")
 	if old then
@@ -65,6 +76,7 @@ function MapBuilder.build(): BuiltMap
 		stages[index] = StageBuilder.build(index, layout, origin, root, Dressing.byStage[index])
 	end
 
+	disableStraySpawns(root)
 	return {
 		lobbySpawn = lobby.spawn,
 		stages = stages,
