@@ -296,6 +296,33 @@ Config.Performance = {
 	MaxEmittersPerStage = 6,
 }
 
+--- Layered 3D ambience. Each layer is a looping sound placed in the world by
+--- AmbienceService; the rolloff numbers are what make it fade naturally as you move.
+Config.Ambience = {
+	Layers = {
+		Drip = { asset = "AmbientDrip", min = 8, max = 65 },
+		Wind = { asset = "AmbientWind", min = 25, max = 150 },
+		Wood = { asset = "AmbientWood", min = 12, max = 80 },
+		Piano = { asset = "AmbientPiano", min = 18, max = 110 },
+		Applause = { asset = "AmbientApplause", min = 30, max = 170 },
+	},
+	-- Room reverb, applied per stage to the ambience sound group on each client.
+	-- DecayTime is how long the tail rings; WetLevel is how much of it you hear (dB).
+	Reverb = {
+		Lobby = { DecayTime = 1.1, Density = 0.7, Diffusion = 0.7, WetLevel = -9, DryLevel = 0 },
+		Stages = {
+			-- A big empty hall: long tail, very present.
+			{ DecayTime = 3.4, Density = 1, Diffusion = 1, WetLevel = -2, DryLevel = 0 },
+			-- Outdoors between painted flats: short and dry.
+			{ DecayTime = 1.3, Density = 0.5, Diffusion = 0.6, WetLevel = -10, DryLevel = 0 },
+			-- Boxy backstage timber.
+			{ DecayTime = 2.1, Density = 0.9, Diffusion = 0.85, WetLevel = -5, DryLevel = 0 },
+		},
+	},
+	-- Seconds to cross-fade between rooms, so reverb never changes with a click.
+	ReverbBlend = 1.2,
+}
+
 Config.Effects = {
 	ShakeIntensity = 0.35,
 	ShakeSeconds = 0.35,

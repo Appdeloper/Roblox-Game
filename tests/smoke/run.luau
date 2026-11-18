@@ -24,6 +24,7 @@ if map then
 	require("./mannequin.spec")(h, map, check)
 	require("./clearance.spec")(h, map, check)
 end
+require("./ambience.spec")(h, check)
 require("./round.spec")(placePath, check)
 require("./data.spec")(placePath, check)
 require("./meta.spec")(placePath, check)

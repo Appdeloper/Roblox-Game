@@ -14,6 +14,7 @@ local Assets = require(ReplicatedStorage.Shared.Assets)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local MapBuilder = require(ServerScriptService.MapBuilder)
 local Services = ServerScriptService.Services
+local AmbienceService = require(Services.AmbienceService)
 local Badges = require(Services.Badges)
 local CheckpointService = require(Services.CheckpointService)
 local DataService = require(Services.DataService)
@@ -37,6 +38,7 @@ RoundService.setTicketEnricher(DataService.enrichTicket)
 LeaderboardService.init(map.leaderboardGui, RoundService.RunFinished)
 Badges.init(RoundService.RunFinished, MannequinService.DoorOutran, DataService.grantTitle)
 ScareService.init()
+AmbienceService.init(map)
 
 if RunService:IsStudio() then
 	local missing = Assets.listPlaceholders()
