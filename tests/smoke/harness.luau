@@ -206,6 +206,16 @@ local function stubServices(place)
 		LogCustomEvent = function() end,
 	}
 	stubs.DataStoreService = Harness.fakeDataStores()
+	stubs.BadgeService = {
+		awarded = {},
+		AwardBadge = function(self, userId, badgeId)
+			table.insert(self.awarded, { userId = userId, badgeId = badgeId })
+			return true
+		end,
+		UserHasBadgeAsync = function()
+			return false
+		end,
+	}
 	return stubs
 end
 

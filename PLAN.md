@@ -29,7 +29,7 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
 - [x] **M7 — DataService**: versioned profiles, UpdateAsync merge-saves, retries with backoff, failed-load lockout,
       autosave + BindToClose.
 - [x] **M8 — Leaderboard**: OrderedDataStore of best times + lobby SurfaceGui board.
-- [ ] **M9 — Badges**: First Escape, Opening Night, Spotted the Door (placeholder IDs in Config).
+- [x] **M9 — Badges**: First Escape, Opening Night, Spotted the Door (placeholder IDs in Config).
 - [x] **M10 — Monetization**: cosmetic gamepasses + dev products, idempotent ProcessReceipt with recorded purchase IDs.
 - [x] **M11 — Analytics**: stage_started, stage_cleared, caught, quit_stage, finished (print sink).
 - [x] **M12 — Polish**: moonlit teal lighting + warm spots, footlights, dust, curtain sway, creaks, proximity heartbeat.

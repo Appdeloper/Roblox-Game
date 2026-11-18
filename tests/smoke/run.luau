@@ -25,6 +25,7 @@ if map then
 end
 require("./round.spec")(placePath, check)
 require("./data.spec")(placePath, check)
+require("./meta.spec")(placePath, check)
 require("./client.spec")(placePath, check)
 
 if failures > 0 then
