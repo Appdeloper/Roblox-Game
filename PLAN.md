@@ -24,7 +24,7 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
       10 Hz zone watcher (exits, doors, scares, kill nets), analytics wrapper.
 - [x] **M5 — Scares**: shadow bow (S1), mannequin in the upstairs window + turning handle (S2), knock + applause (S3).
       Telegraphed, captioned, once per run, skippable, catch paused while they play.
-- [ ] **M6 — Client UI**: title cards, retake counter, timer, big jump button, theatre-ticket finish screen,
+- [x] **M6 — Client UI**: title cards, retake counter, timer, big jump button, theatre-ticket finish screen,
       Reduced Scares toggle, lobby panel. All built in code with tweens.
 - [ ] **M7 — DataService**: versioned profiles, UpdateAsync merge-saves, retries with backoff, failed-load lockout,
       autosave + BindToClose.

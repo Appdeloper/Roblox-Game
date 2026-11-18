@@ -24,6 +24,7 @@ if map then
 	require("./mannequin.spec")(h, map, check)
 end
 require("./round.spec")(placePath, check)
+require("./client.spec")(placePath, check)
 
 if failures > 0 then
 	error(string.format("%d smoke checks failed", failures), 0)

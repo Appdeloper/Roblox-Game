@@ -76,7 +76,8 @@ local function makeScheduler()
 	sched.task = {
 		wait = function(seconds)
 			local co = coroutine.running()
-			schedule(sched.now + (seconds or 0), co, {})
+			-- Like Roblox, task.wait() always yields at least one frame.
+			schedule(sched.now + math.max(seconds or 0, 1 / 60), co, {})
 			coroutine.yield()
 			return seconds or 0
 		end,
