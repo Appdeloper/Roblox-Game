@@ -1,0 +1,5 @@
+# Offline tests run under the plain Luau CLI (string requires), not Roblox.
+std = "luau"
+
+[lints]
+shadowing = "allow"
