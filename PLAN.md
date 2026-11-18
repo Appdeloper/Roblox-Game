@@ -15,7 +15,7 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
 
 - [x] **M0 — Scaffold & tooling**: `default.project.json`, `rokit.toml`, `selene.toml`, `stylua.toml`, `.gitignore`, CI workflow.
 - [x] **M1 — Shared foundation**: `Config`, `Types`, `Theme`, `Assets`, `Remotes`, `Signal`, `JumpMath`, `TimeFormat`, `Zone`.
-- [ ] **M2 — MapBuilder**: lobby (rehearsal stage + leaderboard wall), Stage 1 Auditorium, Stage 2 Painted Street,
+- [x] **M2 — MapBuilder**: lobby (rehearsal stage + leaderboard wall), Stage 1 Auditorium, Stage 2 Painted Street,
       Stage 3 Curtain Call. Data-driven layouts, jump-gap validation (< 70 % of max jump), spawns, kill nets,
       TrussPart ladders, slide mat, descending backdrop, collapsing staircase, two exits. Offline layout tests.
 - [ ] **M3 — MannequinService**: block rig with blank face, 20 Hz trail recorder + delayed replay, painted-door

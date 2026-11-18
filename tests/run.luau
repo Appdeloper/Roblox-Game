@@ -10,5 +10,6 @@ require("./config.spec")(T)
 require("./jumpmath.spec")(T)
 require("./timeformat.spec")(T)
 require("./signal.spec")(T)
+require("./layout.spec")(T)
 
 T.finish()

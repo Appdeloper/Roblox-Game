@@ -13,6 +13,7 @@ STYLUA=$(tool stylua)
 SELENE=$(tool selene)
 LUAU=$(tool luau)
 ROJO=$(tool rojo)
+LUNE=$(tool lune)
 
 echo "==> stylua --check"
 "$STYLUA" --check src tests
@@ -31,5 +32,8 @@ echo "==> luau tests"
 echo "==> rojo build"
 mkdir -p build
 "$ROJO" build default.project.json -o build/DontLookBackstage.rbxl
+
+echo "==> lune smoke test"
+"$LUNE" run tests/smoke/run build/DontLookBackstage.rbxl
 
 echo "All checks passed."
