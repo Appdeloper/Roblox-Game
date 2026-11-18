@@ -102,6 +102,8 @@ Theme.Surfaces = {
 
 	-- Metal & trim
 	Brass = s(214, 168, 72, M.Metal, { Reflectance = 0.12 }),
+	-- The door star is the single most important thing to notice: polished brighter.
+	BrassStar = s(240, 198, 96, M.Metal, { Reflectance = 0.35 }),
 	Gilt = s(201, 160, 70, M.Foil),
 	Iron = s(34, 36, 42, M.Metal),
 
@@ -115,6 +117,15 @@ Theme.Surfaces = {
 	PaintBlue = s(60, 100, 180, M.SmoothPlastic),
 	PaintYellow = s(230, 190, 70, M.SmoothPlastic),
 	Paper = s(246, 236, 210, M.SmoothPlastic),
+	-- Lore props
+	Playbill = s(238, 226, 196, M.SmoothPlastic),
+	PlaybillBoard = s(92, 26, 34, M.WoodPlanks),
+	TagCard = s(214, 186, 134, M.SmoothPlastic),
+	BookPage = s(246, 242, 232, M.SmoothPlastic),
+	-- Marks on the floor: flat, faint, and always below standing height.
+	ScuffMark = s(28, 24, 26, M.SmoothPlastic, { Transparency = 0.5 }),
+	DustPrint = s(226, 232, 230, M.SmoothPlastic, { Transparency = 0.62 }),
+	DustFilm = s(214, 222, 224, M.SmoothPlastic, { Transparency = 0.78 }),
 
 	-- Glow (Neon)
 	WindowGlow = s(255, 214, 120, M.Neon),

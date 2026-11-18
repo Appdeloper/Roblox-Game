@@ -15,6 +15,7 @@ local Builders = require(script.Parent.Builders)
 local Props = require(script.Parent.Props)
 local Auditorium = require(script.Parent.Set.Auditorium)
 local CurtainCall = require(script.Parent.Set.CurtainCall)
+local Story = require(script.Parent.Set.Story)
 local Street = require(script.Parent.Set.Street)
 
 type Layout = LayoutTypes.Layout
@@ -67,7 +68,9 @@ end
 
 function Dressing.stage1(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 	local set = Builders.folder("Dressing", model)
+	local story = Builders.folder("Story", model)
 	Auditorium.build({ set = set, origin = origin, rng = rngFor(1), route = route })
+	Story.byStage[1]({ set = story, origin = origin, rng = rngFor(1 + 10) })
 	-- Footlights along the stage lip (inside the proscenium pillars); warm spots above.
 	-- Two runs with a deliberate gap where the prop trunks meet the stage: the missing
 	-- footlights read as "this is the way up" and keep the climb visually clear.
@@ -101,7 +104,9 @@ local SHOP_SIGNS = { "BAKERY", "HATS & CAPS", "BOOKS", "TOY SHOP" }
 
 function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 	local set = Builders.folder("Dressing", model)
+	local story = Builders.folder("Story", model)
 	Street.build({ set = set, origin = origin, rng = rngFor(2), route = route })
+	Story.byStage[2]({ set = story, origin = origin, rng = rngFor(2 + 10) })
 	for i, id in { "RoofA", "RoofB", "RoofC", "RoofD" } do
 		local roof = route[id]
 		if roof then
@@ -185,7 +190,9 @@ end
 
 function Dressing.stage3(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 	local set = Builders.folder("Dressing", model)
+	local story = Builders.folder("Story", model)
 	CurtainCall.build({ set = set, origin = origin, rng = rngFor(3), route = route })
+	Story.byStage[3]({ set = story, origin = origin, rng = rngFor(3 + 10) })
 	staircaseStringers(set, origin)
 	Props.footlights(set, origin + Vector3.new(91.2, 5.4, -19), origin + Vector3.new(91.2, 5.4, 19), 14, 5)
 	Props.stageSpot(set, origin + Vector3.new(110, 50, 0), origin + Vector3.new(134, 6, 0), Theme.Colors.WarmSpot, 70)

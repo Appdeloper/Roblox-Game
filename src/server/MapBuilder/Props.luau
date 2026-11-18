@@ -104,7 +104,7 @@ local function doorLeaf(model: Model, base: CFrame, starred: boolean, panelSurfa
 			1.05,
 			0.44,
 			0.12,
-			"Brass"
+			"BrassStar"
 		)
 	end
 	local spindle = base * CFrame.new(DOOR_WIDTH / 2 - 0.45, UNDER_GAP + 3.8, -0.2)

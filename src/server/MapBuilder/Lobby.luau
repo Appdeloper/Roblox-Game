@@ -13,6 +13,7 @@ local Theme = require(ReplicatedStorage.Shared.Theme)
 local Builders = require(script.Parent.Builders)
 local Props = require(script.Parent.Props)
 local StageBuilder = require(script.Parent.StageBuilder)
+local Story = require(script.Parent.Set.Story)
 
 local Lobby = {}
 
@@ -239,6 +240,11 @@ function Lobby.build(parent: Instance, origin: Vector3): LobbyInfo
 	local startPrompt = stageDoor(model, origin)
 	wardrobe(model, origin)
 	titleSign(model, origin)
+	Story.lobby({
+		set = Builders.folder("Story", model),
+		origin = origin,
+		rng = Random.new(Config.Map.VisualSeed),
+	})
 	for _, z in { -12, 12 } do
 		Props.stageSpot(
 			model,

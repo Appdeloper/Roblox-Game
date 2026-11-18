@@ -27,6 +27,7 @@ local LANDING_MARGIN = 7 -- room beyond the landing edge the player may overshoo
 local LATERAL_MARGIN = 1 -- half a character's width past the platform edge
 local HEAD_HEIGHT = 5.5 -- below this, even decor would be in the player's face
 local INSET = 0.45 -- ignore flush trim/tape hanging off the very edge
+local FLAT_MARKING_HEIGHT = 0.12 -- anything this flat is paint on the floor, not an obstacle
 
 -- Route parts, their support posts and the safety net are allowed to be there.
 local IGNORED_NAMES = {
@@ -89,7 +90,12 @@ return function(h, map, check)
 	local parts = {}
 	for _, d in mapRoot:GetDescendants() do
 		if d:IsA("BasePart") and not IGNORED_NAMES[d.Name] then
-			table.insert(parts, { inst = d, box = partBox(d), collides = d.CanCollide })
+			local box = partBox(d)
+			-- A flat sheet lying on a surface (scuffs, footprints, dust, dropped pages) is
+			-- physically incapable of obstructing anyone, so it is never a blocker.
+			if box.max.Y - box.min.Y > FLAT_MARKING_HEIGHT then
+				table.insert(parts, { inst = d, box = box, collides = d.CanCollide })
+			end
 		end
 	end
 
