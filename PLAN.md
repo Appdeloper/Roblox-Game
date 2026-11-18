@@ -22,7 +22,7 @@ Everything — map, rig, UI, data — is generated from Luau in this repo and sy
       shortcut (warning → preset path → rejoin/ambush), catch detection, respawn grace, one mannequin per player.
 - [x] **M4 — CheckpointService + RoundService**: stage entrances as checkpoints, retakes, run state machine,
       10 Hz zone watcher (exits, doors, scares, kill nets), analytics wrapper.
-- [ ] **M5 — Scares**: shadow bow (S1), mannequin in the upstairs window + turning handle (S2), knock + applause (S3).
+- [x] **M5 — Scares**: shadow bow (S1), mannequin in the upstairs window + turning handle (S2), knock + applause (S3).
       Telegraphed, captioned, once per run, skippable, catch paused while they play.
 - [ ] **M6 — Client UI**: title cards, retake counter, timer, big jump button, theatre-ticket finish screen,
       Reduced Scares toggle, lobby panel. All built in code with tweens.

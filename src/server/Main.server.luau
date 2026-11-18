@@ -18,6 +18,7 @@ local CheckpointService = require(Services.CheckpointService)
 local MannequinService = require(Services.MannequinService)
 local RemoteGuard = require(Services.RemoteGuard)
 local RoundService = require(Services.RoundService)
+local ScareService = require(Services.ScareService)
 
 Remotes.init()
 local map = MapBuilder.build()
@@ -26,6 +27,7 @@ RemoteGuard.init()
 MannequinService.init()
 CheckpointService.init(map)
 RoundService.init(map)
+ScareService.init()
 
 if RunService:IsStudio() then
 	local missing = Assets.listPlaceholders()

@@ -184,6 +184,7 @@ return function(placePath, check, hooks)
 		check(#ticket.seat > 0, "ticket has a seat")
 	end
 	check(remotes.count("DoorWarning", ana.UserId) >= 2, "painted doors warned during the run")
+	check(remotes.count("Scare", ana.UserId) == 3, "each stage's scare plays exactly once")
 	check(analyticsCount("stage_started", ana.UserId) == 3, "analytics: stage_started x3")
 	check(analyticsCount("stage_cleared", ana.UserId) == 3, "analytics: stage_cleared x3")
 	check(analyticsCount("finished", ana.UserId) == 1, "analytics: finished")
