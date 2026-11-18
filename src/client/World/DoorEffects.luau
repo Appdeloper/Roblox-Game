@@ -115,13 +115,24 @@ local function resetDoor(door: DoorVisual)
 	setGlow(door, false)
 end
 
+local function registerPainted(model: Instance)
+	register(model, tostring(model:GetAttribute("DoorId")) .. "/" .. tostring(model:GetAttribute("Role")))
+end
+
+local function registerExit(model: Instance)
+	register(model, "Exit/" .. tostring(model:GetAttribute("Side")))
+end
+
 function DoorEffects.init()
 	for _, model in CollectionService:GetTagged("PaintedDoor") do
-		register(model, tostring(model:GetAttribute("DoorId")) .. "/" .. tostring(model:GetAttribute("Role")))
+		registerPainted(model)
 	end
 	for _, model in CollectionService:GetTagged("StageExitDoor") do
-		register(model, "Exit/" .. tostring(model:GetAttribute("Side")))
+		registerExit(model)
 	end
+	-- Late replication (or a map rebuild) still gets registered.
+	CollectionService:GetInstanceAddedSignal("PaintedDoor"):Connect(registerPainted)
+	CollectionService:GetInstanceAddedSignal("StageExitDoor"):Connect(registerExit)
 end
 
 function DoorEffects.get(key: string): DoorVisual?

@@ -24,7 +24,34 @@ local function replace(className: string, name: string): Instance
 	return effect
 end
 
+local OWNED = { TheatreAir = true, TealGrade = true, SoftBloom = true }
+local POST_CLASSES = {
+	"Atmosphere",
+	"BloomEffect",
+	"BlurEffect",
+	"ColorCorrectionEffect",
+	"DepthOfFieldEffect",
+	"SunRaysEffect",
+}
+
+--- Studio templates ship their own Atmosphere/Bloom/DepthOfField/SunRays. At runtime the
+--- theatre owns the look (and DoF/SunRays are expensive on phones), so remove the others.
+--- This only affects the running game; nothing in edit mode is touched.
+local function removeForeignEffects()
+	for _, child in Lighting:GetChildren() do
+		if not OWNED[child.Name] then
+			for _, className in POST_CLASSES do
+				if child:IsA(className) then
+					child:Destroy()
+					break
+				end
+			end
+		end
+	end
+end
+
 function LightingSetup.apply()
+	removeForeignEffects()
 	Lighting.ClockTime = 0
 	Lighting.Brightness = 1
 	Lighting.Ambient = Theme.Colors.AmbientTeal

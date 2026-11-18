@@ -7,6 +7,7 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
@@ -46,6 +47,17 @@ FinishTicket.init(function()
 end)
 LobbyPanel.init(Wardrobe.open)
 Wardrobe.init(LobbyPanel.setHidden)
+
+-- LocalScripts can start before the server-built map has replicated: wait for it before the
+-- world modules index doors, hazards and curtains. (Server→client remotes fired meanwhile are
+-- queued by Roblox and delivered once the handlers below connect.)
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+if not Workspace:WaitForChild("Map", 60) then
+	warn("[Client] Workspace.Map never arrived — is the server script running?")
+end
+
 MannequinAnimator.init()
 DoorEffects.init()
 Hazards.init()

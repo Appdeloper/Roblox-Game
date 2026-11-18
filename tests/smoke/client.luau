@@ -309,6 +309,10 @@ function Client.boot(h, Fakes)
 	}
 
 	local clientGame = setmetatable({
+		IsLoaded = function()
+			return true
+		end,
+		Loaded = h.signal(),
 		GetService = function(_, name)
 			if stubs[name] then
 				return stubs[name]
@@ -342,6 +346,7 @@ function Client.boot(h, Fakes)
 		if cache[key] ~= nil then
 			return cache[key]
 		end
+		require("./harness").loaded[key] = true
 		local moduleEnv = table.clone(env)
 		moduleEnv.script = m.wrap(real)
 		local chunk = luau.load(real.Source, { debugName = "client:" .. key, environment = moduleEnv })

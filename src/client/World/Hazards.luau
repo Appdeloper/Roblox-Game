@@ -61,14 +61,17 @@ end
 
 -- ── Backdrop ──────────────────────────────────────────────────────────────────────────────
 
-local function setupBackdrop()
-	local part = CollectionService:GetTagged("Backdrop")[1]
-	if not part or not part:IsA("BasePart") then
+local function setupBackdrop(part: Instance)
+	if backdrop or not part:IsA("BasePart") then
 		return
 	end
-	local floorY = part:GetAttribute("FloorY") :: number
-	local triggerCF = part:GetAttribute("TriggerCFrame") :: CFrame
-	local triggerSize = part:GetAttribute("TriggerSize") :: Vector3
+	local floorY = part:GetAttribute("FloorY")
+	local triggerCF = part:GetAttribute("TriggerCFrame")
+	local triggerSize = part:GetAttribute("TriggerSize")
+	if type(floorY) ~= "number" or typeof(triggerCF) ~= "CFrame" or typeof(triggerSize) ~= "Vector3" then
+		warn("[Hazards] backdrop is missing its attributes; it will stay up")
+		return
+	end
 	local rest = part.CFrame
 	local closedY = floorY + Config.Hazards.Backdrop.ClosedGap + part.Size.Y / 2
 	backdrop = {
@@ -112,12 +115,16 @@ end
 
 -- ── Collapsing steps ──────────────────────────────────────────────────────────────────────
 
-local function setupSteps()
-	for _, part in CollectionService:GetTagged("CollapseStep") do
-		if part:IsA("BasePart") then
-			table.insert(steps, { part = part, rest = part.CFrame, state = "Idle", token = 0 })
+local function addStep(part: Instance)
+	if not part:IsA("BasePart") then
+		return
+	end
+	for _, step in steps do
+		if step.part == part then
+			return
 		end
 	end
+	table.insert(steps, { part = part, rest = part.CFrame, state = "Idle", token = 0 })
 end
 
 local function standingOn(step: Step, pos: Vector3): boolean
@@ -228,8 +235,15 @@ function Hazards.onStageStarted(stage: number, realExit: string?)
 end
 
 function Hazards.init()
-	setupBackdrop()
-	setupSteps()
+	for _, part in CollectionService:GetTagged("Backdrop") do
+		setupBackdrop(part)
+	end
+	for _, part in CollectionService:GetTagged("CollapseStep") do
+		addStep(part)
+	end
+	-- Pieces that replicate after start-up are picked up too.
+	CollectionService:GetInstanceAddedSignal("Backdrop"):Connect(setupBackdrop)
+	CollectionService:GetInstanceAddedSignal("CollapseStep"):Connect(addStep)
 	RunService.Heartbeat:Connect(function(dt)
 		if ClientState.phase ~= "Running" or (ClientState.stage ~= 2 and ClientState.stage ~= 3) then
 			return

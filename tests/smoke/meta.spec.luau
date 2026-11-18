@@ -28,8 +28,12 @@ return function(placePath, check)
 	end
 
 	local ana = sim.join("BoardAna")
+	-- Slow leaderboard writes must never delay the finish ticket or stall the zone loop.
+	ordered.latency = 2
 	local finished = escape(ana)
-	check(finished ~= nil, "escape completes")
+	check(finished ~= nil, "escape completes; ticket arrives at once even while the leaderboard write is slow")
+	sim.tick(2.5)
+	ordered.latency = 0
 	sim.tick(1)
 	local stored = ordered.data[tostring(ana.UserId)]
 	check(

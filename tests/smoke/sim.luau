@@ -75,7 +75,8 @@ return function(placePath, check, hooks)
 		local player = Fakes.player(h.signal, name)
 		table.insert(Players._list, player)
 		Players.PlayerAdded:Fire(player)
-		player:spawn(roblox.CFrame.new(0, 10, -220), realRoot)
+		local lobby = Config.Map.LobbyOrigin
+		player:spawn(roblox.CFrame.new(lobby[1], lobby[2] + 6, lobby[3]), realRoot)
 		tick(0.2)
 		return player
 	end

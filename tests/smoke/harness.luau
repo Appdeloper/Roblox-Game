@@ -18,6 +18,9 @@ local roblox = require("@lune/roblox")
 
 local Harness = {}
 
+-- Full names of every ModuleScript actually loaded by any harness (server or client).
+Harness.loaded = {}
+
 local function makeSignal()
 	local handlers = {}
 	local signal = {}
@@ -133,7 +136,7 @@ end
 
 -- ── Service stubs ─────────────────────────────────────────────────────────────────────────
 
-local function stubServices(place)
+local function stubServices(place, sched)
 	local stubs = {}
 	stubs.CollectionService = {
 		AddTag = function(_, inst, tag)
@@ -205,7 +208,7 @@ local function stubServices(place)
 	stubs.AnalyticsService = {
 		LogCustomEvent = function() end,
 	}
-	stubs.DataStoreService = Harness.fakeDataStores()
+	stubs.DataStoreService = Harness.fakeDataStores(sched)
 	stubs.MarketplaceService = {
 		owned = {},
 		ProcessReceipt = nil,
@@ -216,7 +219,7 @@ local function stubServices(place)
 	}
 	stubs.BadgeService = {
 		awarded = {},
-		AwardBadge = function(self, userId, badgeId)
+		AwardBadgeAsync = function(self, userId, badgeId)
 			table.insert(self.awarded, { userId = userId, badgeId = badgeId })
 			return true
 		end,
@@ -242,11 +245,18 @@ end
 
 --- In-memory DataStoreService. Values are deep-copied (like real serialization) and each
 --- store can be told to fail its next N reads/writes to exercise retry + lockout paths.
-function Harness.fakeDataStores()
+function Harness.fakeDataStores(sched)
 	local service = { stores = {} }
 	local function makeStore(name)
-		local store = { name = name, data = {}, failGets = 0, failUpdates = 0, gets = 0, updates = 0 }
+		-- `latency`: seconds each call yields (real DataStore calls yield; catches blocking callers).
+		local store = { name = name, data = {}, failGets = 0, failUpdates = 0, gets = 0, updates = 0, latency = 0 }
+		local function lag(self)
+			if self.latency > 0 and sched then
+				sched.task.wait(self.latency)
+			end
+		end
 		function store.GetAsync(self, key)
+			lag(self)
 			self.gets += 1
 			if self.failGets > 0 then
 				self.failGets -= 1
@@ -255,6 +265,7 @@ function Harness.fakeDataStores()
 			return deepCopy(self.data[key])
 		end
 		function store.UpdateAsync(self, key, transform)
+			lag(self)
 			self.updates += 1
 			if self.failUpdates > 0 then
 				self.failUpdates -= 1
@@ -313,7 +324,7 @@ end
 function Harness.load(placePath: string)
 	local place = roblox.deserializePlace(fs.readFile(placePath))
 	local sched = makeScheduler()
-	local stubs = stubServices(place)
+	local stubs = stubServices(place, sched)
 	local cache = {}
 	local mocks = {}
 	local env
@@ -348,6 +359,7 @@ function Harness.load(placePath: string)
 		-- Lune copies the env table (no metatable lookups), so pass a flat one.
 		local moduleEnv = table.clone(env)
 		moduleEnv.script = module
+		Harness.loaded[key] = true
 		local chunk = luau.load(module.Source, { debugName = module:GetFullName(), environment = moduleEnv })
 		local result = chunk()
 		cache[key] = result

@@ -1,8 +1,9 @@
 --!strict
 --[[
 	Signal — tiny in-process event (no BindableEvent, no instance allocation).
-	Handlers run synchronously in connection order; a handler error is reported and the
-	remaining handlers still run.
+	Like Roblox events, every handler runs on its own thread (task.spawn): handlers start
+	immediately in connection order, but one that yields (e.g. a DataStore call) never blocks
+	the code that fired the signal, and an error in one handler can't stop the others.
 ]]
 
 export type Connection = {
@@ -17,6 +18,16 @@ export type Signal<T...> = {
 }
 
 local Signal = {}
+
+-- task.spawn in Roblox (and the Lune harness); a plain call in the offline Luau test runner,
+-- which has no `task` library.
+local function spawnHandler(fn: (...any) -> (), ...: any)
+	if typeof(task) == "table" then
+		task.spawn(fn, ...)
+	else
+		fn(...)
+	end
+end
 
 function Signal.new<T...>(): Signal<T...>
 	local handlers: { { fn: (T...) -> (), conn: Connection } } = {}
@@ -44,10 +55,7 @@ function Signal.new<T...>(): Signal<T...>
 		local snapshot = table.clone(handlers)
 		for _, entry in snapshot do
 			if entry.conn.Connected then
-				local ok, err = pcall(entry.fn, ...)
-				if not ok then
-					warn("[Signal] handler error: " .. tostring(err))
-				end
+				spawnHandler(entry.fn, ...)
 			end
 		end
 	end

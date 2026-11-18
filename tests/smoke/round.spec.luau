@@ -85,7 +85,7 @@ return function(placePath, check)
 	ana.Character.humanoid.Health = 0
 	ana.Character.humanoid.Died:Fire()
 	tick(0.2)
-	ana:spawn(roblox.CFrame.new(0, 10, -220))
+	ana:spawn(roblox.CFrame.new(0, 406, -220))
 	tick(0.3)
 	check((ana:position() - entrance1).Magnitude < 0.1, "respawned character returns to the checkpoint")
 	check(remotes.last("StageStarted", ana.UserId)[1].retakes == 3, "deaths count as retakes too")

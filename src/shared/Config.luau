@@ -36,11 +36,13 @@ Config.Map = {
 	-- Studs above a spawn pad where characters are placed (root part height).
 	SpawnHeight = 3,
 	-- World offsets for each area. Stages are sealed rooms, so they never see each other.
-	LobbyOrigin = { 0, 0, -220 },
+	-- Everything sits 400 studs up so Studio template parts (Baseplate, flat terrain at y≈0)
+	-- can never poke into the stage pits, whatever place you sync into.
+	LobbyOrigin = { 0, 400, -220 },
 	StageOrigins = {
-		{ 0, 0, 0 },
-		{ 0, 0, 260 },
-		{ 0, 0, 520 },
+		{ 0, 400, 0 },
+		{ 0, 400, 260 },
+		{ 0, 400, 520 },
 	},
 	SupportPostThickness = 0.8,
 }

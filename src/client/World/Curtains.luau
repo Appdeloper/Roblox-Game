@@ -34,12 +34,20 @@ local function sway(part: BasePart)
 	TweenService:Create(part, info, { CFrame = rotated(angle) }):Play()
 end
 
+local swaying: { [BasePart]: boolean } = {}
+
+local function start(part: Instance)
+	if part:IsA("BasePart") and not swaying[part] then
+		swaying[part] = true
+		sway(part)
+	end
+end
+
 function Curtains.init()
 	for _, part in CollectionService:GetTagged("Curtain") do
-		if part:IsA("BasePart") then
-			sway(part)
-		end
+		start(part)
 	end
+	CollectionService:GetInstanceAddedSignal("Curtain"):Connect(start)
 end
 
 return Curtains

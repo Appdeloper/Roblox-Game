@@ -47,7 +47,7 @@ function Badges.award(player: Player, key: string)
 	end
 	task.spawn(function()
 		local ok = Retry.call("badge " .. key, 3, 1, function()
-			return BadgeService:AwardBadge(player.UserId, id)
+			return BadgeService:AwardBadgeAsync(player.UserId, id)
 		end)
 		if not ok then
 			memo[key] = nil -- let a later trigger try again
