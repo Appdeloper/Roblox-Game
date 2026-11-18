@@ -14,6 +14,7 @@ local Types = require(ReplicatedStorage.Shared.Types)
 
 local Client = script.Parent
 local AudioController = require(Client.Audio.AudioController)
+local ProximityFX = require(Client.Audio.ProximityFX)
 local CameraEffects = require(Client.Camera.CameraEffects)
 local Captions = require(Client.UI.Captions)
 local ClientState = require(Client.ClientState)
@@ -25,6 +26,7 @@ local SettingsPanel = require(Client.UI.SettingsPanel)
 local TitleCard = require(Client.UI.TitleCard)
 local UIRoot = require(Client.UI.UIRoot)
 local Wardrobe = require(Client.UI.Wardrobe)
+local Curtains = require(Client.World.Curtains)
 local DoorEffects = require(Client.World.DoorEffects)
 local Hazards = require(Client.World.Hazards)
 local MannequinAnimator = require(Client.World.MannequinAnimator)
@@ -48,6 +50,8 @@ MannequinAnimator.init()
 DoorEffects.init()
 Hazards.init()
 Scares.init()
+Curtains.init()
+ProximityFX.init()
 
 -- ── Run flow ──────────────────────────────────────────────────────────────────────────────
 
