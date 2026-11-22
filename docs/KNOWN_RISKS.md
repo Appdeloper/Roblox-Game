@@ -115,6 +115,18 @@ lives/score/speed-up, Co-op downed → revive → shared clear → party retake.
 | Downed players | They stand still with WalkSpeed 0; there's no "downed" pose yet | `RoundService.setDowned` |
 | Endless difficulty curve | Needs real players | `Config.Modes.Endless` (`DelayStep`, `MinDelay`, `Lives`) |
 
+## Progression (Phase 2D): verified and open
+
+Verified in Studio: the trophy shelf fills locally (22 parts for 11 trophies), and all five wardrobe
+tabs exist. The sim covers stubs, trophies, unlocks, equipping, the Copycat skin and the streak.
+
+| Risk | Why | Where to fix |
+| --- | --- | --- |
+| Badges | Placeholder IDs (0); BadgeService only awards in live servers | `Config.Badges` (8 new keys) |
+| Streak across servers | Needs DataStores (published place) | `ProfileSchema.merge` (`LastDay`/`Streak`) |
+| Trail look | Colour/lifetime judged without seeing it | `CosmeticsService.buildTrail` |
+| Trophy shelf readability | Small cups; might be hard to see from the stage | `client/World/TrophyShelf.luau` sizes |
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.

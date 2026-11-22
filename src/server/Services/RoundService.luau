@@ -46,6 +46,8 @@ export type RunResult = {
 	escaped: boolean,
 	-- Daily only: the UTC day the run belongs to.
 	dailyDay: number?,
+	-- Co-op: how many players started the show together (1 otherwise).
+	partySize: number,
 }
 
 type Party = {
@@ -80,6 +82,10 @@ RoundService.RunFinished = Signal.new() :: Signal.Signal<Player, RunResult>
 RoundService.StageEntered = Signal.new() :: Signal.Signal<Player, number, boolean>
 -- Fired when a player stands in a stage's scare zone for the first time this run.
 RoundService.ScareZoneEntered = Signal.new() :: Signal.Signal<Player, number>
+-- Fired when a player clears a stage (before moving on). (player, stageIndex)
+RoundService.StageCleared = Signal.new() :: Signal.Signal<Player, number>
+-- Fired when a downed co-op player is revived. (player, revivedBy)
+RoundService.Revived = Signal.new() :: Signal.Signal<Player, Player>
 
 -- Optional hook so DataService can enrich the finish ticket (best time etc.).
 export type TicketEnricher = (player: Player, result: RunResult, ticket: Types.TicketData) -> ()
@@ -327,6 +333,7 @@ function finish(player: Player, run: Run)
 		cleared = progress.cleared,
 		escaped = run.mode ~= "Endless",
 		dailyDay = run.dailyDay,
+		partySize = if run.party then #(run.party :: Party).members else 1,
 	}
 	run.phase = "Finished"
 	MannequinService.despawn(player)
@@ -388,6 +395,9 @@ local function clearStage(player: Player, run: Run)
 	})
 	local party = run.party
 	if party then
+		for _, member in partyMembersRunning(party) do
+			RoundService.StageCleared:Fire(member, progress.stage)
+		end
 		-- One clear moves the whole party on (or finishes the show for everyone).
 		local nextStage = progress.sequence[progress.step + 1]
 		if nextStage then
@@ -405,6 +415,7 @@ local function clearStage(player: Player, run: Run)
 		end
 		return
 	end
+	RoundService.StageCleared:Fire(player, progress.stage)
 	if CheckpointService.advance(player) then
 		enterStage(player, run, false)
 	else
@@ -461,6 +472,7 @@ local function revive(player: Player, run: Run, by: Player)
 		MannequinService.reset(player, stage)
 	end
 	notifyParty(run.party :: Party, by.DisplayName .. " revived " .. player.DisplayName .. "!")
+	RoundService.Revived:Fire(player, by)
 	Analytics.track("revived", player, { by = by.UserId })
 end
 

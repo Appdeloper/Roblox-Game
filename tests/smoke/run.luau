@@ -30,6 +30,7 @@ require("./round.spec")(placePath, check)
 require("./data.spec")(placePath, check)
 require("./meta.spec")(placePath, check)
 require("./modes.spec")(placePath, check)
+require("./progression.spec")(placePath, check)
 require("./shop.spec")(placePath, check)
 require("./client.spec")(placePath, check)
 

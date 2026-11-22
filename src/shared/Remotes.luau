@@ -45,6 +45,7 @@ Remotes.ClientToServer = {
 	"SetSetting", -- (key: string, value: boolean)
 	"SetQuality", -- (level: string) one of Config.Quality.Order, or "Auto"
 	"EquipSkin", -- (skinId: string)
+	"EquipCosmetic", -- (category: string, id: string) Trail | MannequinSkin | Playbill
 	"SetTrailEnabled", -- (enabled: boolean)
 	"ScareSkipped", -- (stage: number) analytics only
 	"LookState", -- (mannequinName: string) the mannequin you're looking at, "" for none

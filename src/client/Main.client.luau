@@ -39,6 +39,7 @@ local Hazards = require(Client.World.Hazards)
 local MannequinAnimator = require(Client.World.MannequinAnimator)
 local LookWatcher = require(Client.World.LookWatcher)
 local Movers = require(Client.World.Movers)
+local TrophyShelf = require(Client.World.TrophyShelf)
 local Scares = require(Client.World.Scares)
 
 -- Quality first: other controllers read its settings as they start up.
@@ -73,6 +74,7 @@ end
 MannequinAnimator.init()
 LookWatcher.init()
 Movers.init()
+TrophyShelf.init()
 DoorEffects.init()
 Hazards.init()
 Scares.init()

@@ -32,6 +32,13 @@ local MannequinService = {}
 
 MannequinService.Caught = Signal.new() :: Signal.Signal<Player>
 MannequinService.DoorOutran = Signal.new() :: Signal.Signal<Player, string>
+-- A mannequin lunged because the player stared too long. (player)
+MannequinService.Stared = Signal.new() :: Signal.Signal<Player>
+-- The player's reflection cracked (they ran past it). (player)
+MannequinService.MirrorCracked = Signal.new() :: Signal.Signal<Player>
+
+-- Cosmetic colour for a player's Copycat (set by CosmeticsService).
+local skinResolver: ((Player) -> Color3?)? = nil
 
 type Cast = { [string]: Mannequin.Mannequin } -- key: "Main", "Understudy1", …, "Mirror"
 
@@ -113,9 +120,11 @@ local function eventsFor(player: Player): Mannequin.Events
 		end,
 		stare = function(name: string)
 			Remotes.get("StareLunge"):FireClient(player, name)
+			MannequinService.Stared:Fire(player)
 		end,
 		mirrorCracked = function(name: string)
 			Remotes.get("MirrorCracked"):FireClient(player, name)
+			MannequinService.MirrorCracked:Fire(player)
 		end,
 	}
 end
@@ -171,6 +180,7 @@ local function prepare(player: Player, stage: Types.StageInfo)
 		mannequin:setDelay(options.delay)
 		mannequin:reset(stage, now)
 	end
+	MannequinService.refreshSkin(player)
 	ensureLoop()
 end
 
@@ -214,6 +224,20 @@ end
 --- Clears the trails, moves the cast home and starts the respawn grace period.
 function MannequinService.reset(player: Player, stage: Types.StageInfo)
 	prepare(player, stage)
+end
+
+function MannequinService.setSkinResolver(resolver: (Player) -> Color3?)
+	skinResolver = resolver
+end
+
+--- Repaints the player's Copycat with their equipped mannequin skin.
+function MannequinService.refreshSkin(player: Player)
+	local cast = casts[player]
+	local main = cast and cast.Main
+	if main and skinResolver then
+		local ok, color = pcall(skinResolver, player)
+		main:applySkin(if ok then color else nil)
+	end
 end
 
 --- Endless: the Copycat's delay for this player (nil restores the default). Applies on the

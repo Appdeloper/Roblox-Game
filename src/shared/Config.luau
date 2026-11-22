@@ -280,7 +280,7 @@ Config.AntiCheat = {
 Config.Data = {
 	StoreName = "PlayerProfiles",
 	KeyPrefix = "player_",
-	SchemaVersion = 2,
+	SchemaVersion = 3,
 	MaxRetries = 4,
 	RetryBaseDelay = 1,
 	AutosaveSeconds = 120,
@@ -303,7 +303,135 @@ Config.Badges = {
 	FirstEscape = 0,
 	OpeningNight = 0,
 	SpottedTheDoor = 0,
+	StareDown = 0,
+	MirrorMirror = 0,
+	FullHouse = 0,
+	DailyDouble = 0,
+	DailyDevotee = 0,
+	EndlessTen = 0,
+	CastParty = 0,
+	RevivalAct = 0,
 }
+
+-- Trophies: what the trophy shelf in the lobby shows. Each one also awards the badge of the
+-- same key (Config.Badges) through BadgeService, server-side. Order = shelf position.
+Config.Trophies = {
+	FirstEscape = { Order = 1, DisplayName = "First Escape", Description = "Escape the theatre." },
+	OpeningNight = { Order = 2, DisplayName = "Opening Night", Description = "Escape with zero retakes." },
+	SpottedTheDoor = { Order = 3, DisplayName = "Spotted the Door", Description = "Outrun a painted-door shortcut." },
+	StareDown = {
+		Order = 4,
+		DisplayName = "Stare Down",
+		Description = "Make a mannequin lunge, then still clear the stage.",
+	},
+	MirrorMirror = {
+		Order = 5,
+		DisplayName = "Mirror, Mirror",
+		Description = "Run past your reflection until it cracks.",
+	},
+	FullHouse = { Order = 6, DisplayName = "Full House", Description = "Clear Opening Night." },
+	DailyDouble = { Order = 7, DisplayName = "Daily Double", Description = "Finish a Daily Run." },
+	DailyDevotee = { Order = 8, DisplayName = "Daily Devotee", Description = "Visit three days in a row." },
+	EndlessTen = { Order = 9, DisplayName = "Long Run", Description = "Clear 10 stages in one Endless run." },
+	CastParty = { Order = 10, DisplayName = "Cast Party", Description = "Finish Co-op with a friend." },
+	RevivalAct = { Order = 11, DisplayName = "Revival", Description = "Revive a teammate in Co-op." },
+}
+
+-- Ticket stubs for the ticket book: one per act cleared, plus one per mode finished.
+Config.Stubs = {
+	Act1 = { Order = 1, DisplayName = "Act I" },
+	Act2 = { Order = 2, DisplayName = "Act II" },
+	Act3 = { Order = 3, DisplayName = "Act III" },
+	Act4 = { Order = 4, DisplayName = "Act IV" },
+	Act5 = { Order = 5, DisplayName = "Act V" },
+	Act6 = { Order = 6, DisplayName = "Act VI" },
+	Daily = { Order = 7, DisplayName = "Daily Run" },
+	Endless = { Order = 8, DisplayName = "Endless" },
+	Coop = { Order = 9, DisplayName = "Co-op" },
+}
+
+-- Cosmetics earned by playing (none of them change gameplay). Unlock.Kind:
+--   "Free" | "Title" (Config.Titles key) | "Trophy" (Config.Trophies key) |
+--   "Streak" (best daily streak >= Key) | "GamePass" (Config.Monetization.GamePasses key)
+-- Colours are RGB 0..255.
+Config.Cosmetics = {
+	Trail = {
+		None = { Order = 1, DisplayName = "No trail", Color = { 60, 60, 70 }, Unlock = { Kind = "Free" } },
+		Spotlight = {
+			Order = 2,
+			DisplayName = "Spotlight",
+			Color = { 255, 214, 140 },
+			Unlock = { Kind = "GamePass", Key = "SpotlightTrail" },
+		},
+		StageDust = {
+			Order = 3,
+			DisplayName = "Stage Dust",
+			Color = { 214, 200, 170 },
+			Unlock = { Kind = "Streak", Key = 2 },
+		},
+		Confetti = {
+			Order = 4,
+			DisplayName = "Confetti",
+			Color = { 236, 120, 200 },
+			Unlock = { Kind = "Trophy", Key = "FullHouse" },
+		},
+		Moonbeam = {
+			Order = 5,
+			DisplayName = "Moonbeam",
+			Color = { 120, 214, 224 },
+			Unlock = { Kind = "Trophy", Key = "EndlessTen" },
+		},
+	},
+	MannequinSkin = {
+		Pine = { Order = 1, DisplayName = "Pine", Color = { 196, 160, 118 }, Unlock = { Kind = "Free" } },
+		Ebony = {
+			Order = 2,
+			DisplayName = "Ebony",
+			Color = { 58, 44, 40 },
+			Unlock = { Kind = "Title", Key = "OpeningNight" },
+		},
+		Painted = {
+			Order = 3,
+			DisplayName = "Painted",
+			Color = { 92, 140, 196 },
+			Unlock = { Kind = "Trophy", Key = "MirrorMirror" },
+		},
+		Gilded = {
+			Order = 4,
+			DisplayName = "Gilded",
+			Color = { 214, 168, 72 },
+			Unlock = { Kind = "Trophy", Key = "StareDown" },
+		},
+		Porcelain = {
+			Order = 5,
+			DisplayName = "Porcelain",
+			Color = { 236, 232, 224 },
+			Unlock = { Kind = "Streak", Key = 7 },
+		},
+	},
+	Playbill = {
+		Classic = { Order = 1, DisplayName = "Classic", Color = { 150, 24, 36 }, Unlock = { Kind = "Free" } },
+		Midnight = {
+			Order = 2,
+			DisplayName = "Midnight",
+			Color = { 24, 40, 84 },
+			Unlock = { Kind = "Streak", Key = 3 },
+		},
+		Sunrise = {
+			Order = 3,
+			DisplayName = "Sunrise",
+			Color = { 220, 120, 64 },
+			Unlock = { Kind = "Trophy", Key = "DailyDouble" },
+		},
+		Velvet = {
+			Order = 4,
+			DisplayName = "Velvet",
+			Color = { 96, 32, 110 },
+			Unlock = { Kind = "Trophy", Key = "CastParty" },
+		},
+	},
+}
+Config.DefaultCosmetics = { Trail = "None", MannequinSkin = "Pine", Playbill = "Classic" }
 
 Config.Titles = {
 	OpeningNight = { DisplayName = "Opening Night", Description = "Escaped with zero retakes." },

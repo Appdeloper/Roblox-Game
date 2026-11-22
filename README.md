@@ -26,6 +26,17 @@ the top": back to the stage entrance, plus one retake.
 | **∞ Endless** | Stages come shuffled and never stop. The mannequin gets a little faster every stage. 3 lives | Endless (most stages cleared) |
 | **👥 Co-op** | Story for up to 4 friends. Tap Co-op within 10 s of each other. A clear moves everyone on; a caught player is *downed* until a teammate stands next to them for 1.5 s; if everyone's down, the cast takes it from the top | — |
 
+### Progression (all cosmetic)
+
+- **Trophies** (11) on your own trophy shelf in the lobby, each also a Roblox badge: First Escape,
+  Opening Night, Spotted the Door, Stare Down, Mirror Mirror, Full House, Daily Double, Daily
+  Devotee, Long Run, Cast Party, Revival.
+- **Ticket book**: a stub for every act cleared and every mode finished.
+- **Daily visits**: come back on consecutive days to build a streak (days 2, 3 and 7 unlock
+  wardrobe items).
+- **Wardrobe** tabs: ticket skins, trails, mannequin skins (your Copycat's wood), playbill
+  backgrounds (the stage title cards), and your Collection.
+
 At the end you get a **theatre ticket** with your escape time and retakes. Zero retakes earns the
 title **Opening Night**.
 

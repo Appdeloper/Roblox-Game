@@ -1,7 +1,8 @@
 --!strict
 --[[
-	Wardrobe — cosmetics only: ticket skins and the Spotlight Trail.
-	Each card shows what it is and exactly how to get it (free, title, Game Pass, or Robux).
+	Wardrobe — cosmetics only, in tabs: ticket skins, trails, mannequin skins, playbill
+	backgrounds, and your Collection (trophies + ticket stubs). Each card shows what it is and
+	exactly how to get it (free, title, trophy, daily streak, Game Pass, or Robux).
 	Purchases are prompted here, but every grant is decided on the server.
 ]]
 
@@ -24,6 +25,15 @@ local Wardrobe = {}
 
 local layer: Frame
 local grid: ScrollingFrame
+local tab = "Tickets"
+local tabButtons: { [string]: TextButton } = {}
+local TABS = {
+	{ id = "Tickets", text = "🎟 Tickets" },
+	{ id = "Trail", text = "✨ Trails" },
+	{ id = "MannequinSkin", text = "🪆 Mannequin" },
+	{ id = "Playbill", text = "📜 Playbill" },
+	{ id = "Collection", text = "🏆 Collection" },
+}
 local onVisibilityChanged: ((boolean) -> ())? = nil
 
 type CardAction = { text: string, color: Color3, enabled: boolean, run: (() -> ())? }
@@ -90,29 +100,6 @@ local function skinAction(skinId: string, skin: any): CardAction
 	}
 end
 
-local function trailAction(): CardAction
-	local profile = ClientState.profile
-	if profile and profile.ownsSpotlightTrail then
-		local on = profile.trailEnabled
-		return {
-			text = if on then "On ✓ (tap to hide)" else "Off (tap to show)",
-			color = if on then Theme.Colors.UiGood else Theme.Colors.UiPanel,
-			enabled = true,
-			run = function()
-				Remotes.get("SetTrailEnabled"):FireServer(not on)
-			end,
-		}
-	end
-	return {
-		text = "Game Pass",
-		color = Theme.Colors.Brass,
-		enabled = true,
-		run = function()
-			prompt("GamePass", Config.Monetization.GamePasses.SpotlightTrail.Id)
-		end,
-	}
-end
-
 local function card(order: number, name: string, swatch: Color3, subtitle: string, action: CardAction)
 	local c = Widgets.frame("Card_" .. name, grid, UDim2.fromOffset(200, 220), nil, Theme.Colors.UiDark)
 	c.LayoutOrder = order
@@ -152,17 +139,104 @@ local function card(order: number, name: string, swatch: Color3, subtitle: strin
 	button.AutoButtonColor = action.enabled
 end
 
+local function rgb(c: { number }): Color3
+	return Color3.fromRGB(c[1], c[2], c[3])
+end
+
+--- How to get a cosmetic you don't have yet.
+local function howToGet(unlock: any): string
+	if unlock.Kind == "Title" then
+		local title = (Config.Titles :: any)[unlock.Key]
+		return "Earn: " .. (if title then title.DisplayName else unlock.Key)
+	elseif unlock.Kind == "Trophy" then
+		local trophy = (Config.Trophies :: any)[unlock.Key]
+		return "Trophy: " .. (if trophy then trophy.DisplayName else unlock.Key)
+	elseif unlock.Kind == "Streak" then
+		return string.format("Visit %d days in a row", unlock.Key)
+	end
+	return "Locked"
+end
+
+local function cosmeticAction(category: string, id: string, item: any): CardAction
+	local profile = ClientState.profile :: any
+	local equipped = profile and profile.equipped and profile.equipped[category]
+	if equipped == id then
+		return { text = "Equipped ✓", color = Theme.Colors.UiGood, enabled = false }
+	end
+	local unlocked = profile and profile.unlocked and table.find(profile.unlocked[category] or {}, id) ~= nil
+	if unlocked then
+		return {
+			text = "Equip",
+			color = Theme.Colors.UiAccent,
+			enabled = true,
+			run = function()
+				Remotes.get("EquipCosmetic"):FireServer(category, id)
+			end,
+		}
+	end
+	if item.Unlock.Kind == "GamePass" then
+		local pass = (Config.Monetization.GamePasses :: any)[item.Unlock.Key]
+		return {
+			text = "Game Pass",
+			color = Theme.Colors.Brass,
+			enabled = true,
+			run = function()
+				prompt("GamePass", pass.Id)
+			end,
+		}
+	end
+	return { text = howToGet(item.Unlock), color = Theme.Colors.UiPanel, enabled = false }
+end
+
+local SUBTITLES = { Trail = "Trail", MannequinSkin = "Your mannequin", Playbill = "Title cards" }
+
+local function renderCollection()
+	local profile = ClientState.profile :: any
+	local trophies = profile and profile.trophies or {}
+	local stubs = profile and profile.stubs or {}
+	for key, trophy in Config.Trophies :: any do
+		local earned = table.find(trophies, key) ~= nil
+		card(
+			trophy.Order,
+			(if earned then "🏆 " else "🔒 ") .. trophy.DisplayName,
+			if earned then Theme.Colors.Brass else Theme.Colors.UiPanel,
+			trophy.Description,
+			{ text = if earned then "Earned" else "Not yet", color = Theme.Colors.UiDark, enabled = false }
+		)
+	end
+	for key, stub in Config.Stubs :: any do
+		local earned = table.find(stubs, key) ~= nil
+		card(
+			100 + stub.Order,
+			"🎟 " .. stub.DisplayName,
+			if earned then Theme.Colors.Paper else Theme.Colors.UiPanel,
+			"Ticket stub",
+			{ text = if earned then "Collected" else "Not yet", color = Theme.Colors.UiDark, enabled = false }
+		)
+	end
+end
+
 local function render()
 	for _, child in grid:GetChildren() do
 		if child:IsA("Frame") then
 			child:Destroy()
 		end
 	end
-	local trail = Config.Monetization.GamePasses.SpotlightTrail
-	card(0, trail.DisplayName, Theme.Colors.WarmSpot, "Glow trail", trailAction())
-	for skinId, skin in Config.TicketSkins do
-		local palette = (Theme.TicketSkins :: any)[skinId] or Theme.TicketSkins.Classic
-		card(skin.Order, skin.DisplayName, palette.Border, "Ticket skin", skinAction(skinId, skin))
+	for id, button in tabButtons do
+		button.BackgroundColor3 = if id == tab then Theme.Colors.UiAccent else Theme.Colors.UiDark
+		button.TextColor3 = if id == tab then Theme.Colors.Ink else Theme.Colors.Paper
+	end
+	if tab == "Tickets" then
+		for skinId, skin in Config.TicketSkins do
+			local palette = (Theme.TicketSkins :: any)[skinId] or Theme.TicketSkins.Classic
+			card(skin.Order, skin.DisplayName, palette.Border, "Ticket skin", skinAction(skinId, skin))
+		end
+	elseif tab == "Collection" then
+		renderCollection()
+	else
+		for id, item in (Config.Cosmetics :: any)[tab] do
+			card(item.Order, item.DisplayName, rgb(item.Color), SUBTITLES[tab], cosmeticAction(tab, id, item))
+		end
 	end
 end
 
@@ -195,10 +269,27 @@ function Wardrobe.init(visibilityChanged: (boolean) -> ())
 		color = Theme.Colors.UiDark,
 		textColor = Theme.Colors.Paper,
 	}, Wardrobe.close)
+	local tabBar =
+		Widgets.frame("Tabs", panel, UDim2.new(1, -32, 0, 52), UDim2.fromOffset(16, 72), Theme.Colors.UiPanel, 1)
+	for i, t in TABS do
+		tabButtons[t.id] = Widgets.button({
+			name = "Tab" .. t.id,
+			parent = tabBar,
+			text = t.text,
+			size = UDim2.new(1 / #TABS, -6, 1, 0),
+			position = UDim2.new((i - 1) / #TABS, 3, 0, 0),
+			color = Theme.Colors.UiDark,
+			textColor = Theme.Colors.Paper,
+		}, function()
+			AudioController.play("UiClick")
+			tab = t.id
+			render()
+		end)
+	end
 	grid = Instance.new("ScrollingFrame")
 	grid.Name = "Grid"
-	grid.Size = UDim2.new(1, -32, 1, -130)
-	grid.Position = UDim2.fromOffset(16, 76)
+	grid.Size = UDim2.new(1, -32, 1, -190)
+	grid.Position = UDim2.fromOffset(16, 134)
 	grid.BackgroundTransparency = 1
 	grid.BorderSizePixel = 0
 	grid.ScrollBarThickness = 8

@@ -68,14 +68,24 @@ return function(placePath, check)
 	end)
 	check(c.find("WardrobeLayer").Visible and c.find("Card_Golden Ticket") ~= nil, "wardrobe shows ticket skins")
 	step("wardrobe equip + buy buttons", function()
-		for _, cardName in
-			{ "Card_Classic Stub", "Card_Opening Night", "Card_Moonlit", "Card_Spotlight Trail", "Card_Velvet Curtain" }
-		do
+		for _, cardName in { "Card_Classic Stub", "Card_Opening Night", "Card_Moonlit", "Card_Velvet Curtain" } do
 			c.find(cardName).Action.Activated:Fire()
 		end
-		c.find("CloseWardrobe").Activated:Fire()
 	end)
 	check(r.sent("EquipSkin") == 1, "equipping an owned skin asks the server")
+	step("wardrobe tabs: trails, mannequin, playbill, collection", function()
+		c.find("TabTrail").Activated:Fire()
+		c.tick(0.1)
+		c.find("Card_Spotlight").Action.Activated:Fire()
+		c.find("TabMannequinSkin").Activated:Fire()
+		c.tick(0.1)
+		c.find("TabPlaybill").Activated:Fire()
+		c.tick(0.1)
+		c.find("TabCollection").Activated:Fire()
+		c.tick(0.1)
+		c.find("CloseWardrobe").Activated:Fire()
+	end)
+	check(c.find("Card_🔒 Full House") ~= nil, "collection shows locked trophies")
 	step("lobby start button fires RequestStart", function()
 		c.find("Start").Activated:Fire()
 	end)

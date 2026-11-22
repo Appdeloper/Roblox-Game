@@ -52,6 +52,14 @@ export type ProfileSnapshot = {
 	reducedScares: boolean,
 	quality: string,
 	savingEnabled: boolean,
+	-- v3: progression.
+	trophies: { string },
+	stubs: { string },
+	equipped: { [string]: string },
+	-- category -> ids this player may equip
+	unlocked: { [string]: { string } },
+	streak: number,
+	bestStreak: number,
 }
 
 -- Persisted profile (DataStore value). Version is migrated by DataService.
@@ -66,6 +74,13 @@ export type ProfileData = {
 	EquippedSkin: string,
 	TrailEnabled: boolean,
 	Settings: { ReducedScares: boolean, Quality: string },
+	-- v3: progression.
+	Trophies: { [string]: boolean },
+	Stubs: { [string]: boolean },
+	Equipped: { Trail: string, MannequinSkin: string, Playbill: string },
+	LastDay: number?,
+	Streak: number,
+	BestStreak: number,
 	-- purchaseId -> os.time() when granted. Guards ProcessReceipt against double credit.
 	ProcessedReceipts: { [string]: number },
 }

@@ -15,6 +15,8 @@ local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local MapBuilder = require(ServerScriptService.MapBuilder)
 local Services = ServerScriptService.Services
 local AmbienceService = require(Services.AmbienceService)
+local CosmeticsService = require(Services.CosmeticsService)
+local ProgressionService = require(Services.ProgressionService)
 local Badges = require(Services.Badges)
 local CheckpointService = require(Services.CheckpointService)
 local DataService = require(Services.DataService)
@@ -39,6 +41,16 @@ LeaderboardService.init(map.leaderboardGui, RoundService.RunFinished, map.modeBo
 Badges.init(RoundService.RunFinished, MannequinService.DoorOutran, DataService.grantTitle)
 ScareService.init()
 AmbienceService.init(map)
+CosmeticsService.init()
+ProgressionService.init({
+	stageEntered = RoundService.StageEntered,
+	stageCleared = RoundService.StageCleared,
+	runFinished = RoundService.RunFinished,
+	stared = MannequinService.Stared,
+	mirrorCracked = MannequinService.MirrorCracked,
+	doorOutran = MannequinService.DoorOutran,
+	revived = RoundService.Revived,
+})
 
 if RunService:IsStudio() then
 	local missing = Assets.listPlaceholders()

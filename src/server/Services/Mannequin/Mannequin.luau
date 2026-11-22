@@ -281,6 +281,20 @@ function Mannequin._setStare(self: Mannequin, meter: number)
 	end
 end
 
+--- Paints the rig's body parts (nil restores the default wood). Joint balls keep their colour.
+function Mannequin.applySkin(self: Mannequin, color: Color3?)
+	for _, part in self.rig.model:GetChildren() do
+		if part:IsA("BasePart") and part.Name ~= "Root" and not string.find(part.Name, "JointBall", 1, true) then
+			local default = part:GetAttribute("DefaultColor")
+			if default == nil then
+				part:SetAttribute("DefaultColor", part.Color)
+				default = part.Color
+			end
+			part.Color = color or default :: Color3
+		end
+	end
+end
+
 --- Changes the replay delay (Endless speeds the Copycat up). nil keeps the role default.
 function Mannequin.setDelay(self: Mannequin, delay: number?)
 	if delay then

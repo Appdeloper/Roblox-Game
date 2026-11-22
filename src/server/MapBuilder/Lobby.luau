@@ -266,6 +266,24 @@ function Lobby.build(parent: Instance, origin: Vector3): LobbyInfo
 	}
 	local startPrompt = stageDoor(model, origin)
 	wardrobe(model, origin)
+	-- The trophy shelf: each player's client fills it with their own trophies.
+	local shelf = Builders.part({
+		name = "TrophyShelf",
+		size = Vector3.new(16, 0.6, 2.4),
+		cframe = CFrame.new(origin + Vector3.new(16, 7, 20.6)),
+		parent = model,
+		surface = "DarkWood",
+		tag = "TrophyShelf",
+	})
+	Props.sign(
+		model,
+		CFrame.lookAt(origin + Vector3.new(16, 5.6, 21.75), origin + Vector3.new(16, 5.6, 0)),
+		Vector3.new(9, 1.2, 0.2),
+		"YOUR TROPHIES",
+		Theme.Colors.Brass,
+		"DarkWood"
+	)
+	local _ = shelf
 	titleSign(model, origin)
 	Story.lobby({
 		set = Builders.folder("Story", model),
