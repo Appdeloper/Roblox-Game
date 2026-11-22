@@ -33,7 +33,7 @@ return function(placePath, check)
 	check((ana:position() - entrance1).Magnitude < 0.1, "teleported to the stage 1 entrance")
 	tick(3)
 	check(remotes.count("Caught", ana.UserId) == 0, "no catch while reading the title card")
-	for stage = 1, 3 do
+	for stage = 1, Config.Game.StageCount do
 		local info = remotes.last("StageStarted", ana.UserId)[1]
 		walk(ana, routeWaypoints(stage, info.realExit), Config.Movement.WalkSpeed)
 	end
@@ -54,9 +54,9 @@ return function(placePath, check)
 		check(ticket.bestTime ~= nil and ticket.isNewBest, "ticket shows the new best from DataService")
 	end
 	check(remotes.count("DoorWarning", ana.UserId) >= 2, "painted doors warned during the run")
-	check(remotes.count("Scare", ana.UserId) == 3, "each stage's scare plays exactly once")
-	check(analyticsCount("stage_started", ana.UserId) == 3, "analytics: stage_started x3")
-	check(analyticsCount("stage_cleared", ana.UserId) == 3, "analytics: stage_cleared x3")
+	check(remotes.count("Scare", ana.UserId) == Config.Game.StageCount, "each stage's scare plays exactly once")
+	check(analyticsCount("stage_started", ana.UserId) == Config.Game.StageCount, "analytics: stage_started x6")
+	check(analyticsCount("stage_cleared", ana.UserId) == Config.Game.StageCount, "analytics: stage_cleared x6")
 	check(analyticsCount("finished", ana.UserId) == 1, "analytics: finished")
 	check(#mannequins:GetChildren() == 0, "mannequin removed after finishing")
 
@@ -111,7 +111,14 @@ return function(placePath, check)
 	check(remotes.count("FakeExit", ana.UserId) >= 1, "the painted exit is fake")
 	check(remotes.count("RunFinished", ana.UserId) == 1, "fake exit doesn't finish the run")
 	walk(ana, { route3[#route3 - 1], routeWaypoints(3, info3.realExit)[#route3] }, Config.Movement.WalkSpeed)
-	check(remotes.count("RunFinished", ana.UserId) == 2, "the real exit finishes the run")
+	check(stageOf(ana) == 4, "the real exit clears the stage")
+	for stage = 4, 5 do
+		walk(ana, routeWaypoints(stage), Config.Movement.WalkSpeed)
+	end
+	local info6 = remotes.last("StageStarted", ana.UserId)[1]
+	check(info6.stage == 6 and info6.realExit ~= nil, "opening night picks one real exit")
+	walk(ana, routeWaypoints(6, info6.realExit), Config.Movement.WalkSpeed)
+	check(remotes.count("RunFinished", ana.UserId) == 2, "the real exit of the finale finishes the run")
 
 	print("\n== Smoke: server sim — two players")
 	local ben = join("Ben")

@@ -4,7 +4,7 @@
 
 	It is the orchestrator: it teleports, counts retakes (via CheckpointService), spawns and
 	resets the mannequin, and runs one 10 Hz zone watcher for every running player (stage exits,
-	painted-door triggers, scare zones, kill line, stage-3 exits). Other services hook in through
+	painted-door triggers, scare zones, kill line, real/fake exits). Other services hook in through
 	the RunFinished / StageEntered signals so this file never grows their logic.
 ]]
 
@@ -14,6 +14,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local Workspace = game:GetService("Workspace")
 
 local Clock = require(ReplicatedStorage.Shared.Clock)
+local Motion = require(ReplicatedStorage.Shared.Motion)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Signal = require(ReplicatedStorage.Shared.Signal)
@@ -40,7 +41,8 @@ type Run = {
 	-- workspace:GetServerTimeNow() at start (shared clock for the HUD timer).
 	startedAt: number,
 	clockStartedAt: number,
-	realExit: string,
+	-- Stage index -> name of the real exit, picked when the run starts.
+	realExits: { [number]: string },
 	scaresPlayed: { [number]: boolean },
 	respawning: boolean,
 	lastStartRequest: number,
@@ -70,7 +72,7 @@ local function newRun(): Run
 		phase = "Lobby",
 		startedAt = 0,
 		clockStartedAt = 0,
-		realExit = "Left",
+		realExits = {},
 		scaresPlayed = {},
 		respawning = false,
 		lastStartRequest = -math.huge,
@@ -100,7 +102,7 @@ local function stageStartInfo(player: Player, run: Run, isRetake: boolean): Type
 		act = text.Act,
 		hint = text.Hint,
 		isRetake = isRetake,
-		realExit = if stage == Config.Game.StageCount then run.realExit else nil,
+		realExit = run.realExits[stage],
 		runStartedAt = run.startedAt,
 		retakes = if progress then progress.retakes else 0,
 	}
@@ -146,7 +148,20 @@ function RoundService.startRun(player: Player): boolean
 	run.phase = "Running"
 	run.startedAt = Clock.serverNow()
 	run.clockStartedAt = now
-	run.realExit = if math.random() < 0.5 then "Left" else "Right"
+	table.clear(run.realExits)
+	for _, info in map.stages do
+		if info.exits then
+			local candidates = {}
+			for _, exit in info.exits do
+				if exit.canBeReal then
+					table.insert(candidates, exit.name)
+				end
+			end
+			if #candidates > 0 then
+				run.realExits[info.index] = candidates[math.random(1, #candidates)]
+			end
+		end
+	end
 	run.verified = true
 	run.doorsOutran = 0
 	if Config.Scares.PlayOncePerRun then
@@ -168,7 +183,7 @@ local function respawnAtCheckpoint(player: Player)
 end
 
 --- Shared path for anything that sends you back to the stage entrance.
-local function sendBack(player: Player, run: Run, reason: "caught" | "fell" | "died", countIt: boolean)
+local function sendBack(player: Player, run: Run, reason: "caught" | "fell" | "died" | "spotted", countIt: boolean)
 	if run.phase ~= "Running" or run.respawning then
 		return
 	end
@@ -185,6 +200,8 @@ local function sendBack(player: Player, run: Run, reason: "caught" | "fell" | "d
 		Remotes.get("Caught"):FireClient(player, retakes)
 	elseif reason == "fell" then
 		Remotes.get("Fell"):FireClient(player, retakes)
+	elseif reason == "spotted" then
+		Remotes.get("Spotted"):FireClient(player, retakes)
 	end
 	if reason ~= "died" then
 		task.delay(Config.Catch.RespawnDelay, respawnAtCheckpoint, player)
@@ -275,15 +292,14 @@ end
 
 -- ── Zone watcher (10 Hz) ──────────────────────────────────────────────────────────────────
 
-local function checkExits3(player: Player, run: Run, stage: Types.StageInfo, pos: Vector3)
-	for _, side in { "Left", "Right" } do
-		local zoneInfo = if side == "Left" then stage.exitLeftZone else stage.exitRightZone
-		if zoneInfo and Zone.contains(zoneInfo, pos) then
-			if side == run.realExit then
+local function checkExits(player: Player, run: Run, stage: Types.StageInfo, pos: Vector3)
+	for _, exit in stage.exits :: { Types.ExitInfo } do
+		if Zone.contains(exit.zone, pos) then
+			if exit.name == run.realExits[stage.index] then
 				clearStage(player, run)
 			elseif Clock.now() - run.lastFakeExitAt > 2 then
 				run.lastFakeExitAt = Clock.now()
-				Remotes.get("FakeExit"):FireClient(player)
+				Remotes.get("FakeExit"):FireClient(player, exit.name)
 				Analytics.track("fake_exit", player, { stage = stage.index })
 			end
 			return
@@ -306,14 +322,29 @@ local function watchPlayer(player: Player, run: Run)
 			MannequinService.tryDoor(player, door)
 		end
 	end
+	if stage.spinners then
+		-- Light-rig beams: judged here from the same clock the clients animate with. The beam
+		-- must have been on for a moment, so a crossing that looked clear on screen stays clear.
+		local now = Clock.serverNow()
+		for _, rig in stage.spinners do
+			if
+				Zone.contains(rig.gate, pos)
+				and Motion.beamOn(rig.motion, now)
+				and Motion.beamOn(rig.motion, now - Config.Hazards.BeamLeniency)
+			then
+				sendBack(player, run, "spotted", Config.Retakes.CountFalls)
+				return
+			end
+		end
+	end
 	if stage.scareZone and not run.scaresPlayed[stage.index] and Zone.contains(stage.scareZone, pos) then
 		run.scaresPlayed[stage.index] = true
 		RoundService.ScareZoneEntered:Fire(player, stage.index)
 	end
 	if stage.exitZone and Zone.contains(stage.exitZone, pos) then
 		clearStage(player, run)
-	elseif stage.exitLeftZone then
-		checkExits3(player, run, stage, pos)
+	elseif stage.exits then
+		checkExits(player, run, stage, pos)
 	end
 end
 

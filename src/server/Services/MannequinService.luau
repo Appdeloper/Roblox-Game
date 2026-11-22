@@ -123,7 +123,8 @@ function MannequinService.castFor(stageIndex: number, hasMirrorPath: boolean): {
 	local behaviours = Config.Behaviours[stageIndex] or { "Copycat" }
 	local wanted: { [string]: Mannequin.Options } = { Main = { role = "Copycat" } }
 	if table.find(behaviours, "Understudy") then
-		for i, delay in Config.Mannequin.UnderstudyDelays do
+		local delays = Config.Mannequin.UnderstudyDelaysByStage[stageIndex] or Config.Mannequin.UnderstudyDelays
+		for i, delay in delays do
 			wanted["Understudy" .. i] = { role = "Understudy", delay = delay }
 		end
 	end

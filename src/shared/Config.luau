@@ -13,7 +13,7 @@ local Config = {}
 
 Config.Game = {
 	Name = "Don't Look Backstage",
-	StageCount = 3,
+	StageCount = 6,
 	-- Bump when you ship a change that should show in the lobby footer.
 	BuildLabel = "v1.0.0",
 }
@@ -43,6 +43,9 @@ Config.Map = {
 		{ 0, 400, 0 },
 		{ 0, 400, 260 },
 		{ 0, 400, 520 },
+		{ 0, 400, 780 },
+		{ 0, 400, 1040 },
+		{ 0, 400, 1300 },
 	},
 	SupportPostThickness = 0.8,
 	-- Seed for all set-dressing randomness (seat variety, plank shades, ropes, prop jitter).
@@ -74,6 +77,11 @@ Config.Mannequin = {
 	ReachDistance = 9,
 	-- Understudy: extra mannequins replaying the same trail, each later than the last.
 	UnderstudyDelays = { 2.6, 3.8 },
+	-- Per-stage override (the finale fields the full cast).
+	UnderstudyDelaysByStage = {
+		[4] = { 3.0 },
+		[6] = { 2.2, 3.0, 3.8 },
+	},
 	-- Mirror: a reflection that walks the route toward you from a point ahead. It can't catch
 	-- you, but stare at it too long and it steps out of the glass and joins the chase.
 	Mirror = {
@@ -110,12 +118,18 @@ Config.Behaviours = {
 	{ "Copycat", "Shortcut" },
 	{ "Copycat", "Shortcut", "Mirror" },
 	{ "Copycat", "Shortcut", "Understudy" },
+	{ "Copycat", "Understudy" },
+	{ "Copycat", "Mirror", "Understudy" },
+	-- Opening Night: the full cast at once.
+	{ "Copycat", "Shortcut", "Mirror", "Understudy" },
 }
 
 -- Mirror points as fractions of the stage's route length: it appears once you pass `From`
 -- and stands at the reflection of your progress across `Plane`.
 Config.Mirrors = {
 	[2] = { From = 0.06, Plane = 0.62 },
+	[5] = { From = 0.05, Plane = 0.6 },
+	[6] = { From = 0.05, Plane = 0.62 },
 }
 
 Config.Catch = {
@@ -176,9 +190,31 @@ Config.Scares = {
 		KnockToApplauseSeconds = 1.5,
 		ApplauseSeconds = 3.5,
 	},
+	-- The Flies: a light rig drops on its chain and its spot finds you.
+	Stage4 = {
+		CatchPause = 3.5,
+		DropSeconds = 0.6,
+		SpotSeconds = 2.4,
+	},
+	-- The Prop Room: every costume on the rail turns to look at you.
+	Stage5 = {
+		CatchPause = 3.5,
+		TurnSeconds = 1.2,
+		HoldSeconds = 2,
+	},
+	-- Opening Night: house lights up, the audience is mannequins, and they stand.
+	Stage6 = {
+		CatchPause = 4,
+		LightsUpSeconds = 0.8,
+		StandSeconds = 1.6,
+		ApplauseSeconds = 3,
+	},
 }
 
 Config.Hazards = {
+	-- A light-rig beam only counts once it has been on the gate this long (seconds), so a
+	-- crossing that looked clear on a laggy phone stays clear.
+	BeamLeniency = 0.15,
 	Backdrop = {
 		DescendSeconds = 3.4,
 		HoldSeconds = 1.6,
@@ -209,7 +245,7 @@ Config.Run = {
 
 Config.AntiCheat = {
 	-- Clears faster than these (seconds) are ignored for the leaderboard/badges.
-	MinStageSeconds = { 5, 6, 4 },
+	MinStageSeconds = { 5, 6, 4, 6, 6, 5 },
 	MinRunSeconds = 20,
 }
 
@@ -406,6 +442,12 @@ Config.Ambience = {
 			{ DecayTime = 1.3, Density = 0.5, Diffusion = 0.6, WetLevel = -10, DryLevel = 0 },
 			-- Boxy backstage timber.
 			{ DecayTime = 2.1, Density = 0.9, Diffusion = 0.85, WetLevel = -5, DryLevel = 0 },
+			-- High in the flies: airy, a long thin tail.
+			{ DecayTime = 2.8, Density = 0.6, Diffusion = 0.9, WetLevel = -4, DryLevel = 0 },
+			-- A cramped prop store full of soft costumes: short and muffled.
+			{ DecayTime = 0.9, Density = 1, Diffusion = 0.5, WetLevel = -12, DryLevel = 0 },
+			-- The full house: big, warm, applause-friendly.
+			{ DecayTime = 3, Density = 1, Diffusion = 1, WetLevel = -3, DryLevel = 0 },
 		},
 	},
 	-- Seconds to cross-fade between rooms, so reverb never changes with a click.
@@ -439,6 +481,21 @@ Config.Stages = {
 		Act = "ACT III",
 		Hint = "Run down the stairs. Only one exit is real.",
 	},
+	{
+		Title = "The Flies",
+		Act = "ACT IV",
+		Hint = "Cross the catwalks while the light rigs look away.",
+	},
+	{
+		Title = "The Prop Room",
+		Act = "ACT V",
+		Hint = "Jump while the crates are big. Don't ride the belt.",
+	},
+	{
+		Title = "Opening Night",
+		Act = "ACT VI",
+		Hint = "The whole cast is here. Find the one real exit!",
+	},
 }
 
 Config.Text = {
@@ -446,6 +503,7 @@ Config.Text = {
 	Caught = "CUT! Take it from the top.",
 	Fell = "Missed your mark! Back to places.",
 	FakeExit = "It's only paint!",
+	Spotted = "Caught in the spotlight! Back to places.",
 	LookHint = "Look at the mannequin and it freezes. Stare too long and it moves closer!",
 	StareLunge = "You stared too long. It moved closer!",
 	MirrorCracked = "Crack! Your reflection is gone... for now.",

@@ -13,7 +13,7 @@ export type StageStartInfo = {
 	act: string,
 	hint: string,
 	isRetake: boolean,
-	-- Stage 3 only: which exit is real ("Left" | "Right").
+	-- Stages with a choice of exits: the name of the real one.
 	realExit: string?,
 	-- Server time (workspace:GetServerTimeNow()) when the run began; drives the HUD timer.
 	runStartedAt: number,
@@ -88,6 +88,19 @@ export type ZoneInfo = {
 	size: Vector3,
 }
 
+-- A rotating light rig whose beam lands on `gate` (judged by the server from shared/Motion).
+export type SpinnerInfo = {
+	id: string,
+	motion: { period: number, phase: number?, aim: number?, halfWidth: number? },
+	gate: ZoneInfo,
+}
+
+export type ExitInfo = {
+	name: string,
+	zone: ZoneInfo,
+	canBeReal: boolean,
+}
+
 export type StageInfo = {
 	index: number,
 	entrance: CFrame,
@@ -98,9 +111,10 @@ export type StageInfo = {
 	doors: { DoorInfo },
 	-- Walkable route as mannequin-root-height points, entrance to exit (Mirror uses it).
 	routePath: { Vector3 }?,
-	-- Stage 3 only.
-	exitLeftZone: ZoneInfo?,
-	exitRightZone: ZoneInfo?,
+	-- Stages with a choice of exits (one real per run, the rest painted fakes).
+	exits: { ExitInfo }?,
+	-- Stage 4: light-rig beams.
+	spinners: { SpinnerInfo }?,
 }
 
 export type MapInfo = {

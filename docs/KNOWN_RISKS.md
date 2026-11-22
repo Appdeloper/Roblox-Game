@@ -86,6 +86,21 @@ mat; stage 3 spawns two Understudies. Open, needs eyes and hands:
 | Mirror spacing | The reflection appears too late, or crowds the roofs | `Config.Mirrors[2]` (`From`, `Plane`), `Mirror.VanishGap` |
 | Three chasers in stage 3 | Too punishing for younger players | `Config.Mannequin.UnderstudyDelays` (fewer or later) |
 
+## Six stages (Phase 2B): verified and open
+
+Verified in Studio: a full six-stage run finishes with the Output clean and prints
+`ready: 6 stages`. A light-rig beam sends you back (`Spotted`), the stage 5 and 6 mirrors crack,
+the finale's fake doors bump you and the real one finishes the run. 3,813 parts in all.
+
+| Risk | What you'd see | Where to fix |
+| --- | --- | --- |
+| Light-rig timing | Beams feel unfair, or too easy to slip past | `Layouts/Stage4.luau` → `movers[*].motion` (`period`, `halfWidth`), `Config.Hazards.BeamLeniency` |
+| Sandbag and shelves push you on the client | They don't push, or they fling you too hard | `client/World/Movers.luau` (`Solid` parts collide locally), mover `size`/`amplitude` |
+| Conveyor speed | The belt doesn't carry you, or it's too strong for phones | `Layouts/Stage5.luau` → `Conveyor.conveyor` |
+| Shrinking crates | The crate shrinks out from under you without warning | `Layouts/Stage5.luau` → `pulse.hold`, `pulse.min` |
+| Audience readability | The house reads as clutter around the risers | `Set/Backstage.luau` → `openingNight` (rows, spacing) |
+| Stage 6 difficulty | Four chasers plus a mirror is too much for younger players | `Config.Mannequin.UnderstudyDelaysByStage[6]` |
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.

@@ -156,6 +156,18 @@ local function buildRoof(ctx: Ctx, box: RouteBox, parent: Instance, index: numbe
 	})
 end
 
+--- Copies a Motion spec onto attributes (clients rebuild it with Movers.specOf).
+local function setMotion(instance: Instance, spec: LayoutTypes.MotionSpec)
+	instance:SetAttribute("Period", spec.period)
+	instance:SetAttribute("Phase", spec.phase or 0)
+	for _, key in { "amplitude", "min", "hold", "aim", "halfWidth" } do
+		local value = (spec :: any)[key]
+		if value ~= nil then
+			instance:SetAttribute(string.upper(string.sub(key, 1, 1)) .. string.sub(key, 2), value)
+		end
+	end
+end
+
 local function buildRouteBox(ctx: Ctx, box: RouteBox, parent: Instance, order: number): BasePart
 	if box.kind == "Slide" then
 		return buildSlide(ctx, box, parent)
@@ -174,6 +186,19 @@ local function buildRouteBox(ctx: Ctx, box: RouteBox, parent: Instance, order: n
 	if box.collapse then
 		CollectionService:AddTag(part, "CollapseStep")
 		part:SetAttribute("Order", order)
+	end
+	if box.pulse then
+		-- Clients shrink/grow it from server time (shared/Motion); full size is the layout size.
+		CollectionService:AddTag(part, "PulseProp")
+		setMotion(part, box.pulse)
+		part:SetAttribute("BaseSize", part.Size)
+	end
+	if box.conveyor then
+		-- An anchored part with a velocity carries characters standing on it.
+		local velocity = Builders.v(box.conveyor)
+		part.AssemblyLinearVelocity = velocity
+		part:SetAttribute("ConveyorVelocity", velocity)
+		CollectionService:AddTag(part, "Conveyor")
 	end
 	return part
 end
@@ -354,8 +379,102 @@ local function buildExits(ctx: Ctx)
 		return
 	end
 	local folder = Builders.folder("Exits", ctx.model)
-	Props.exitDoor(folder, placement(ctx, exits.left), "Left")
-	Props.exitDoor(folder, placement(ctx, exits.right), "Right")
+	for _, exit in exits do
+		Props.exitDoor(folder, placement(ctx, exit.door), exit.name)
+	end
+end
+
+-- ── Movers ────────────────────────────────────────────────────────────────────────────────
+--- Moving hazards are built at rest and animated on every client from server time. On the
+--- server they don't collide (Hazard attribute), so only the client's own physics meets them.
+
+local function hazardPart(props: any): BasePart
+	local part = Builders.part(props)
+	part.CanCollide = false
+	part.CanQuery = false
+	part:SetAttribute("Hazard", true)
+	return part
+end
+
+local function buildMovers(ctx: Ctx): { Types.SpinnerInfo }
+	local spinners: { Types.SpinnerInfo } = {}
+	local movers = ctx.layout.movers
+	if not movers then
+		return spinners
+	end
+	local folder = Builders.folder("Movers", ctx.model)
+	for _, mover in movers do
+		local model = Builders.model(mover.id, folder)
+		model:SetAttribute("Kind", mover.kind)
+		model:SetAttribute("Axis", mover.axis)
+		setMotion(model, mover.motion)
+		local center = w(ctx, mover.center)
+		model:SetAttribute("Pivot", center)
+		if mover.kind == "Pendulum" then
+			local length = mover.ropeLength or 10
+			model:SetAttribute("RopeLength", length)
+			local bob = hazardPart({
+				name = "Bob",
+				size = Builders.v(mover.size),
+				cframe = CFrame.new(center - Vector3.new(0, length, 0)),
+				parent = model,
+				surface = "Sandbag",
+			})
+			bob:SetAttribute("Solid", true)
+			hazardPart({
+				name = "Rope",
+				size = Vector3.new(0.3, length, 0.3),
+				cframe = CFrame.new(center - Vector3.new(0, length / 2, 0)),
+				parent = model,
+				surface = "Rope",
+			})
+		elseif mover.kind == "Slider" then
+			local shelf = hazardPart({
+				name = "Shelf",
+				size = Builders.v(mover.size),
+				cframe = CFrame.new(center),
+				parent = model,
+				surface = "DarkWood",
+			})
+			shelf:SetAttribute("Solid", true)
+		elseif mover.kind == "Spinner" then
+			local gate = mover.gate :: LayoutTypes.Box
+			local gateCenter = w(ctx, gate.center)
+			hazardPart({
+				name = "Rig",
+				size = Builders.v(mover.size),
+				cframe = CFrame.new(center),
+				parent = model,
+				surface = "Iron",
+			})
+			-- The beam, built pointing at its gate; clients swing it around the rig.
+			local target = Vector3.new(gateCenter.X, gateCenter.Y - gate.size[2] / 2, gateCenter.Z)
+			local length = (target - center).Magnitude
+			hazardPart({
+				name = "Beam",
+				size = Vector3.new(1.6, 1.6, length),
+				cframe = CFrame.lookAt(center, target) * CFrame.new(0, 0, -length / 2),
+				parent = model,
+				surface = "WarmBeam",
+			})
+			-- The danger mark painted on the catwalk, so the gate reads before the beam arrives.
+			hazardPart({
+				name = "GateMark",
+				size = Vector3.new(gate.size[1], 0.08, gate.size[3]),
+				cframe = CFrame.new(gateCenter.X, gateCenter.Y - gate.size[2] / 2 + 0.05, gateCenter.Z),
+				parent = model,
+				surface = "GlowTape",
+			})
+			model:SetAttribute("Target", target)
+			table.insert(spinners, {
+				id = mover.id,
+				motion = mover.motion,
+				gate = zone(ctx, gate) :: Types.ZoneInfo,
+			})
+		end
+		CollectionService:AddTag(model, "Mover")
+	end
+	return spinners
 end
 
 local function buildMarkers(ctx: Ctx)
@@ -398,9 +517,23 @@ local function routePath(ctx: Ctx): { Vector3 }
 	return points
 end
 
-local function stageInfo(ctx: Ctx, doors: { Types.DoorInfo }): Types.StageInfo
+local function exitInfos(ctx: Ctx): { Types.ExitInfo }?
+	local exits = ctx.layout.exits
+	if not exits then
+		return nil
+	end
+	local out: { Types.ExitInfo } = {}
+	for _, exit in exits do
+		table.insert(
+			out,
+			{ name = exit.name, zone = zone(ctx, exit.zone) :: Types.ZoneInfo, canBeReal = exit.canBeReal }
+		)
+	end
+	return out
+end
+
+local function stageInfo(ctx: Ctx, doors: { Types.DoorInfo }, spinners: { Types.SpinnerInfo }): Types.StageInfo
 	local layout = ctx.layout
-	local exits = layout.exits
 	return {
 		index = ctx.index,
 		entrance = placement(ctx, layout.spawn),
@@ -410,8 +543,8 @@ local function stageInfo(ctx: Ctx, doors: { Types.DoorInfo }): Types.StageInfo
 		scareZone = zone(ctx, layout.scareZone),
 		doors = doors,
 		routePath = routePath(ctx),
-		exitLeftZone = if exits then zone(ctx, exits.leftZone) else nil,
-		exitRightZone = if exits then zone(ctx, exits.rightZone) else nil,
+		exits = exitInfos(ctx),
+		spinners = if #spinners > 0 then spinners else nil,
 	}
 end
 
@@ -440,12 +573,13 @@ function StageBuilder.build(
 	local doors = buildDoors(ctx)
 	buildBackdrop(ctx, routeParts)
 	buildExits(ctx)
+	local spinners = buildMovers(ctx)
 	buildMarkers(ctx)
 	if dress then
 		dress(model, layout, origin, routeParts)
 	end
 	stampStage(model, index)
-	return stageInfo(ctx, doors)
+	return stageInfo(ctx, doors, spinners)
 end
 
 return StageBuilder

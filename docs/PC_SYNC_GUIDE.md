@@ -80,7 +80,7 @@ Leave it running. You should see `Rojo server listening on port 34872`.
 5. Press **Play** (or F5).
 
 **What you should see:**
-- Output prints `[Main] Don't Look Backstage ready: 3 stages`.
+- Output prints `[Main] Don't Look Backstage ready: 6 stages`.
 - You appear on a small wooden rehearsal stage with a glowing bulb, and a card that says
   "You wake up onstage…".
 - The Baseplate is still there, far below you. That's normal: the game is built 400 studs up

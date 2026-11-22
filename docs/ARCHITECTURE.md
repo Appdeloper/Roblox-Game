@@ -17,7 +17,7 @@
 
 ```
 Remotes.init()                 create every RemoteEvent before clients look for them
-MapBuilder.build()             lobby + 3 stages + lighting → MapInfo (spawns, zones, door paths)
+MapBuilder.build()             lobby + 6 stages + lighting → MapInfo (spawns, zones, door paths)
 RemoteGuard.init()
 DataService.init()             profiles load on PlayerAdded
 MonetizationService.init()     ProcessReceipt, pass checks on ProfileLoaded
