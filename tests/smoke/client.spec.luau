@@ -13,6 +13,8 @@ return function(placePath, check)
 	local h = Harness.load(placePath)
 	local SSS = h.place:GetService("ServerScriptService")
 	local map = h.require(SSS.MapBuilder).build()
+	-- The ambience emitters are server-built; the client routes them through its reverb.
+	h.require(SSS.Services.AmbienceService).init()
 	local c = ClientHarness.boot(h, Fakes)
 	-- A server mannequin owned by the test client, so animator/heartbeat/creak paths run.
 	local MannequinRig = h.require(h.place:GetService("ReplicatedStorage").Shared.MannequinRig)
@@ -137,6 +139,33 @@ return function(placePath, check)
 		r.fromServer("FakeExit")
 	end)
 	c.tick(6)
+	-- ── Room sound ────────────────────────────────────────────────────────────────────────
+	print("\n== Smoke: room sound")
+	local soundService = h.place:GetService("SoundService")
+	local ambienceGroup = soundService:FindFirstChild("DLB_Ambience")
+	check(ambienceGroup ~= nil, "ambience sound group created")
+	if ambienceGroup then
+		local roomReverb = ambienceGroup:FindFirstChildWhichIsA("ReverbSoundEffect")
+		check(roomReverb ~= nil, "room reverb effect on the group")
+		local routed = 0
+		for _, part in h.game:GetService("CollectionService"):GetTagged("AmbienceEmitter") do
+			local sound = part:FindFirstChildWhichIsA("Sound")
+			if sound and sound.SoundGroup == ambienceGroup then
+				routed += 1
+			end
+		end
+		check(routed >= 15, string.format("%d ambience sounds routed through the reverb", routed))
+		if roomReverb then
+			r.fromServer("StageStarted", stageInfo(1, false, 0))
+			c.tick(0.4)
+			local hall = roomReverb.DecayTime
+			r.fromServer("StageStarted", stageInfo(2, false, 0))
+			c.tick(0.4)
+			local street = roomReverb.DecayTime
+			check(hall > street, "the empty hall rings longer than the open street")
+		end
+	end
+
 	-- ── Scare lighting ────────────────────────────────────────────────────────────────────
 	print("\n== Smoke: scare lighting")
 	local tags = h.game:GetService("CollectionService")
