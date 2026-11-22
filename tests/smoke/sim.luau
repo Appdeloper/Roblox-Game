@@ -58,8 +58,32 @@ return function(placePath, check, hooks)
 	local Heartbeat = h.stubs.RunService.Heartbeat
 	local mannequins = h.place:GetService("Workspace"):FindFirstChild("Mannequins")
 	local layouts = {}
-	for i = 1, 3 do
+	for i = 1, Config.Game.StageCount do
 		layouts[i] = h.require(SSS.MapBuilder.Layouts["Stage" .. i])
+	end
+	local Motion = h.require(h.place:GetService("ReplicatedStorage").Shared.Motion)
+
+	--- A sensible player waits at the edge of a light-rig gate until the beam has passed.
+	local function beamAhead(stage, pos)
+		local layout = layouts[stage]
+		if not layout or not layout.movers then
+			return false
+		end
+		local origin = Config.Map.StageOrigins[stage]
+		local now = 1000 + h.sched.now
+		for _, mover in layout.movers do
+			if mover.kind == "Spinner" then
+				local g = mover.gate
+				local c = Vector3.new(g.center[1] + origin[1], g.center[2] + origin[2], g.center[3] + origin[3])
+				local half = Vector3.new(g.size[1], g.size[2], g.size[3]) / 2 + Vector3.new(2, 0, 2)
+				local d = pos - c
+				local inside = math.abs(d.X) <= half.X and math.abs(d.Y) <= half.Y and math.abs(d.Z) <= half.Z
+				if inside and (Motion.beamOn(mover.motion, now) or Motion.beamEta(mover.motion, now) < 0.8) then
+					return true
+				end
+			end
+		end
+		return false
 	end
 
 	local function tick(seconds)
@@ -111,8 +135,11 @@ return function(placePath, check, hooks)
 		if layout.exitZone then
 			table.insert(points, v(layout.exitZone.center, origin))
 		elseif layout.exits then
-			local zone = if realExit == "Left" then layout.exits.leftZone else layout.exits.rightZone
-			table.insert(points, v(zone.center, origin))
+			for _, exit in layout.exits do
+				if exit.name == realExit then
+					table.insert(points, v(exit.zone.center, origin))
+				end
+			end
 		end
 		return points
 	end
@@ -129,6 +156,10 @@ return function(placePath, check, hooks)
 				local pos = player:position()
 				local step = math.min(speed * DT, (target - pos).Magnitude)
 				local dir = (target - pos).Unit
+				if beamAhead(startStage, pos + dir * 3) and not beamAhead(startStage, pos) then
+					tick(DT)
+					continue
+				end
 				player:moveTo(
 					pos + dir * step,
 					Vector3.new(dir.X, 0, dir.Z).Magnitude > 0.01 and Vector3.new(dir.X, 0, dir.Z).Unit or nil

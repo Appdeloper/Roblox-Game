@@ -20,7 +20,7 @@ return function(placePath, check)
 	local function escape(player)
 		sim.remotes.fromClient("RequestStart", player)
 		sim.tick(0.2)
-		for stage = 1, 3 do
+		for stage = 1, Config.Game.StageCount do
 			local info = remotes.last("StageStarted", player.UserId)[1]
 			sim.walk(player, sim.routeWaypoints(stage, info.realExit), Config.Movement.WalkSpeed)
 		end
@@ -76,7 +76,7 @@ return function(placePath, check)
 	local cheat = sim.join("BoardCheat")
 	sim.remotes.fromClient("RequestStart", cheat)
 	sim.tick(0.2)
-	for stage = 1, 3 do
+	for stage = 1, Config.Game.StageCount do
 		local info = remotes.last("StageStarted", cheat.UserId)[1]
 		local points = sim.routeWaypoints(stage, info.realExit)
 		cheat:moveTo(points[#points])

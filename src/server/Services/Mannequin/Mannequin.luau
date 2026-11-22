@@ -9,6 +9,12 @@
 	  Trailing  replays the trail `Delay` seconds late (catches up / drifts back smoothly).
 	  Shortcut  painted-door shortcut: Approach → Path (hidden) → Hold (warning) → StepOut.
 	  Ambush    stepped out of the door; rejoins the trail as soon as it's fair to.
+	  Mirror    (role "Mirror" only) a reflection walking the route toward the player from a
+	            point ahead; it cracks and vanishes when they get close to that point.
+
+	Roles: "Copycat" (the player's own mannequin; takes painted doors), "Understudy" (same trail,
+	longer delay, no doors) and "Mirror". Every role obeys the "Don't Look" rule (LookRule):
+	watched -> frozen, stared at too long -> lunges closer.
 
 	Movement: the root is unanchored and server-owned; AlignPosition/AlignOrientation with
 	RigidityEnabled pull it to the target, so clients get smooth, interpolated physics
@@ -18,11 +24,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local LookRule = require(ReplicatedStorage.Shared.LookRule)
 local MannequinRig = require(ReplicatedStorage.Shared.MannequinRig)
+local RoutePath = require(ReplicatedStorage.Shared.RoutePath)
 local Types = require(ReplicatedStorage.Shared.Types)
 local Trail = require(script.Parent.Trail)
 
-export type State = "Idle" | "Warmup" | "Trailing" | "Shortcut" | "Ambush"
+export type State = "Idle" | "Warmup" | "Trailing" | "Shortcut" | "Ambush" | "Mirror"
+export type Role = "Copycat" | "Understudy" | "Mirror"
 type Phase = "Approach" | "Path" | "Hold" | "StepOut"
 
 export type Events = {
@@ -30,6 +39,22 @@ export type Events = {
 	doorWarning: (doorId: string, seconds: number) -> (),
 	doorOpened: (doorId: string) -> (),
 	doorOutran: (doorId: string) -> (),
+	-- Optional: stared at too long (lights flicker client-side) / the mirror cracked.
+	stare: ((name: string) -> ())?,
+	mirrorCracked: ((name: string) -> ())?,
+}
+
+export type Options = {
+	role: Role?,
+	delay: number?,
+}
+
+type MirrorState = {
+	path: RoutePath.RoutePath,
+	from: number,
+	plane: number,
+	shown: boolean,
+	cracked: boolean,
 }
 
 type Shortcut = {
@@ -65,6 +90,13 @@ export type Mannequin = typeof(setmetatable(
 		position: Vector3,
 		facing: Vector3,
 		caughtPending: boolean,
+		role: Role,
+		delay: number,
+		look: LookRule.State,
+		looking: boolean,
+		frozen: boolean,
+		mirror: MirrorState?,
+		emergeFrom: CFrame?,
 	},
 	Mannequin
 ))
@@ -89,9 +121,19 @@ local function flatDirection(from: Vector3, to: Vector3, fallback: Vector3): Vec
 	return d.Unit
 end
 
-function Mannequin.new(name: string, ownerUserId: number, parent: Instance, events: Events): Mannequin
+function Mannequin.new(
+	name: string,
+	ownerUserId: number,
+	parent: Instance,
+	events: Events,
+	options: Options?
+): Mannequin
+	local role: Role = if options and options.role then options.role else "Copycat"
 	local rig = MannequinRig.build(name, CFrame.new())
 	rig.model:SetAttribute("OwnerUserId", ownerUserId)
+	rig.model:SetAttribute("Role", role)
+	rig.model:SetAttribute("Stare", 0)
+	rig.model:SetAttribute("Hidden", role == "Mirror")
 
 	local attachment = Instance.new("Attachment")
 	attachment.Name = "AlignAttachment"
@@ -137,6 +179,16 @@ function Mannequin.new(name: string, ownerUserId: number, parent: Instance, even
 		position = Vector3.zero,
 		facing = Vector3.new(0, 0, -1),
 		caughtPending = false,
+		role = role,
+		delay = if options and options.delay
+			then options.delay
+			elseif role == "Mirror" then Config.Mannequin.Mirror.Delay
+			else Config.Mannequin.Delay,
+		look = LookRule.new(),
+		looking = false,
+		frozen = false,
+		mirror = nil,
+		emergeFrom = nil,
 	}, Mannequin)
 	return self
 end
@@ -182,8 +234,60 @@ function Mannequin.reset(self: Mannequin, stage: Types.StageInfo, now: number)
 	self.caughtPending = false
 	self.position = stage.mannequinHome.Position
 	self.facing = stage.mannequinHome.LookVector
+	LookRule.reset(self.look)
+	self.looking = false
+	self.frozen = false
+	self:_setStare(0)
+	self.mirror = nil
+	self.emergeFrom = nil
+	if self.role == "Mirror" then
+		self.delay = Config.Mannequin.Mirror.Delay
+		self:_resetMirror(stage)
+	end
 	self:_setPose("Idle")
 	self:_apply(true)
+end
+
+function Mannequin._resetMirror(self: Mannequin, stage: Types.StageInfo)
+	local spec = Config.Mirrors[stage.index]
+	local points = stage.routePath
+	if not spec or not points or #points < 2 then
+		self:_setHidden(true)
+		return
+	end
+	local path = RoutePath.new(points)
+	self.mirror = {
+		path = path,
+		from = spec.From * path.total,
+		plane = spec.Plane * path.total,
+		shown = false,
+		cracked = false,
+	}
+	self.position = path:at(spec.Plane * path.total)
+	self:_setHidden(true)
+end
+
+function Mannequin._setHidden(self: Mannequin, hidden: boolean)
+	if self.rig.model:GetAttribute("Hidden") ~= hidden then
+		self.rig.model:SetAttribute("Hidden", hidden)
+	end
+end
+
+function Mannequin._setStare(self: Mannequin, meter: number)
+	-- Quantised so the attribute only replicates when the HUD meter visibly changes.
+	local q = math.floor(meter * 20 + 0.5) / 20
+	if self.rig.model:GetAttribute("Stare") ~= q then
+		self.rig.model:SetAttribute("Stare", q)
+	end
+end
+
+--- The owner is (or stopped) looking at this mannequin. Validated by MannequinService.
+function Mannequin.setLooking(self: Mannequin, looking: boolean)
+	self.looking = looking
+end
+
+function Mannequin.name(self: Mannequin): string
+	return self.rig.model.Name
 end
 
 --- Freezes the mannequin and disables catching (used while a scare plays).
@@ -200,7 +304,7 @@ end
 --- Called by the zone watcher when the player passes a painted door. Returns true if the
 --- mannequin takes the shortcut (only while trailing, once per door per attempt).
 function Mannequin.tryDoor(self: Mannequin, door: Types.DoorInfo, now: number): boolean
-	if self.state ~= "Trailing" or self.doorsUsed[door.id] or now < self.pausedUntil then
+	if self.role ~= "Copycat" or self.state ~= "Trailing" or self.doorsUsed[door.id] or now < self.pausedUntil then
 		return false
 	end
 	self.doorsUsed[door.id] = true
@@ -222,11 +326,11 @@ end
 
 -- ── Per-frame update ──────────────────────────────────────────────────────────────────────
 
-function Mannequin._record(self: Mannequin, now: number, playerCF: CFrame)
+function Mannequin._record(self: Mannequin, now: number, playerCF: CFrame, tag: string?)
 	if now < self.nextSampleAt then
 		return
 	end
-	self.trail:push(now, flatten(playerCF))
+	self.trail:push(now, flatten(playerCF), tag)
 	-- Fixed cadence; if a frame was slow, resync instead of bursting samples.
 	self.nextSampleAt = math.max(self.nextSampleAt + SAMPLE_INTERVAL, now)
 end
@@ -260,7 +364,7 @@ end
 
 function Mannequin._updateWarmup(self: Mannequin, now: number)
 	local first = self.trail:firstTime()
-	if first and now - first >= Config.Mannequin.Delay then
+	if first and now - first >= self.delay then
 		self.state = "Trailing"
 		self.cursor = first
 		self.emergeStartedAt = now
@@ -268,7 +372,7 @@ function Mannequin._updateWarmup(self: Mannequin, now: number)
 end
 
 function Mannequin._advanceCursor(self: Mannequin, dt: number, now: number)
-	local desired = now - Config.Mannequin.Delay
+	local desired = now - self.delay
 	if self.cursor < desired then
 		-- Fell behind (scare hold): replay faster until back to Delay.
 		self.cursor = math.min(desired, self.cursor + dt * Config.Mannequin.CatchUpRate)
@@ -287,7 +391,7 @@ function Mannequin._updateTrailing(self: Mannequin, now: number, dt: number)
 	end
 	local alpha = (now - self.emergeStartedAt) / Config.Mannequin.EmergeSeconds
 	if alpha < 1 then
-		cf = stage.mannequinHome:Lerp(cf, math.max(alpha, 0))
+		cf = (self.emergeFrom or stage.mannequinHome):Lerp(cf, math.max(alpha, 0))
 	end
 	self.position = cf.Position
 	self.facing = cf.LookVector
@@ -343,7 +447,7 @@ function Mannequin._updateAmbush(self: Mannequin, now: number, playerCF: CFrame?
 		self.cursor = t
 	elseif now >= self.ambushUntil then
 		-- Player never came this way: fall back to normal trailing.
-		self.cursor = math.max(now - Config.Mannequin.Delay, self.trail:firstTime() or now)
+		self.cursor = math.max(now - self.delay, self.trail:firstTime() or now)
 	else
 		return
 	end
@@ -352,14 +456,106 @@ function Mannequin._updateAmbush(self: Mannequin, now: number, playerCF: CFrame?
 	self.emergeStartedAt = -math.huge
 end
 
-function Mannequin._updatePose(self: Mannequin, now: number)
+-- Player movement tags that the rig replays as-is (anything else reads as walking).
+local REPLAYED_TAGS = { Jump = true, Fall = true, Climb = true }
+
+function Mannequin._updatePose(self: Mannequin, now: number, playerCF: CFrame?)
 	if now >= self.bowFrom and now < self.bowUntil then
 		self:_setPose("Bow")
+	elseif self.frozen then
+		self:_setPose("Frozen")
 	elseif self.state == "Idle" or self.state == "Warmup" then
 		self:_setPose("Idle")
+	elseif
+		playerCF
+		and self:canCatch(now)
+		and (playerCF.Position - self.position).Magnitude < Config.Mannequin.ReachDistance
+	then
+		self:_setPose("Reach")
+	elseif self.state == "Trailing" or self.state == "Mirror" then
+		-- Copy the player's pose from the same moment it is copying their position.
+		local tag = self.trail:tagAt(if self.state == "Mirror" then now - self.delay else self.cursor)
+		self:_setPose(if REPLAYED_TAGS[tag] then tag else "Walk")
 	else
 		self:_setPose("Walk")
 	end
+end
+
+-- -- Don't Look ---------------------------------------------------------------------------
+
+function Mannequin._updateLook(self: Mannequin, now: number)
+	local canFreeze = self.state == "Trailing" or self.state == "Ambush" or self.state == "Mirror"
+	local result = LookRule.step(self.look, Config.Mannequin.Look, self.looking and canFreeze, now)
+	self.frozen = result.frozen
+	self:_setStare(result.meter)
+	if result.lunge then
+		self:_lunge(now)
+	end
+end
+
+function Mannequin._lunge(self: Mannequin, now: number)
+	local look = Config.Mannequin.Look
+	if self.state == "Mirror" then
+		-- Stared at too long, the reflection steps out of the glass and joins the chase,
+		-- a full Copycat delay behind the player.
+		self:_setHidden(false)
+		self.delay = Config.Mannequin.Delay
+		self.state = "Trailing"
+		self.cursor = math.max(now - self.delay, self.trail:firstTime() or now)
+		self.emergeFrom = self:targetCFrame()
+		self.emergeStartedAt = now
+		if self.mirror then
+			self.mirror.cracked = true
+		end
+	elseif self.state == "Trailing" then
+		-- Skip ahead on the trail, but never closer than MinGapSeconds behind the player.
+		self.cursor = math.max(self.cursor, math.min(self.cursor + look.LungeSeconds, now - look.MinGapSeconds))
+	end
+	local stare = self.events.stare
+	if stare then
+		stare(self:name())
+	end
+end
+
+-- -- Mirror -------------------------------------------------------------------------------
+
+function Mannequin._updateMirror(self: Mannequin, now: number, playerCF: CFrame?)
+	local mirror = self.mirror
+	if not mirror or mirror.cracked then
+		return
+	end
+	local cf = self.trail:sample(now - self.delay)
+	if not cf then
+		return
+	end
+	local s = mirror.path:project(cf.Position)
+	if s >= mirror.plane - Config.Mannequin.Mirror.VanishGap then
+		if mirror.shown then
+			mirror.cracked = true
+			mirror.shown = false
+			self:_setHidden(true)
+			local cracked = self.events.mirrorCracked
+			if cracked then
+				cracked(self:name())
+			end
+		end
+		return
+	end
+	if s < mirror.from then
+		return
+	end
+	if not mirror.shown then
+		mirror.shown = true
+		self.emergeStartedAt = now
+		self:_setHidden(false)
+	end
+	-- Stand at the reflection of the player's progress across the mirror point, lifted by
+	-- however high the player is above the route (so it jumps when they jump).
+	local reflected = mirror.path:at(2 * mirror.plane - s)
+	local lift = cf.Position.Y - mirror.path:at(s).Y
+	self.position = reflected + Vector3.new(0, math.max(lift, 0), 0)
+	local toward = if playerCF then playerCF.Position else cf.Position
+	self.facing = flatDirection(self.position, toward, self.facing)
 end
 
 function Mannequin._pruneTrail(self: Mannequin, now: number)
@@ -385,6 +581,7 @@ function Mannequin.canCatch(self: Mannequin, now: number): boolean
 	if self.state == "Trailing" or self.state == "Ambush" then
 		return true
 	end
+	-- A reflection never catches; only one that has stepped out of the glass (Trailing).
 	return self.state == "Shortcut" and self.shortcut ~= nil and self.shortcut.phase == "StepOut"
 end
 
@@ -401,16 +598,26 @@ function Mannequin._checkCatch(self: Mannequin, now: number, playerCF: CFrame)
 end
 
 --- playerCF is nil while the character is missing or dead (nothing is recorded or caught).
-function Mannequin.update(self: Mannequin, now: number, dt: number, playerCF: CFrame?)
+--- playerTag is the player's movement pose ("Run", "Jump", "Fall", "Climb", "Idle").
+function Mannequin.update(self: Mannequin, now: number, dt: number, playerCF: CFrame?, playerTag: string?)
 	if not self.stage then
 		return
 	end
-	self:_updatePose(now)
+	self:_updateLook(now)
+	self:_updatePose(now, playerCF)
 	if playerCF and self.state ~= "Idle" then
-		self:_record(now, playerCF)
+		self:_record(now, playerCF, playerTag)
+	end
+	if self.frozen then
+		-- Watched: it holds still. The trail keeps recording, so it catches up afterwards.
+		return self:_finishUpdate(now, playerCF)
 	end
 	if now >= self.pausedUntil then
-		if self.state == "Idle" then
+		if self.state == "Idle" and self.role == "Mirror" then
+			self:_updateMirrorIdle(now, playerCF, playerTag)
+		elseif self.state == "Mirror" then
+			self:_updateMirror(now, playerCF)
+		elseif self.state == "Idle" then
 			self:_updateIdle(now, playerCF)
 		elseif self.state == "Warmup" then
 			self:_updateWarmup(now)
@@ -422,10 +629,27 @@ function Mannequin.update(self: Mannequin, now: number, dt: number, playerCF: CF
 			self:_updateAmbush(now, playerCF)
 		end
 	end
+	self:_finishUpdate(now, playerCF)
+end
+
+function Mannequin._finishUpdate(self: Mannequin, now: number, playerCF: CFrame?)
 	self:_pruneTrail(now)
 	self:_apply(false)
 	if playerCF then
 		self:_checkCatch(now, playerCF)
+	end
+end
+
+--- The mirror starts recording once the player leaves the entrance (like Idle → Warmup).
+function Mannequin._updateMirrorIdle(self: Mannequin, now: number, playerCF: CFrame?, playerTag: string?)
+	local stage = self.stage :: Types.StageInfo
+	if not playerCF or not self.mirror then
+		return
+	end
+	if (playerCF.Position - stage.entrance.Position).Magnitude > Config.Mannequin.StartMoveDistance then
+		self.state = "Mirror"
+		self.nextSampleAt = now
+		self:_record(now, playerCF, playerTag)
 	end
 end
 

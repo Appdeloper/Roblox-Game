@@ -136,7 +136,7 @@ return function(placePath, check)
 		local stepPart = h.game:GetService("CollectionService"):GetTagged("CollapseStep")[1]
 		c.character.root.CFrame = stepPart.CFrame * roblox.CFrame.new(0, 3.5, 0)
 		r.fromServer("Scare", 3)
-		r.fromServer("FakeExit")
+		r.fromServer("FakeExit", "Right")
 	end)
 	c.tick(6)
 	-- The harness reports a touch device, so "Auto" quality resolves to Low — which

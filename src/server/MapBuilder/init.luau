@@ -25,6 +25,9 @@ local LAYOUTS = {
 	require(script.Layouts.Stage1),
 	require(script.Layouts.Stage2),
 	require(script.Layouts.Stage3),
+	require(script.Layouts.Stage4),
+	require(script.Layouts.Stage5),
+	require(script.Layouts.Stage6),
 }
 
 local MapBuilder = {}

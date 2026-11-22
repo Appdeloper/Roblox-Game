@@ -1,6 +1,6 @@
 --!strict
 --[[
-	Scares — the three scripted, once-per-run moments. Design rules (ages 9–17, mobile):
+	Scares — the six scripted, once-per-run moments (one signature scare per stage). Design rules (ages 9–17, mobile):
 	  * Telegraphed: a caption announces what is happening before or as it happens.
 	  * Readable: big, slow, well-lit motion — no gore, nothing pops at the camera.
 	  * Skippable-friendly: never blocks movement; a Skip button ends the effect instantly.
@@ -243,7 +243,13 @@ end
 local function knockAndApplause(myToken: number)
 	local cfg = Config.Scares.Stage3
 	local info = ClientState.stageInfo
-	local fakeSide = if info and info.realExit == "Left" then "Right" else "Left"
+	local fakeSide = "Left"
+	for _, name in DoorEffects.exitNames(3) do
+		if not info or name ~= info.realExit then
+			fakeSide = name
+			break
+		end
+	end
 	local fakeDoor = DoorEffects.get("Exit/" .. fakeSide)
 	if fakeDoor and fakeDoor.panel then
 		AudioController.playAt("Knock", fakeDoor.panel)
@@ -261,7 +267,7 @@ local function knockAndApplause(myToken: number)
 		-- choice is lit but not given away.
 		local stage3 = ClientState.stageInfo
 		if stage3 then
-			for _, side in { "Left", "Right" } do
+			for _, side in DoorEffects.exitNames(3) do
 				local door = DoorEffects.get("Exit/" .. side)
 				if door and door.panel then
 					local at = door.panel.Position
@@ -279,9 +285,149 @@ local function knockAndApplause(myToken: number)
 	end)
 end
 
+local function finishAfter(myToken: number, seconds: number)
+	task.delay(seconds, function()
+		if alive(myToken) then
+			finish()
+		end
+	end)
+end
+
+local function myRoot(): BasePart?
+	local character = Players.LocalPlayer.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	return if root and root:IsA("BasePart") then root else nil
+end
+
+-- ── Stage 4: a light rig drops and finds you ─────────────────────────────────────────────
+
+local function rigDrop(myToken: number)
+	local cfg = Config.Scares.Stage4
+	local root = myRoot()
+	if not root then
+		finish()
+		return
+	end
+	-- A rig crashes down on its chain beside the catwalk (never at the camera), swings to a
+	-- stop, and its spot lands on you.
+	local hang = root.Position + Vector3.new(4, 14, -6)
+	local rig = localPart("FallenRig", Vector3.new(3, 2, 3), CFrame.new(hang + Vector3.new(0, 10, 0)), "Iron")
+	local chain = localPart("RigChain", Vector3.new(0.3, 12, 0.3), CFrame.new(hang + Vector3.new(0, 16, 0)), "Iron")
+	AudioController.play("RiggingCreak")
+	caption(4, "CLANG! A light rig drops on its chain...", cfg.DropSeconds + cfg.SpotSeconds)
+	TweenService:Create(rig, TweenInfo.new(cfg.DropSeconds, Enum.EasingStyle.Bounce), { CFrame = CFrame.new(hang) })
+		:Play()
+	TweenService:Create(
+		chain,
+		TweenInfo.new(cfg.DropSeconds, Enum.EasingStyle.Bounce),
+		{ CFrame = CFrame.new(hang + Vector3.new(0, 6, 0)) }
+	):Play()
+	CameraEffects.shake(0.15, 0.3)
+	task.delay(cfg.DropSeconds, function()
+		if not alive(myToken) then
+			return
+		end
+		local target = myRoot()
+		if target then
+			StageLight.snapOn(hang, target.Position - Vector3.new(0, 3, 0), cfg.SpotSeconds)
+		end
+		caption(4, "...and its spotlight finds you. Somewhere behind, wood creaks.", cfg.SpotSeconds)
+	end)
+	finishAfter(myToken, cfg.DropSeconds + cfg.SpotSeconds + 0.3)
+end
+
+-- ── Stage 5: every costume turns to look ─────────────────────────────────────────────────
+
+local function costumesTurn(myToken: number)
+	local cfg = Config.Scares.Stage5
+	local root = myRoot()
+	AudioController.play("RiggingCreak")
+	caption(5, "The costumes on the rail... all turn to look at you.", cfg.TurnSeconds + cfg.HoldSeconds)
+	for _, head in CollectionService:GetTagged("CostumeHead") do
+		if head:IsA("BasePart") and root then
+			local d = root.Position - head.Position
+			local yaw = math.atan2(-d.X, -d.Z)
+			-- Movers applies the Turn attribute on top of the ride along the rail.
+			local value = Instance.new("NumberValue")
+			value.Value = 0
+			value.Changed:Connect(function(v)
+				head:SetAttribute("Turn", v)
+			end)
+			track(value)
+			TweenService:Create(value, TweenInfo.new(cfg.TurnSeconds, Enum.EasingStyle.Sine), { Value = yaw }):Play()
+		end
+	end
+	task.delay(cfg.TurnSeconds + cfg.HoldSeconds, function()
+		for _, head in CollectionService:GetTagged("CostumeHead") do
+			head:SetAttribute("Turn", nil)
+		end
+		if alive(myToken) then
+			finish()
+		end
+	end)
+end
+
+-- ── Stage 6: house lights up, the audience stands ────────────────────────────────────────
+
+local function audienceStands(myToken: number)
+	local cfg = Config.Scares.Stage6
+	caption(
+		6,
+		"The house lights come up. Every seat is taken... by mannequins.",
+		cfg.LightsUpSeconds + cfg.StandSeconds
+	)
+	StageLight.flood(cfg.LightsUpSeconds + cfg.StandSeconds + cfg.ApplauseSeconds)
+	task.delay(cfg.LightsUpSeconds, function()
+		if not alive(myToken) then
+			return
+		end
+		AudioController.play("RiggingCreak")
+		local members = CollectionService:GetTagged("Audience")
+		for i, model in members do
+			if model:IsA("Model") then
+				-- Stand up row by row: each body and head rises two studs.
+				task.delay((i % 13) * 0.05, function()
+					if not alive(myToken) then
+						return
+					end
+					for _, part in model:GetChildren() do
+						if part:IsA("BasePart") then
+							local rest = part.CFrame
+							part:SetAttribute("Rest", rest)
+							TweenService:Create(part, TweenInfo.new(0.5), { CFrame = rest + Vector3.new(0, 2, 0) })
+								:Play()
+						end
+					end
+				end)
+			end
+		end
+	end)
+	task.delay(cfg.LightsUpSeconds + cfg.StandSeconds, function()
+		if not alive(myToken) then
+			return
+		end
+		AudioController.play("Applause")
+		caption(6, "...and they applaud. Now RUN. Only one door is real!", cfg.ApplauseSeconds)
+	end)
+	task.delay(cfg.LightsUpSeconds + cfg.StandSeconds + cfg.ApplauseSeconds, function()
+		-- Sit everyone back down so a retake starts from a quiet house.
+		for _, model in CollectionService:GetTagged("Audience") do
+			for _, part in model:GetChildren() do
+				local rest = part:GetAttribute("Rest")
+				if part:IsA("BasePart") and typeof(rest) == "CFrame" then
+					part.CFrame = rest
+				end
+			end
+		end
+		if alive(myToken) then
+			finish()
+		end
+	end)
+end
+
 -- ── API ───────────────────────────────────────────────────────────────────────────────────
 
-local SCARES = { shadowBow, windowWalk, knockAndApplause }
+local SCARES = { shadowBow, windowWalk, knockAndApplause, rigDrop, costumesTurn, audienceStands }
 
 function Scares.init()
 	StageLight.init()

@@ -30,8 +30,20 @@ type DoorVisual = {
 	token: number,
 }
 
--- painted doors: key "doorId/Role"; stage-3 exits: key "Exit/Left" etc.
+-- painted doors: key "doorId/Role"; real/fake exits: key "Exit/<name>" (names are unique).
 local doors: { [string]: DoorVisual } = {}
+
+--- Names of the exit doors that belong to `stage` (from the model's Stage attribute).
+function DoorEffects.exitNames(stage: number): { string }
+	local out = {}
+	for key, door in doors do
+		if string.sub(key, 1, 5) == "Exit/" and door.model:GetAttribute("Stage") == stage then
+			table.insert(out, string.sub(key, 6))
+		end
+	end
+	table.sort(out)
+	return out
+end
 
 local function register(model: Instance, key: string)
 	if not model:IsA("Model") then

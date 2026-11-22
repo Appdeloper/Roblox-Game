@@ -49,6 +49,58 @@ These are the ones to look at first with [VISUAL_CHECKLIST.md](VISUAL_CHECKLIST.
 
 ---
 
+## Verified in Roblox Studio (Phase 1, 2026-11-22)
+
+Played in Studio 0.748 through its MCP server, with the repo scripts synced in. Runs were driven by moving
+the character along each stage's route from a client script and reading the Output. Screenshots are in
+[screenshots/](screenshots/).
+
+| Check | Result |
+| --- | --- |
+| Boot and Output | Clean. `[Main] Don't Look Backstage ready: 3 stages`. Only expected notices (placeholders, DataStore unavailable). |
+| Full run, stages 1 → 3 | Finished in 48.8 s with 0 retakes: `RunFinished`, finish ticket data, **Opening Night** title, best time. |
+| Slide mat (stage 2) | Raycast on the live wedge: +5 studs at the −X end, −5 at the +X end, so it slopes **down toward the landing**. Risk 3 closed. |
+| Mannequin trail-follower | Stays about 20–30 studs behind at running speed; standing still gets you caught in about 1.4 s. |
+| Mannequin physics | Upright (UpVector.Y = 1.00), not sinking (root 0.3 studs below the player's), at rest when parked. Risk 1 mostly closed; jitter at speed not judged by eye yet. |
+| Painted doors | `DoorWarning` (about 2.8 s) then `DoorOpened` in stages 1 and 3. |
+| Catch / respawn | `Caught` → retake +1 → back at the stage entrance. The mannequin parks at its home spot and does **not** re-catch while you stand at the entrance (no catch loop). |
+| Checkpoints | Each stage clear sends you to the next stage's entrance; a retake returns you to the current one. |
+| Stage 3 exits | The fake exit gives `FakeExit`, the real one finishes the run. |
+| Badges | `FirstEscape` and `OpeningNight` fire on finish (logged, since the IDs are placeholders). |
+| Part count | 3,260 BaseParts and 57 lights, well under 12,000. |
+
+**Not verified in Studio yet:** DataStore saving and the leaderboard (an unpublished place cannot use
+DataStores, even with API access on: publish once, then retest), purchases, mobile emulator layout,
+and the look of stages 2 and 3 (Studio closed before those screenshots were taken).
+
+## Mannequin overhaul (Phase 2A): verified and open
+
+Verified in Studio: looking at the mannequin freezes it (`Pose = Frozen`), the HUD stare meter fills,
+at 2.2 s `StareLunge` fires and it closes in; the stage 2 Mirror appears and cracks before the slide
+mat; stage 3 spawns two Understudies. Open, needs eyes and hands:
+
+| Risk | What you'd see | Where to fix |
+| --- | --- | --- |
+| Head-follow axis on the block rig | The head turns away from you, or tilts instead of turning | `MannequinAnimator.lookAngles` (swap the sign of `yaw`) |
+| Look cone on phones | Freezing feels too easy or too hard to trigger | `Config.Mannequin.Look.MaxAngleDegrees` |
+| Mirror spacing | The reflection appears too late, or crowds the roofs | `Config.Mirrors[2]` (`From`, `Plane`), `Mirror.VanishGap` |
+| Three chasers in stage 3 | Too punishing for younger players | `Config.Mannequin.UnderstudyDelays` (fewer or later) |
+
+## Six stages (Phase 2B): verified and open
+
+Verified in Studio: a full six-stage run finishes with the Output clean and prints
+`ready: 6 stages`. A light-rig beam sends you back (`Spotted`), the stage 5 and 6 mirrors crack,
+the finale's fake doors bump you and the real one finishes the run. 3,813 parts in all.
+
+| Risk | What you'd see | Where to fix |
+| --- | --- | --- |
+| Light-rig timing | Beams feel unfair, or too easy to slip past | `Layouts/Stage4.luau` → `movers[*].motion` (`period`, `halfWidth`), `Config.Hazards.BeamLeniency` |
+| Sandbag and shelves push you on the client | They don't push, or they fling you too hard | `client/World/Movers.luau` (`Solid` parts collide locally), mover `size`/`amplitude` |
+| Conveyor speed | The belt doesn't carry you, or it's too strong for phones | `Layouts/Stage5.luau` → `Conveyor.conveyor` |
+| Shrinking crates | The crate shrinks out from under you without warning | `Layouts/Stage5.luau` → `pulse.hold`, `pulse.min` |
+| Audience readability | The house reads as clutter around the risers | `Set/Backstage.luau` → `openingNight` (rows, spacing) |
+| Stage 6 difficulty | Four chasers plus a mirror is too much for younger players | `Config.Mannequin.UnderstudyDelaysByStage[6]` |
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.
