@@ -23,6 +23,7 @@ local CameraEffects = require(script.Parent.Parent.Camera.CameraEffects)
 local Captions = require(script.Parent.Parent.UI.Captions)
 local ClientState = require(script.Parent.Parent.ClientState)
 local DoorEffects = require(script.Parent.DoorEffects)
+local StageLight = require(script.Parent.StageLight)
 
 local Scares = {}
 
@@ -46,6 +47,7 @@ local function finish()
 		instance:Destroy()
 	end
 	table.clear(cleanup)
+	StageLight.clear()
 end
 
 local function skip(stage: number)
@@ -200,6 +202,12 @@ local function windowWalk(myToken: number)
 		CFrame = CFrame.lookAt(to, to + (to - from).Unit),
 	}):Play()
 
+	task.delay(cfg.WindowWalkSeconds * 0.55, function()
+		if alive(myToken) then
+			-- A street lamp gives out as it passes: the first thing you notice is the dark.
+			StageLight.lampDie(to)
+		end
+	end)
 	task.delay(cfg.WindowWalkSeconds, function()
 		if not alive(myToken) then
 			return
@@ -249,6 +257,19 @@ local function knockAndApplause(myToken: number)
 		end
 		AudioController.play("Applause")
 		bounceAudience(myToken)
+		-- The house lights come up for a curtain call: both doors are picked out, so the
+		-- choice is lit but not given away.
+		local stage3 = ClientState.stageInfo
+		if stage3 then
+			for _, side in { "Left", "Right" } do
+				local door = DoorEffects.get("Exit/" .. side)
+				if door and door.panel then
+					local at = door.panel.Position
+					StageLight.snapOn(at + Vector3.new(-18, 26, 0), at, cfg.ApplauseSeconds)
+				end
+			end
+			StageLight.flood(cfg.ApplauseSeconds)
+		end
 		caption(3, "…then applause from the empty seats. Take your exit!", cfg.ApplauseSeconds)
 		task.delay(cfg.ApplauseSeconds, function()
 			if alive(myToken) then
@@ -263,6 +284,7 @@ end
 local SCARES = { shadowBow, windowWalk, knockAndApplause }
 
 function Scares.init()
+	StageLight.init()
 	fxFolder = Instance.new("Folder")
 	fxFolder.Name = "LocalScareFX"
 	fxFolder.Parent = Workspace
