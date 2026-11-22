@@ -71,7 +71,7 @@ return {
 
 	solids = {
 		-- Flat the entry door is set into (left of the mid landing).
-		{ name = "LandingFlat", center = { 56, 30, -8 }, size = { 10, 14, 1 }, surface = "Plaster" },
+		{ name = "LandingFlat", center = { 56, 30, -9.2 }, size = { 10, 14, 1 }, surface = "Plaster" },
 		-- Flat beside the foot of the stairs holding the exit door.
 		{ name = "FootFlat", center = { 100, 13, -20.5 }, size = { 12, 14, 1 }, surface = "Plaster" },
 		{
@@ -95,11 +95,11 @@ return {
 	doors = {
 		{
 			id = "S3_LandingDoor",
-			entry = { pos = { 56, 23, -7.4 }, facing = { 0, 0, 1 } },
+			entry = { pos = { 56, 23, -8.6 }, facing = { 0, 0, 1 } },
 			exit = { pos = { 100, 6, -19.9 }, facing = { 0, 0, 1 } },
 			trigger = { center = { 56, 28, 0 }, size = { 10, 10, 14 } },
-			entryPoint = { 56, 26, -9.5 },
-			path = { { 56, 26, -10.5 }, { 100, 9, -22 }, { 100, 9, -21 } },
+			entryPoint = { 56, 26, -10.6 },
+			path = { { 56, 26, -11.6 }, { 100, 9, -22 }, { 100, 9, -21 } },
 			exitStep = { 100, 9, -14 },
 			pathSpeed = 22,
 		},

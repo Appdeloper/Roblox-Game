@@ -13,10 +13,18 @@ local Theme = require(ReplicatedStorage.Shared.Theme)
 local LayoutTypes = require(script.Parent.LayoutTypes)
 local Builders = require(script.Parent.Builders)
 local Props = require(script.Parent.Props)
+local Auditorium = require(script.Parent.Set.Auditorium)
+local CurtainCall = require(script.Parent.Set.CurtainCall)
+local Street = require(script.Parent.Set.Street)
 
 type Layout = LayoutTypes.Layout
 
 local Dressing = {}
+
+--- Deterministic per-stage randomness for set dressing.
+local function rngFor(stage: number): Random
+	return Random.new(Config.Map.VisualSeed + stage * 101)
+end
 
 local function roomCenterAndSize(layout: Layout, origin: Vector3): (Vector3, Vector3)
 	local min = origin + Builders.v(layout.room.min)
@@ -57,10 +65,14 @@ local function exitArch(parent: Instance, base: CFrame, label: string)
 	Props.sign(parent, base * CFrame.new(0, 10, 0), Vector3.new(7, 1.6, 0.3), label, Theme.Colors.WarmSpot, "Iron")
 end
 
-function Dressing.stage1(model: Model, layout: Layout, origin: Vector3, _route: { [string]: BasePart })
+function Dressing.stage1(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 	local set = Builders.folder("Dressing", model)
-	-- Footlights along the stage lip; warm spots from the grid above.
-	Props.footlights(set, origin + Vector3.new(102.2, 22.3, -24), origin + Vector3.new(102.2, 22.3, 24), 16, 5)
+	Auditorium.build({ set = set, origin = origin, rng = rngFor(1), route = route })
+	-- Footlights along the stage lip (inside the proscenium pillars); warm spots above.
+	-- Two runs with a deliberate gap where the prop trunks meet the stage: the missing
+	-- footlights read as "this is the way up" and keep the climb visually clear.
+	Props.footlights(set, origin + Vector3.new(102.2, 21.4, -19), origin + Vector3.new(102.2, 21.4, -1), 11, 4)
+	Props.footlights(set, origin + Vector3.new(102.2, 21.4, 15), origin + Vector3.new(102.2, 21.4, 19), 4, 3)
 	for _, z in { -14, 14 } do
 		Props.stageSpot(
 			set,
@@ -70,7 +82,8 @@ function Dressing.stage1(model: Model, layout: Layout, origin: Vector3, _route: 
 			60
 		)
 	end
-	moonWindow(set, origin + Vector3.new(-5.6, 30, 0), Vector3.xAxis, 120)
+	-- Above the back balcony (y 30..33).
+	moonWindow(set, origin + Vector3.new(-5.6, 39, 0), Vector3.xAxis, 120)
 	-- Exit glows in the back curtain.
 	exitArch(set, CFrame.lookAt(origin + Vector3.new(156.8, 22, 0), origin + Vector3.new(0, 22, 0)), "BACKSTAGE")
 	Props.sign(
@@ -88,6 +101,7 @@ local SHOP_SIGNS = { "BAKERY", "HATS & CAPS", "BOOKS", "TOY SHOP" }
 
 function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 	local set = Builders.folder("Dressing", model)
+	Street.build({ set = set, origin = origin, rng = rngFor(2), route = route })
 	for i, id in { "RoofA", "RoofB", "RoofC", "RoofD" } do
 		local roof = route[id]
 		if roof then
@@ -114,25 +128,27 @@ function Dressing.stage2(model: Model, layout: Layout, origin: Vector3, route: {
 			decor = true,
 		})
 	end
-	-- Two street lamps on the roofs, one warm light over the landing.
-	for _, pos in { Vector3.new(54, 25.5, -8), Vector3.new(92, 26, -8) } do
-		local lamp = Builders.part({
-			name = "StreetLamp",
-			size = Vector3.new(0.8, 0.8, 0.8),
-			cframe = CFrame.new(origin + pos + Vector3.new(0, 6, 0)),
-			parent = set,
-			surface = "WarmGlow",
-			decor = true,
-		})
-		Builders.pointLight(lamp, Theme.Colors.WarmSpot, 22, 1.4)
+	-- Wall lanterns on the painted facade (the roofs you run across stay completely clear).
+	for _, x in { 46, 86 } do
+		local bracket = origin + Vector3.new(x, 27.5, 11.4)
 		Builders.part({
-			name = "LampPost",
-			size = Vector3.new(0.4, 6, 0.4),
-			cframe = CFrame.new(origin + pos + Vector3.new(0, 3, 0)),
+			name = "LanternBracket",
+			size = Vector3.new(0.3, 0.3, 1.6),
+			cframe = CFrame.new(bracket),
 			parent = set,
 			surface = "Iron",
 			decor = true,
 		})
+		local lamp = Builders.part({
+			name = "StreetLamp",
+			size = Vector3.new(1.1, 1.4, 1.1),
+			cframe = CFrame.new(bracket - Vector3.new(0, 0.9, 0.7)),
+			parent = set,
+			surface = "WarmGlow",
+			decor = true,
+			tag = "FlickerLamp",
+		})
+		Builders.pointLight(lamp, Theme.Colors.WarmSpot, 26, 1.5)
 	end
 	Props.stageSpot(set, origin + Vector3.new(137, 40, -14), origin + Vector3.new(140, 1, 0), Theme.Colors.WarmSpot, 50)
 	moonWindow(set, origin + Vector3.new(72, 50, 11.8), -Vector3.zAxis, 140)
@@ -153,7 +169,7 @@ local function staircaseStringers(set: Instance, origin: Vector3)
 	for _, flight in { { 21, 40, 50, 25 }, { 62, 23, 91, 8 } } do
 		local a = origin + Vector3.new(flight[1], flight[2] - 1.5, 0)
 		local b = origin + Vector3.new(flight[3], flight[4] - 1.5, 0)
-		for _, z in { -5.2, 5.2 } do
+		for _, z in { -5.9, 5.9 } do
 			local pa, pb = a + Vector3.new(0, 0, z), b + Vector3.new(0, 0, z)
 			Builders.part({
 				name = "Stringer",
@@ -167,28 +183,11 @@ local function staircaseStringers(set: Instance, origin: Vector3)
 	end
 end
 
-local function emptyAudience(set: Instance, origin: Vector3)
-	-- Rows of empty seats below the staircase — where the applause comes from.
-	for row = 0, 5 do
-		for _, z in { -19, 19 } do
-			Builders.part({
-				name = "AudienceRow",
-				size = Vector3.new(2, 2.5, 10),
-				cframe = CFrame.new(origin + Vector3.new(24 + row * 10, -2.5, z)),
-				parent = set,
-				surface = "Velvet",
-				decor = true,
-				tag = "AudienceSeat",
-			})
-		end
-	end
-end
-
-function Dressing.stage3(model: Model, layout: Layout, origin: Vector3, _route: { [string]: BasePart })
+function Dressing.stage3(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 	local set = Builders.folder("Dressing", model)
+	CurtainCall.build({ set = set, origin = origin, rng = rngFor(3), route = route })
 	staircaseStringers(set, origin)
-	emptyAudience(set, origin)
-	Props.footlights(set, origin + Vector3.new(93, 6.3, -19), origin + Vector3.new(93, 6.3, 19), 14, 5)
+	Props.footlights(set, origin + Vector3.new(91.2, 5.4, -19), origin + Vector3.new(91.2, 5.4, 19), 14, 5)
 	Props.stageSpot(set, origin + Vector3.new(110, 50, 0), origin + Vector3.new(134, 6, 0), Theme.Colors.WarmSpot, 70)
 	Props.stageSpot(set, origin + Vector3.new(30, 54, 0), origin + Vector3.new(56, 23, 0), Theme.Colors.WarmSpot, 60)
 	moonWindow(set, origin + Vector3.new(-5.6, 46, 0), Vector3.xAxis, 140)

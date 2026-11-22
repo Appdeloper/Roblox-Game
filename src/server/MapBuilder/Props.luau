@@ -12,34 +12,69 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local Builders = require(script.Parent.Builders)
+local SetPieces = require(script.Parent.SetPieces)
 
 local Props = {}
 
 local DOOR_WIDTH = 5
 local DOOR_HEIGHT = 8.6
 local UNDER_GAP = 0.35
+local OPENING = DOOR_HEIGHT + UNDER_GAP
 
+--- Thick moulded frame: deep jambs + head, gilt casing, keystone and a threshold.
 local function doorFrame(model: Model, base: CFrame)
-	local jambSize = Vector3.new(0.5, DOOR_HEIGHT + UNDER_GAP + 0.5, 0.7)
 	for _, side in { -1, 1 } do
 		Builders.part({
 			name = "Jamb",
-			size = jambSize,
-			cframe = base * CFrame.new(side * (DOOR_WIDTH / 2 + 0.25), jambSize.Y / 2, 0),
+			size = Vector3.new(0.9, OPENING + 0.9, 1.1),
+			cframe = base * CFrame.new(side * (DOOR_WIDTH / 2 + 0.45), (OPENING + 0.9) / 2, 0),
 			parent = model,
 			surface = "DarkWood",
+		})
+		Builders.part({
+			name = "Casing",
+			size = Vector3.new(0.25, OPENING + 0.9, 0.14),
+			cframe = base * CFrame.new(side * (DOOR_WIDTH / 2 + 0.78), (OPENING + 0.9) / 2, -0.62),
+			parent = model,
+			surface = "Gilt",
+			decor = true,
 		})
 	end
 	Builders.part({
 		name = "Lintel",
-		size = Vector3.new(DOOR_WIDTH + 1, 0.5, 0.7),
-		cframe = base * CFrame.new(0, DOOR_HEIGHT + UNDER_GAP + 0.25, 0),
+		size = Vector3.new(DOOR_WIDTH + 1.8, 0.9, 1.1),
+		cframe = base * CFrame.new(0, OPENING + 0.45, 0),
 		parent = model,
 		surface = "DarkWood",
 	})
+	Builders.part({
+		name = "Casing",
+		size = Vector3.new(DOOR_WIDTH + 1.8, 0.25, 0.14),
+		cframe = base * CFrame.new(0, OPENING + 0.78, -0.62),
+		parent = model,
+		surface = "Gilt",
+		decor = true,
+	})
+	Builders.part({
+		name = "Keystone",
+		size = Vector3.new(1, 1.3, 0.3),
+		cframe = base * CFrame.new(0, OPENING + 1.1, -0.55),
+		parent = model,
+		surface = "Gilt",
+		decor = true,
+	})
+	Builders.part({
+		name = "Threshold",
+		size = Vector3.new(DOOR_WIDTH + 0.6, 0.12, 1.2),
+		cframe = base * CFrame.new(0, 0.06, -0.1),
+		parent = model,
+		surface = "DarkWood",
+		decor = true,
+	})
 end
 
---- The door leaf (panel, star, handle) lives in its own model so clients can swing it on the hinge.
+--- The door leaf lives in its own model so clients can swing it on the hinge. Everything on
+--- the leaf (insets, star, rose, handle) swings with it; only "Handle" turns on a warning.
 local function doorLeaf(model: Model, base: CFrame, starred: boolean, panelSurface: string): Model
 	local leaf = Builders.model("Leaf", model)
 	local panel = Builders.part({
@@ -50,46 +85,62 @@ local function doorLeaf(model: Model, base: CFrame, starred: boolean, panelSurfa
 		surface = panelSurface,
 	})
 	leaf.PrimaryPart = panel
-
-	if starred then
-		local plaque = Builders.part({
-			name = "Star",
-			size = Vector3.new(1.8, 1.8, 0.08),
-			cframe = base * CFrame.new(0, UNDER_GAP + DOOR_HEIGHT * 0.72, -0.19),
+	-- Two raised panels.
+	for _, frac in { 0.27, 0.72 } do
+		Builders.part({
+			name = "Inset",
+			size = Vector3.new(DOOR_WIDTH - 1.4, DOOR_HEIGHT * 0.36, 0.08),
+			cframe = base * CFrame.new(0, UNDER_GAP + DOOR_HEIGHT * frac, -0.19),
 			parent = leaf,
-			surface = "Invisible",
+			surface = if panelSurface == "PaintedDoor" then "DoorPanelInset" else "AgedWood",
 			decor = true,
 		})
-		local _, label = Builders.surfaceText(plaque, Enum.NormalId.Front, "★", Theme.Colors.Brass, Theme.Fonts.Bold)
-		label.TextStrokeTransparency = 0.4
-		label.TextStrokeColor3 = Theme.Surfaces.DarkWood.Color
 	end
-
-	local handle = Builders.part({
-		name = "Handle",
-		size = Vector3.new(0.9, 0.22, 0.22),
-		cframe = base * CFrame.new(DOOR_WIDTH / 2 - 0.8, UNDER_GAP + 3.8, -0.3),
+	if starred then
+		SetPieces.star(
+			leaf,
+			"Star",
+			base * CFrame.new(0, UNDER_GAP + DOOR_HEIGHT * 0.72, -0.27),
+			1.05,
+			0.44,
+			0.12,
+			"Brass"
+		)
+	end
+	local spindle = base * CFrame.new(DOOR_WIDTH / 2 - 0.45, UNDER_GAP + 3.8, -0.2)
+	Builders.cylinder({
+		name = "Rose",
+		size = Vector3.new(0.1, 0.6, 0.6),
+		cframe = spindle * CFrame.Angles(0, math.rad(90), 0),
 		parent = leaf,
 		surface = "Brass",
 		decor = true,
 	})
-	handle.Reflectance = 0.2
+	-- Lever: its spindle end sits on the rose (DoorEffects turns it around that end).
+	Builders.part({
+		name = "Handle",
+		size = Vector3.new(0.9, 0.2, 0.2),
+		cframe = spindle * CFrame.new(-0.35, 0, -0.15),
+		parent = leaf,
+		surface = "Brass",
+		decor = true,
+	})
 	return leaf
 end
 
---- Hidden glow strip in the gap under the door. Clients fade it in during a warning.
-local function underGlow(model: Model, base: CFrame)
+--- Warm light strip in the gap under the door + a hidden floor spill; clients reveal both.
+local function underGlow(model: Model, base: CFrame, spillTag: string, spillAttributes: { [string]: any })
 	local strip = Builders.part({
 		name = "UnderGlow",
 		size = Vector3.new(DOOR_WIDTH, 0.2, 0.15),
 		cframe = base * CFrame.new(0, 0.12, -0.05),
 		parent = model,
 		surface = "DoorGlow",
-		transparency = 1,
 		decor = true,
 	})
-	local light = Builders.pointLight(strip, Theme.Colors.DoorGlow, 10, 2.5, false)
+	local light = Builders.pointLight(strip, Theme.Colors.DoorGlow, 12, 2.5, false)
 	light.Name = "Glow"
+	SetPieces.lightSpill(model, base, spillTag, spillAttributes)
 end
 
 --- base: CFrame at the bottom-centre of the doorway, LookVector pointing out into the room.
@@ -97,7 +148,7 @@ function Props.paintedDoor(parent: Instance, base: CFrame, doorId: string, role:
 	local model = Builders.model("PaintedDoor_" .. doorId .. "_" .. role, parent)
 	doorFrame(model, base)
 	doorLeaf(model, base, true, "PaintedDoor")
-	underGlow(model, base)
+	underGlow(model, base, "DoorSpill", { DoorId = doorId })
 	model:SetAttribute("DoorId", doorId)
 	model:SetAttribute("Role", role)
 	-- Hinge on the leaf's left edge (seen from the room), used by the client swing.
@@ -106,16 +157,53 @@ function Props.paintedDoor(parent: Instance, base: CFrame, doorId: string, role:
 	return model
 end
 
---- Stage 3 exits. Both look like doors; only one opens. The fake one is painted flat on the set.
+--- Flat "painted on the set" look for the fake exit: hidden until a client enables it.
+local function paintedOverlay(panel: BasePart)
+	local gui = Instance.new("SurfaceGui")
+	gui.Name = "PaintedOverlay"
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 30
+	gui.LightInfluence = 0.4
+	gui.Enabled = false
+	gui.Parent = panel
+	local function paint(size: UDim2, pos: UDim2, color: Color3, transparency: number)
+		local f = Instance.new("Frame")
+		f.Size = size
+		f.Position = pos
+		f.BorderSizePixel = 0
+		f.BackgroundColor3 = color
+		f.BackgroundTransparency = transparency
+		f.Parent = gui
+		return f
+	end
+	local wood = Theme.Surfaces.ExitDoor.Color
+	paint(UDim2.fromScale(1, 1), UDim2.new(), wood:Lerp(Theme.Colors.Paper, 0.18), 0)
+	-- Painted "panels" and a painted shadow edge: convincingly flat once you look closely.
+	paint(UDim2.fromScale(0.7, 0.3), UDim2.fromScale(0.15, 0.1), wood:Lerp(Theme.Colors.Black, 0.25), 0.2)
+	paint(UDim2.fromScale(0.7, 0.3), UDim2.fromScale(0.15, 0.55), wood:Lerp(Theme.Colors.Black, 0.25), 0.2)
+	paint(UDim2.fromScale(0.06, 1), UDim2.fromScale(0.94, 0), Theme.Colors.Black, 0.55)
+	local knob = paint(UDim2.fromScale(0.12, 0.06), UDim2.fromScale(0.78, 0.52), Theme.Colors.Brass, 0)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.5, 0)
+	corner.Parent = knob
+end
+
+--- Stage 3 exits. Both look like doors; only one opens. Clients decide (per player) which is
+--- real: the real one gets its light + spill, the fake one its painted overlay.
 function Props.exitDoor(parent: Instance, base: CFrame, side: string): Model
 	local model = Builders.model("Exit_" .. side, parent)
 	doorFrame(model, base)
-	doorLeaf(model, base, false, "ExitDoor")
-	underGlow(model, base)
+	local leaf = doorLeaf(model, base, false, "ExitDoor")
+	underGlow(model, base, "LightSpill", { Side = side })
+	local panel = leaf.PrimaryPart
+	if panel then
+		paintedOverlay(panel)
+	end
 	local sign = Builders.part({
 		name = "ExitSign",
 		size = Vector3.new(3.2, 1.2, 0.3),
-		cframe = base * CFrame.new(0, DOOR_HEIGHT + UNDER_GAP + 1.4, -0.2),
+		cframe = base * CFrame.new(0, OPENING + 2.4, -0.4),
 		parent = model,
 		surface = "ExitSign",
 		decor = true,
@@ -127,20 +215,37 @@ function Props.exitDoor(parent: Instance, base: CFrame, side: string): Model
 	return model
 end
 
---- Seat backs and armrests lying on a tipped row (non-colliding, purely visual).
+--- A tipped-over seat row: the seats hang off the row's SIDE faces (backs on one side,
+--- cushions on the other), always below the walking surface, so the top stays clean and
+--- readable for the jump (only the glow-tape lips sit on top).
 function Props.seatRowDressing(parent: Instance, row: BasePart)
-	local seats = math.max(2, math.floor(row.Size.Z / 3))
+	local seats = math.max(2, math.floor(row.Size.Z / 2.2))
 	local spacing = row.Size.Z / seats
+	local hx, hy = row.Size.X / 2, row.Size.Y / 2
 	for i = 1, seats do
 		local z = -row.Size.Z / 2 + spacing * (i - 0.5)
 		Builders.part({
 			name = "SeatBack",
-			size = Vector3.new(0.4, 1.6, spacing * 0.8),
-			cframe = row.CFrame
-				* CFrame.new(-row.Size.X / 2 + 0.3, row.Size.Y / 2 + 0.5, z)
-				* CFrame.Angles(0, 0, math.rad(-35)),
+			size = Vector3.new(0.35, 1.9, spacing * 0.82),
+			cframe = row.CFrame * CFrame.new(-hx - 0.2, hy - 2, z),
 			parent = parent,
 			surface = "Velvet",
+			decor = true,
+		})
+		Builders.part({
+			name = "SeatCushion",
+			size = Vector3.new(0.5, 1.4, spacing * 0.78),
+			cframe = row.CFrame * CFrame.new(hx + 0.3, -1.3, z),
+			parent = parent,
+			surface = "Velvet",
+			decor = true,
+		})
+		Builders.part({
+			name = "Armrest",
+			size = Vector3.new(0.6, 0.25, 0.22),
+			cframe = row.CFrame * CFrame.new(hx + 0.35, hy - 1.6, z + spacing / 2),
+			parent = parent,
+			surface = "DarkWood",
 			decor = true,
 		})
 	end

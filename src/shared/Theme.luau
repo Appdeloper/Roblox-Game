@@ -107,6 +107,7 @@ Theme.Surfaces = {
 
 	-- Doors, props
 	PaintedDoor = s(96, 64, 110, M.WoodPlanks),
+	DoorPanelInset = s(76, 48, 90, M.WoodPlanks),
 	ExitDoor = s(64, 42, 30, M.WoodPlanks),
 	PaintFlat = s(64, 42, 30, M.SmoothPlastic),
 	Cardboard = s(176, 138, 92, M.Cardboard),
@@ -121,6 +122,8 @@ Theme.Surfaces = {
 	WarmGlow = s(255, 196, 120, M.Neon),
 	MoonGlow = s(64, 138, 150, M.Neon),
 	DoorGlow = s(255, 214, 140, M.Neon, { Transparency = 1 }),
+	-- Floor light spill in front of a lit door; hidden until a client reveals it.
+	SpillGlow = s(255, 206, 140, M.Neon, { Transparency = 1 }),
 	ExitSign = s(120, 210, 160, M.Neon),
 
 	-- Hazards & atmosphere

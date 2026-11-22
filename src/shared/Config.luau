@@ -45,6 +45,9 @@ Config.Map = {
 		{ 0, 400, 520 },
 	},
 	SupportPostThickness = 0.8,
+	-- Seed for all set-dressing randomness (seat variety, plank shades, ropes, prop jitter).
+	-- Same seed = identical map every build; change it to reshuffle the look.
+	VisualSeed = 1984,
 }
 
 Config.Mannequin = {
