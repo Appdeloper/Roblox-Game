@@ -24,8 +24,6 @@ export type RouteBox = {
 	tilt: number?,
 	-- Stage 3 cardboard steps.
 	collapse: boolean?,
-	-- Theme.Colors key; builder picks a default per kind otherwise.
-	color: string?,
 	-- Slide only: the direction its surface slopes DOWN toward ("+X" | "-X" | "+Z" | "-Z").
 	slopeToward: string?,
 }
@@ -46,8 +44,8 @@ export type DoorLayout = {
 
 export type Solid = Box & {
 	name: string,
-	color: string?,
-	material: string?,
+	-- Theme.Surfaces key.
+	surface: string,
 	-- false = purely decorative, players pass through.
 	collide: boolean?,
 	transparency: number?,

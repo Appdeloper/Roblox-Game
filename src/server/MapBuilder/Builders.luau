@@ -16,8 +16,11 @@ export type PartProps = {
 	size: Vector3,
 	cframe: CFrame,
 	parent: Instance,
-	color: Color3?,
-	material: Enum.Material?,
+	-- Key into Theme.Surfaces (Color + Material [+ Reflectance/Transparency]). Required.
+	surface: string,
+	-- Decorative: no collision, no raycast/touch work, no shadow. Use for anything that is
+	-- not walkable or a wall, so the parkour route stays physically and visually clean.
+	decor: boolean?,
 	collide: boolean?,
 	transparency: number?,
 	castShadow: boolean?,
@@ -28,32 +31,9 @@ function Builders.v(t: { number }): Vector3
 	return Vector3.new(t[1], t[2], t[3])
 end
 
---- Theme colour by key. Array entries (e.g. Facade) cycle by `index`.
-function Builders.color(key: string?, fallback: Color3, index: number?): Color3
-	if not key then
-		return fallback
-	end
-	local value = (Theme.Colors :: any)[key]
-	if typeof(value) == "Color3" then
-		return value
-	end
-	if type(value) == "table" and #value > 0 then
-		return value[((index or 1) - 1) % #value + 1]
-	end
-	return fallback
-end
-
-function Builders.material(name: string?, fallback: Enum.Material): Enum.Material
-	if not name then
-		return fallback
-	end
-	local ok, result = pcall(function()
-		return (Enum.Material :: any)[name]
-	end)
-	if ok and typeof(result) == "EnumItem" then
-		return result :: Enum.Material
-	end
-	return fallback
+--- Applies a Theme surface (see Theme.apply).
+function Builders.applySurface(part: BasePart, name: string)
+	Theme.apply(part, name)
 end
 
 local function applyCommon(part: BasePart, props: PartProps)
@@ -61,14 +41,16 @@ local function applyCommon(part: BasePart, props: PartProps)
 	part.Anchored = true
 	part.Size = props.size
 	part.CFrame = props.cframe
-	part.Color = props.color or Theme.Colors.Wall
-	part.Material = props.material or Enum.Material.SmoothPlastic
-	part.CanCollide = if props.collide == nil then true else props.collide
-	-- Decorative parts never need touch/query work; walkable parts keep query for raycasts.
+	Builders.applySurface(part, props.surface)
+	if props.transparency then
+		part.Transparency = props.transparency
+	end
+	local collide = if props.decor then false elseif props.collide == nil then true else props.collide
+	part.CanCollide = collide
+	-- Only collidable geometry needs raycasts; nothing in the map uses Touched.
 	part.CanTouch = false
-	part.CanQuery = part.CanCollide
-	part.Transparency = props.transparency or 0
-	part.CastShadow = props.castShadow or false
+	part.CanQuery = collide
+	part.CastShadow = if props.castShadow ~= nil then props.castShadow else false
 	part.TopSurface = Enum.SurfaceType.Smooth
 	part.BottomSurface = Enum.SurfaceType.Smooth
 	if props.tag then
@@ -83,8 +65,27 @@ function Builders.part(props: PartProps): Part
 	return part
 end
 
+--- Cylinder whose axis runs along the CFrame's X axis (Roblox convention).
+function Builders.cylinder(props: PartProps): Part
+	local part = Builders.part(props)
+	part.Shape = Enum.PartType.Cylinder
+	return part
+end
+
+function Builders.ball(props: PartProps): Part
+	local part = Builders.part(props)
+	part.Shape = Enum.PartType.Ball
+	return part
+end
+
 function Builders.wedge(props: PartProps): WedgePart
 	local part = Instance.new("WedgePart")
+	applyCommon(part, props)
+	return part
+end
+
+function Builders.cornerWedge(props: PartProps): CornerWedgePart
+	local part = Instance.new("CornerWedgePart")
 	applyCommon(part, props)
 	return part
 end
@@ -174,8 +175,7 @@ function Builders.wallWithWindows(
 	center: Vector3,
 	size: Vector3,
 	band: { y1: number, y2: number, spans: { { number } } },
-	color: Color3,
-	material: Enum.Material
+	surface: string
 ): { BasePart }
 	local parts: { BasePart } = {}
 	local minX, maxX = center.X - size.X / 2, center.X + size.X / 2
@@ -191,8 +191,7 @@ function Builders.wallWithWindows(
 				size = Vector3.new(x2 - x1, y2 - y1, size.Z),
 				cframe = CFrame.new((x1 + x2) / 2, (y1 + y2) / 2, center.Z),
 				parent = parent,
-				color = color,
-				material = material,
+				surface = surface,
 			})
 		)
 	end

@@ -58,13 +58,12 @@ local BALLS: { { at: Vector3, part: string, size: number } } = {
 	{ at = Vector3.new(0.5, -2, 0), part = "RightLeg", size = 0.6 },
 }
 
-local function newPart(name: string, size: Vector3, cframe: CFrame, color: Color3, parent: Instance): Part
+local function newPart(name: string, size: Vector3, cframe: CFrame, surface: string, parent: Instance): Part
 	local part = Instance.new("Part")
 	part.Name = name
 	part.Size = size
 	part.CFrame = cframe
-	part.Color = color
-	part.Material = Enum.Material.Wood
+	Theme.apply(part, surface)
 	part.TopSurface = Enum.SurfaceType.Smooth
 	part.BottomSurface = Enum.SurfaceType.Smooth
 	part.CanCollide = false
@@ -82,7 +81,7 @@ function MannequinRig.build(name: string, cframe: CFrame): Rig
 	local model = Instance.new("Model")
 	model.Name = name
 
-	local root = newPart("Root", Vector3.new(2, 2, 1), cframe, Theme.Colors.Mannequin, model)
+	local root = newPart("Root", Vector3.new(2, 2, 1), cframe, "Mannequin", model)
 	root.Transparency = 1
 	root.Massless = false
 	root.CastShadow = false
@@ -90,8 +89,7 @@ function MannequinRig.build(name: string, cframe: CFrame): Rig
 
 	local parts: { [string]: BasePart } = { Root = root }
 	for _, spec in PARTS do
-		parts[spec.name] =
-			newPart(spec.name, spec.size, cframe * CFrame.new(spec.offset), Theme.Colors.Mannequin, model)
+		parts[spec.name] = newPart(spec.name, spec.size, cframe * CFrame.new(spec.offset), "Mannequin", model)
 	end
 
 	local joints: { [string]: Motor6D } = {}
@@ -111,13 +109,8 @@ function MannequinRig.build(name: string, cframe: CFrame): Rig
 
 	for i, ball in BALLS do
 		local host = parts[ball.part]
-		local sphere = newPart(
-			"JointBall" .. i,
-			Vector3.one * ball.size,
-			cframe * CFrame.new(ball.at),
-			Theme.Colors.MannequinJoint,
-			model
-		)
+		local sphere =
+			newPart("JointBall" .. i, Vector3.one * ball.size, cframe * CFrame.new(ball.at), "MannequinJoint", model)
 		sphere.Shape = Enum.PartType.Ball
 		sphere.CastShadow = false
 		local weld = Instance.new("WeldConstraint")

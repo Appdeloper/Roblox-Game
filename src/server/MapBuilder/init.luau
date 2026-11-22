@@ -48,13 +48,27 @@ local function validate(index: number, layout: any)
 	end
 end
 
---- Studio templates ship their own SpawnLocation; it would steal spawns from the lobby.
---- Disable (never delete) any spawn that isn't part of the generated map.
-local function disableStraySpawns(root: Instance)
+--- Studio templates ship a SpawnLocation (would steal spawns from the lobby) and a grey
+--- Baseplate. At runtime: disable stray spawns and hide/neutralise the Baseplate.
+--- Never deletes anything, and edit mode is untouched (this only runs in a live server).
+local function neutraliseTemplate(root: Instance)
 	for _, d in Workspace:GetDescendants() do
-		if d:IsA("SpawnLocation") and not d:IsDescendantOf(root) and d.Enabled then
+		if d:IsDescendantOf(root) then
+			continue
+		end
+		if d:IsA("SpawnLocation") and d.Enabled then
 			d.Enabled = false
 			warn("[MapBuilder] disabled stray SpawnLocation " .. d:GetFullName() .. " (players start in the lobby)")
+		elseif d:IsA("BasePart") and d.Name == "Baseplate" then
+			d.Transparency = 1
+			d.CanCollide = false
+			d.CanQuery = false
+			d.CanTouch = false
+			for _, child in d:GetChildren() do
+				if child:IsA("Decal") or child:IsA("Texture") then
+					child.Transparency = 1
+				end
+			end
 		end
 	end
 end
@@ -76,7 +90,7 @@ function MapBuilder.build(): BuiltMap
 		stages[index] = StageBuilder.build(index, layout, origin, root, Dressing.byStage[index])
 	end
 
-	disableStraySpawns(root)
+	neutraliseTemplate(root)
 	return {
 		lobbySpawn = lobby.spawn,
 		stages = stages,

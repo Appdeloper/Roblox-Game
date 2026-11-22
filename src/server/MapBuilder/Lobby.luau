@@ -44,8 +44,7 @@ local function rehearsalStage(parent: Instance, o: Vector3): SpawnLocation
 		size = Vector3.new(40, 3, 14),
 		cframe = CFrame.new(o + Vector3.new(0, 1.5, -15)),
 		parent = parent,
-		color = Theme.Colors.StageWood,
-		material = Enum.Material.WoodPlanks,
+		surface = "Plank",
 	})
 	-- Two shallow steps down to the floor.
 	for i, z in { -7.5, -6.5 } do
@@ -54,8 +53,7 @@ local function rehearsalStage(parent: Instance, o: Vector3): SpawnLocation
 			size = Vector3.new(10, 3 - i, 1),
 			cframe = CFrame.new(o + Vector3.new(0, (3 - i) / 2, z)),
 			parent = parent,
-			color = Theme.Colors.DarkWood,
-			material = Enum.Material.WoodPlanks,
+			surface = "AgedWood",
 		})
 	end
 	local spawn = Instance.new("SpawnLocation")
@@ -65,8 +63,7 @@ local function rehearsalStage(parent: Instance, o: Vector3): SpawnLocation
 	spawn.Duration = 0
 	spawn.Size = Vector3.new(10, 0.4, 6)
 	spawn.CFrame = CFrame.new(o + Vector3.new(0, 3.2, -15))
-	spawn.Color = Theme.Colors.StageWood
-	spawn.Material = Enum.Material.WoodPlanks
+	Theme.apply(spawn, "RouteWood")
 	spawn.TopSurface = Enum.SurfaceType.Smooth
 	spawn.Parent = parent
 	Props.spikeMark(parent, CFrame.new(o + Vector3.new(0, 3.4, -15)))
@@ -81,18 +78,16 @@ local function ghostLight(parent: Instance, o: Vector3)
 		size = Vector3.new(0.3, 6, 0.3),
 		cframe = CFrame.new(o + Vector3.new(6, 6, -17)),
 		parent = parent,
-		color = Theme.Colors.UiDark,
-		material = Enum.Material.Metal,
-		collide = false,
+		surface = "Iron",
+		decor = true,
 	})
 	local bulb = Builders.part({
 		name = "GhostLightBulb",
 		size = Vector3.new(1, 1, 1),
 		cframe = CFrame.new(o + Vector3.new(6, 9.4, -17)),
 		parent = parent,
-		color = Theme.Colors.WarmSpot,
-		material = Enum.Material.Neon,
-		collide = false,
+		surface = "WarmGlow",
+		decor = true,
 	})
 	bulb.Shape = Enum.PartType.Ball
 	Builders.pointLight(bulb, Theme.Colors.WarmSpot, 40, 1.8)
@@ -105,8 +100,7 @@ local function leaderboardBoard(parent: Instance, o: Vector3): SurfaceGui
 		size = Vector3.new(20, 14, 0.4),
 		cframe = CFrame.lookAt(pos, pos + Vector3.xAxis),
 		parent = parent,
-		color = Theme.Colors.Chalkboard,
-		material = Enum.Material.Slate,
+		surface = "Chalkboard",
 	})
 	local gui = Instance.new("SurfaceGui")
 	gui.Name = "LeaderboardGui"
@@ -171,8 +165,8 @@ local function stageDoor(parent: Instance, o: Vector3): ProximityPrompt
 		size = Vector3.new(1, 1, 1),
 		cframe = base * CFrame.new(0, 4, -1.5),
 		parent = parent,
-		transparency = 1,
-		collide = false,
+		surface = "Invisible",
+		decor = true,
 	})
 	Props.sign(
 		parent,
@@ -180,7 +174,7 @@ local function stageDoor(parent: Instance, o: Vector3): ProximityPrompt
 		Vector3.new(10, 2, 0.3),
 		"PLACES, PLEASE!",
 		Theme.Colors.WarmSpot,
-		Theme.Colors.UiDark
+		"Iron"
 	)
 	return prompt(pad, "StartPrompt", "Start the Show", "Stage Door")
 end
@@ -191,20 +185,18 @@ local function wardrobe(parent: Instance, o: Vector3)
 		size = Vector3.new(10, 0.3, 0.3),
 		cframe = CFrame.new(o + Vector3.new(-14, 6.5, 16)),
 		parent = parent,
-		color = Theme.Colors.Brass,
-		material = Enum.Material.Metal,
-		collide = false,
+		surface = "Brass",
+		decor = true,
 	})
-	local colors = { Theme.Colors.Curtain, Theme.Colors.MoonTeal, Theme.Colors.Brass, Theme.Colors.PaintedDoor }
-	for i, color in colors do
+	local costumes = { "Curtain", "CostumeTeal", "Gilt", "CostumePurple" }
+	for i, costume in costumes do
 		Builders.part({
 			name = "Costume",
 			size = Vector3.new(1.6, 4, 0.6),
 			cframe = CFrame.new(o + Vector3.new(-18 + i * 2.2, 4.3, 16)),
 			parent = parent,
-			color = color,
-			material = Enum.Material.Fabric,
-			collide = false,
+			surface = costume,
+			decor = true,
 		})
 	end
 	local p = prompt(rail, "WardrobePrompt", "Open Wardrobe", "Cosmetics")
@@ -215,7 +207,7 @@ local function wardrobe(parent: Instance, o: Vector3)
 		Vector3.new(8, 1.6, 0.3),
 		"WARDROBE",
 		Theme.Colors.Paper,
-		Theme.Colors.DarkWood
+		"DarkWood"
 	)
 end
 
@@ -226,7 +218,7 @@ local function titleSign(parent: Instance, o: Vector3)
 		Vector3.new(36, 5, 0.3),
 		Config.Game.Name,
 		Theme.Colors.WarmSpot,
-		Theme.Colors.Curtain
+		"Curtain"
 	)
 	Props.sign(
 		parent,
@@ -234,7 +226,7 @@ local function titleSign(parent: Instance, o: Vector3)
 		Vector3.new(10, 1.2, 0.3),
 		Config.Game.BuildLabel,
 		Theme.Colors.PaperShade,
-		Theme.Colors.UiDark
+		"Iron"
 	)
 end
 

@@ -21,17 +21,16 @@ return {
 
 	route = {
 		{ id = "Deck", kind = "Platform", center = { 10, 0, 0 }, size = { 20, 2, 20 }, link = "Start" },
-		{ id = "RoofA", kind = "Roof", center = { 32, 7, 0 }, size = { 20, 34, 20 }, link = "Climb", color = "Roof" },
+		{ id = "RoofA", kind = "Roof", center = { 32, 7, 0 }, size = { 20, 34, 20 }, link = "Climb" },
 		{
 			id = "RoofB",
 			kind = "Roof",
 			center = { 54.5, 7.75, 0 },
 			size = { 16, 35.5, 20 },
 			link = "Jump",
-			color = "Roof",
 		},
-		{ id = "RoofC", kind = "Roof", center = { 74.5, 7, 0 }, size = { 14, 34, 20 }, link = "Jump", color = "Roof" },
-		{ id = "RoofD", kind = "Roof", center = { 92.5, 8, 0 }, size = { 14, 36, 20 }, link = "Jump", color = "Roof" },
+		{ id = "RoofC", kind = "Roof", center = { 74.5, 7, 0 }, size = { 14, 34, 20 }, link = "Jump" },
+		{ id = "RoofD", kind = "Roof", center = { 92.5, 8, 0 }, size = { 14, 36, 20 }, link = "Jump" },
 		{
 			id = "SlideMat",
 			kind = "Slide",
@@ -55,38 +54,33 @@ return {
 			name = "SlideSupport",
 			center = { 113, -4, 0 },
 			size = { 24, 12, 14 },
-			color = "DarkWood",
-			material = "WoodPlanks",
+			surface = "AgedWood",
 		},
 		-- Side flats force the player under the backdrop rather than around it.
 		{
 			name = "BackdropFlatLeft",
 			center = { 146, 20, -20.5 },
 			size = { 2, 64, 19 },
-			color = "Wall",
-			material = "Plaster",
+			surface = "Plaster",
 		},
 		{
 			name = "BackdropFlatRight",
 			center = { 146, 20, 20.5 },
 			size = { 2, 64, 19 },
-			color = "Wall",
-			material = "Plaster",
+			surface = "Plaster",
 		},
 		{
 			name = "BackdropHeader",
 			center = { 146, 46, 0 },
 			size = { 2, 28, 22 },
-			color = "Wall",
-			material = "Plaster",
+			surface = "Plaster",
 		},
 		-- Painted street facade (built with window holes by the Stage 2 dressing).
 		{
 			name = "StreetFacade",
 			center = { 72, 24, FACADE_Z },
 			size = { 152, 68, 2 },
-			color = "Facade",
-			material = "Plaster",
+			surface = "FacadeSage",
 			tag = "StreetFacade",
 			-- Upstairs windows (local X spans, one shared Y band) — the scare puppet walks behind them.
 			windows = { y1 = 30, y2 = 37, spans = { { 48, 54 }, { 58, 64 }, { 68, 74 }, { 78, 84 } } },

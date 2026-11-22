@@ -48,5 +48,28 @@ return function(h, check)
 		stamped = stamped and door:GetAttribute("Stage") ~= nil and door:GetAttribute("DoorId") ~= nil
 	end
 	check(stamped, "painted doors carry Stage + DoorId attributes")
+
+	-- Every part is styled from Theme.Surfaces (one place to retune the whole look).
+	local Theme = h.require(place:GetService("ReplicatedStorage").Shared.Theme)
+	local function key(color, material)
+		return string.format(
+			"%d,%d,%d,%s",
+			math.round(color.R * 255),
+			math.round(color.G * 255),
+			math.round(color.B * 255),
+			tostring(material)
+		)
+	end
+	local known = {}
+	for _, surface in Theme.Surfaces do
+		known[key(surface.Color, surface.Material)] = true
+	end
+	local offTheme = {}
+	for _, d in root:GetDescendants() do
+		if d:IsA("BasePart") and not known[key(d.Color, d.Material)] then
+			table.insert(offTheme, d:GetFullName())
+		end
+	end
+	check(#offTheme == 0, "every map part uses a Theme surface" .. (if #offTheme > 0 then ": " .. offTheme[1] else ""))
 	return map
 end

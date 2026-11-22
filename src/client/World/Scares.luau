@@ -69,7 +69,7 @@ local function taggedInStage(tag: string, stage: number): Instance?
 	return nil
 end
 
-local function localPart(name: string, size: Vector3, cf: CFrame, color: Color3, transparency: number?): Part
+local function localPart(name: string, size: Vector3, cf: CFrame, surface: string): Part
 	local part = Instance.new("Part")
 	part.Name = name
 	part.Anchored = true
@@ -79,9 +79,7 @@ local function localPart(name: string, size: Vector3, cf: CFrame, color: Color3,
 	part.CastShadow = false
 	part.Size = size
 	part.CFrame = cf
-	part.Color = color
-	part.Material = Enum.Material.SmoothPlastic
-	part.Transparency = transparency or 0
+	Theme.apply(part, surface)
 	part.Parent = fxFolder
 	track(part)
 	return part
@@ -91,10 +89,9 @@ end
 
 --- Builds a flat silhouette on the curtain plane. Returns upper-body parts (which bow) and the waist pivot.
 local function buildShadow(feet: CFrame): ({ [BasePart]: CFrame }, CFrame)
-	local ink = Theme.Colors.Black
 	-- feet: origin on the curtain, X = into the curtain, Y = up, Z = sideways along the curtain.
 	local function piece(name: string, height: number, width: number, y: number, z: number): Part
-		return localPart(name, Vector3.new(0.05, height, width), feet * CFrame.new(0, y, z), ink, 0.25)
+		return localPart(name, Vector3.new(0.05, height, width), feet * CFrame.new(0, y, z), "ShadowInk")
 	end
 	piece("ShadowLegL", 3.2, 0.9, 1.6, -0.55)
 	piece("ShadowLegR", 3.2, 0.9, 1.6, 0.55)
@@ -136,8 +133,7 @@ local function shadowBow(myToken: number)
 		"ScareSpot",
 		Vector3.one,
 		CFrame.lookAt(Vector3.new(planeX - 45, floorY + 16, z), feet.Position + Vector3.new(0, 5, 0)),
-		Theme.Colors.UiDark,
-		1
+		"Invisible"
 	)
 	local spot = Instance.new("SpotLight")
 	spot.Face = Enum.NormalId.Front

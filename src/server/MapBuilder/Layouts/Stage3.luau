@@ -26,7 +26,6 @@ for i = 1, 6 do
 		size = STEP,
 		link = "Jump",
 		collapse = true,
-		color = "Cardboard",
 	})
 end
 
@@ -49,7 +48,6 @@ for j = 1, 6 do
 		size = STEP,
 		link = "Jump",
 		collapse = true,
-		color = "Cardboard",
 	})
 end
 
@@ -73,15 +71,14 @@ return {
 
 	solids = {
 		-- Flat the entry door is set into (left of the mid landing).
-		{ name = "LandingFlat", center = { 56, 30, -8 }, size = { 10, 14, 1 }, color = "Wall", material = "Plaster" },
+		{ name = "LandingFlat", center = { 56, 30, -8 }, size = { 10, 14, 1 }, surface = "Plaster" },
 		-- Flat beside the foot of the stairs holding the exit door.
-		{ name = "FootFlat", center = { 100, 13, -20.5 }, size = { 12, 14, 1 }, color = "Wall", material = "Plaster" },
+		{ name = "FootFlat", center = { 100, 13, -20.5 }, size = { 12, 14, 1 }, surface = "Plaster" },
 		{
 			name = "SideCurtainLeft",
 			center = { 120, 28, -24 },
 			size = { 30, 44, 1 },
-			color = "Curtain",
-			material = "Fabric",
+			surface = "Curtain",
 			collide = false,
 			tag = "Curtain",
 		},
@@ -89,8 +86,7 @@ return {
 			name = "SideCurtainRight",
 			center = { 120, 28, 24 },
 			size = { 30, 44, 1 },
-			color = "Curtain",
-			material = "Fabric",
+			surface = "Curtain",
 			collide = false,
 			tag = "Curtain",
 		},
