@@ -18,6 +18,13 @@ export type StageStartInfo = {
 	-- Server time (workspace:GetServerTimeNow()) when the run began; drives the HUD timer.
 	runStartedAt: number,
 	retakes: number,
+	-- "Story" | "Daily" | "Endless" | "Coop"
+	mode: string?,
+	-- Endless: lives left.
+	lives: number?,
+	-- Position in the run's stage list, and its length (nil in Endless: it never ends).
+	step: number?,
+	steps: number?,
 }
 
 -- The theatre ticket shown on the finish screen.
@@ -30,6 +37,8 @@ export type TicketData = {
 	skin: string,
 	playerName: string,
 	seat: string,
+	mode: string?,
+	stagesCleared: number?,
 }
 
 export type ProfileSnapshot = {

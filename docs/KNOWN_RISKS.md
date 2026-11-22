@@ -101,6 +101,20 @@ the finale's fake doors bump you and the real one finishes the run. 3,813 parts 
 | Audience readability | The house reads as clutter around the risers | `Set/Backstage.luau` → `openingNight` (rows, spacing) |
 | Stage 6 difficulty | Four chasers plus a mirror is too much for younger players | `Config.Mannequin.UnderstudyDelaysByStage[6]` |
 
+## Game modes (Phase 2C): verified and open
+
+Verified in Studio: the lobby shows Daily Run, Endless and Co-op buttons. Each mode starts with
+the right HUD pill (`☀ DAILY RUN · 1/4`, `∞ ENDLESS · stage 1 · ♥♥♥`, `👥 CO-OP · 1/6`). A solo
+Co-op gathers for 10 s, then starts. The sim covers the rest: Daily first-finish-only, Endless
+lives/score/speed-up, Co-op downed → revive → shared clear → party retake.
+
+| Risk | Why it couldn't be tested | Where to fix |
+| --- | --- | --- |
+| Daily/Endless boards | DataStores need a published place | `LeaderboardService.refreshModes`; store names in `Config.Modes` |
+| Co-op with real players | Needs 2+ clients (Studio **Test → Clients and Servers**) | `RoundService` co-op section; `Config.Modes.Coop` |
+| Downed players | They stand still with WalkSpeed 0; there's no "downed" pose yet | `RoundService.setDowned` |
+| Endless difficulty curve | Needs real players | `Config.Modes.Endless` (`DelayStep`, `MinDelay`, `Lives`) |
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.

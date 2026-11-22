@@ -41,6 +41,7 @@ Remotes.ServerToClient = {
 Remotes.ClientToServer = {
 	"RequestStart", -- ()
 	"RequestLobby", -- ()
+	"RequestMode", -- (mode: string) "Story" | "Daily" | "Endless" | "Coop"
 	"SetSetting", -- (key: string, value: boolean)
 	"SetQuality", -- (level: string) one of Config.Quality.Order, or "Auto"
 	"EquipSkin", -- (skinId: string)

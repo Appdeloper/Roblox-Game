@@ -35,6 +35,7 @@ local MapBuilder = {}
 export type BuiltMap = Types.MapInfo & {
 	startPrompt: ProximityPrompt,
 	leaderboardGui: SurfaceGui,
+	modeBoards: { [string]: SurfaceGui },
 }
 
 local function validate(index: number, layout: any)
@@ -99,6 +100,7 @@ function MapBuilder.build(): BuiltMap
 		stages = stages,
 		startPrompt = lobby.startPrompt,
 		leaderboardGui = lobby.leaderboardGui,
+		modeBoards = lobby.modeBoards,
 	}
 end
 

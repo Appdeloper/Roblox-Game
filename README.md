@@ -17,6 +17,15 @@ the top": back to the stage entrance, plus one retake.
 | **5 · The Prop Room** | Jump crates that shrink and grow, run a conveyor belt of costumes going the wrong way, slip past sliding shelves | Every costume on the rail turns to look at you |
 | **6 · Opening Night** | The whole cast chases you across a collapsing set to five exit doors. One is real | House lights up: the audience is all mannequins, and they stand |
 
+### Game modes
+
+| Mode | How it plays | Board |
+| --- | --- | --- |
+| **Story** | The six stages in order (START THE SHOW, or walk through the stage door) | ★ Best Escapes (fastest time) |
+| **☀ Daily Run** | Four stages picked by the date, the same for every player that day, always ending on Opening Night. Only your first finish each day counts | Today's Daily Run (fastest first finish) |
+| **∞ Endless** | Stages come shuffled and never stop. The mannequin gets a little faster every stage. 3 lives | Endless (most stages cleared) |
+| **👥 Co-op** | Story for up to 4 friends. Tap Co-op within 10 s of each other. A clear moves everyone on; a caught player is *downed* until a teammate stands next to them for 1.5 s; if everyone's down, the cast takes it from the top | — |
+
 At the end you get a **theatre ticket** with your escape time and retakes. Zero retakes earns the
 title **Opening Night**.
 

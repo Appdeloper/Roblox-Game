@@ -276,9 +276,12 @@ end
 
 --- Fills the finish ticket from the profile (wired in Main as RoundService's ticket enricher).
 function DataService.enrichTicket(player: Player, result: any, ticket: Types.TicketData)
-	local record = DataService.recordRun(player, result.time, result.retakes, result.verified)
-	ticket.bestTime = record.bestTime
-	ticket.isNewBest = record.isNewBest
+	-- Best time and escapes are Story records (co-op is the story with friends).
+	if result.mode == nil or result.mode == "Story" or result.mode == "Coop" then
+		local record = DataService.recordRun(player, result.time, result.retakes, result.verified)
+		ticket.bestTime = record.bestTime
+		ticket.isNewBest = record.isNewBest
+	end
 	local profile = profiles[player]
 	if profile and ProfileSchema.ownsSkin(profile.data, profile.data.EquippedSkin) then
 		ticket.skin = profile.data.EquippedSkin

@@ -36,6 +36,8 @@ MannequinService.DoorOutran = Signal.new() :: Signal.Signal<Player, string>
 type Cast = { [string]: Mannequin.Mannequin } -- key: "Main", "Understudy1", …, "Mirror"
 
 local casts: { [Player]: Cast } = {}
+-- Endless: a per-player Copycat delay (nil = Config.Mannequin.Delay).
+local copycatDelay: { [Player]: number } = {}
 local heartbeat: RBXScriptConnection? = nil
 local folder: Folder
 
@@ -119,9 +121,16 @@ local function eventsFor(player: Player): Mannequin.Events
 end
 
 --- Which cast members a stage needs: key → options.
-function MannequinService.castFor(stageIndex: number, hasMirrorPath: boolean): { [string]: Mannequin.Options }
+function MannequinService.castFor(
+	stageIndex: number,
+	hasMirrorPath: boolean,
+	player: Player?
+): { [string]: Mannequin.Options }
 	local behaviours = Config.Behaviours[stageIndex] or { "Copycat" }
 	local wanted: { [string]: Mannequin.Options } = { Main = { role = "Copycat" } }
+	if player and copycatDelay[player] then
+		wanted.Main.delay = copycatDelay[player]
+	end
 	if table.find(behaviours, "Understudy") then
 		local delays = Config.Mannequin.UnderstudyDelaysByStage[stageIndex] or Config.Mannequin.UnderstudyDelays
 		for i, delay in delays do
@@ -145,7 +154,7 @@ local function prepare(player: Player, stage: Types.StageInfo)
 		cast = {}
 		casts[player] = cast
 	end
-	local wanted = MannequinService.castFor(stage.index, stage.routePath ~= nil)
+	local wanted = MannequinService.castFor(stage.index, stage.routePath ~= nil, player)
 	for key, mannequin in cast do
 		if not wanted[key] then
 			cast[key] = nil
@@ -159,6 +168,7 @@ local function prepare(player: Player, stage: Types.StageInfo)
 			mannequin = Mannequin.new(nameFor(player, key), player.UserId, folder, eventsFor(player), options)
 			cast[key] = mannequin
 		end
+		mannequin:setDelay(options.delay)
 		mannequin:reset(stage, now)
 	end
 	ensureLoop()
@@ -206,7 +216,14 @@ function MannequinService.reset(player: Player, stage: Types.StageInfo)
 	prepare(player, stage)
 end
 
+--- Endless: the Copycat's delay for this player (nil restores the default). Applies on the
+--- next spawn/reset.
+function MannequinService.setCopycatDelay(player: Player, delay: number?)
+	copycatDelay[player] = delay
+end
+
 function MannequinService.despawn(player: Player)
+	copycatDelay[player] = nil
 	local cast = casts[player]
 	if cast then
 		casts[player] = nil

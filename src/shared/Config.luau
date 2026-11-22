@@ -132,6 +132,34 @@ Config.Mirrors = {
 	[6] = { From = 0.05, Plane = 0.62 },
 }
 
+-- Game modes (rules in shared/Modes.luau).
+Config.Modes = {
+	Daily = {
+		-- Stages in a Daily Run (always ends on the finale).
+		Length = 4,
+		-- One OrderedDataStore per UTC day: StoreName .. "_" .. dayNumber.
+		StoreName = "DailyBest_v1",
+	},
+	Endless = {
+		-- Catches/falls you can take before the run ends.
+		Lives = 3,
+		-- The Copycat's delay starts at the story delay and shrinks every stage cleared.
+		BaseDelay = 1.5,
+		DelayStep = 0.06,
+		MinDelay = 0.9,
+		-- Best stages cleared (higher is better).
+		StoreName = "EndlessBest_v1",
+	},
+	Coop = {
+		MaxPlayers = 4,
+		-- Seconds after the first player picks Co-op before the show starts.
+		GatherSeconds = 10,
+		-- Stand this close to a downed teammate for this long to revive them.
+		ReviveRadius = 7,
+		ReviveSeconds = 1.5,
+	},
+}
+
 Config.Catch = {
 	Distance = 3,
 	VerticalTolerance = 4,

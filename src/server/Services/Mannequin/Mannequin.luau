@@ -281,6 +281,15 @@ function Mannequin._setStare(self: Mannequin, meter: number)
 	end
 end
 
+--- Changes the replay delay (Endless speeds the Copycat up). nil keeps the role default.
+function Mannequin.setDelay(self: Mannequin, delay: number?)
+	if delay then
+		self.delay = delay
+	elseif self.role == "Copycat" then
+		self.delay = Config.Mannequin.Delay
+	end
+end
+
 --- The owner is (or stopped) looking at this mannequin. Validated by MannequinService.
 function Mannequin.setLooking(self: Mannequin, looking: boolean)
 	self.looking = looking
