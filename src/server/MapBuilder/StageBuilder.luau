@@ -388,6 +388,16 @@ local function stampStage(model: Model, index: number)
 	model:SetAttribute("Stage", index)
 end
 
+--- Mannequin-root-height points over the middle of every route box, in route order.
+local function routePath(ctx: Ctx): { Vector3 }
+	local points = {}
+	for _, box in ctx.layout.route do
+		local top = if box.kind == "Slide" then 0 else box.size[2] / 2
+		table.insert(points, w(ctx, box.center) + Vector3.new(0, top + Config.Mannequin.RootHeight, 0))
+	end
+	return points
+end
+
 local function stageInfo(ctx: Ctx, doors: { Types.DoorInfo }): Types.StageInfo
 	local layout = ctx.layout
 	local exits = layout.exits
@@ -399,6 +409,7 @@ local function stageInfo(ctx: Ctx, doors: { Types.DoorInfo }): Types.StageInfo
 		exitZone = zone(ctx, layout.exitZone),
 		scareZone = zone(ctx, layout.scareZone),
 		doors = doors,
+		routePath = routePath(ctx),
 		exitLeftZone = if exits then zone(ctx, exits.leftZone) else nil,
 		exitRightZone = if exits then zone(ctx, exits.rightZone) else nil,
 	}

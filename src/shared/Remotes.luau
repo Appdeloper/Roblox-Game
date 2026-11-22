@@ -32,6 +32,8 @@ Remotes.ServerToClient = {
 	"ReturnedToLobby", -- ()
 	"Leaderboard", -- (entries: { LeaderboardEntry })
 	"Notify", -- (message: string)
+	"StareLunge", -- (mannequinName: string) stared too long: lights flicker, it lunges
+	"MirrorCracked", -- (mannequinName: string) the reflection shattered
 }
 
 -- Client → server (all validated server-side)
@@ -43,6 +45,7 @@ Remotes.ClientToServer = {
 	"EquipSkin", -- (skinId: string)
 	"SetTrailEnabled", -- (enabled: boolean)
 	"ScareSkipped", -- (stage: number) analytics only
+	"LookState", -- (mannequinName: string) the mannequin you're looking at, "" for none
 }
 
 local cache: { [string]: RemoteEvent } = {}

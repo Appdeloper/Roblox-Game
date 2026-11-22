@@ -70,6 +70,52 @@ Config.Mannequin = {
 	RootHeight = 3,
 	-- Other players' mannequins are faded on your screen to this transparency.
 	OtherPlayersTransparency = 0.75,
+	-- Inside this distance (and able to catch) it reaches for you with both arms.
+	ReachDistance = 9,
+	-- Understudy: extra mannequins replaying the same trail, each later than the last.
+	UnderstudyDelays = { 2.6, 3.8 },
+	-- Mirror: a reflection that walks the route toward you from a point ahead. It can't catch
+	-- you, but stare at it too long and it steps out of the glass and joins the chase.
+	Mirror = {
+		-- Seconds of lag on the reflection (it mirrors you a beat late).
+		Delay = 0.35,
+		-- It cracks and vanishes when you get this close (studs along the route) to the mirror point.
+		VanishGap = 4,
+	},
+	-- "Don't Look": watching a mannequin freezes it; staring too long makes it lunge.
+	Look = {
+		-- View cone used by the client to decide you're looking at it.
+		MaxAngleDegrees = 16,
+		MaxRange = 70,
+		-- Seconds of continuous looking before the lights flicker and it lunges.
+		StareSeconds = 2.2,
+		-- After a lunge it ignores your gaze for this long.
+		CooldownSeconds = 3,
+		-- Stare meter drained per second while you look away (1 = empties in a second).
+		DrainRate = 0.8,
+		-- A lunge skips this much of the trail (seconds), but never closer than MinGapSeconds behind you.
+		LungeSeconds = 0.6,
+		MinGapSeconds = 0.55,
+		-- The server ignores look reports for mannequins further away than this.
+		ServerRange = 90,
+	},
+}
+
+-- Which mannequin behaviours each stage uses. They escalate:
+--   Copycat    your mannequin copies you Delay seconds late (always on)
+--   Shortcut   it takes painted doors when you pass them (stages whose layout has doors)
+--   Mirror     a reflection walks toward you from ahead (stages with a mirror in Config.Mirrors)
+--   Understudy extra mannequins with longer delays (Config.Mannequin.UnderstudyDelays)
+Config.Behaviours = {
+	{ "Copycat", "Shortcut" },
+	{ "Copycat", "Shortcut", "Mirror" },
+	{ "Copycat", "Shortcut", "Understudy" },
+}
+
+-- Mirror points as fractions of the stage's route length: it appears once you pass `From`
+-- and stands at the reflection of your progress across `Plane`.
+Config.Mirrors = {
+	[2] = { From = 0.06, Plane = 0.62 },
 }
 
 Config.Catch = {
@@ -400,6 +446,9 @@ Config.Text = {
 	Caught = "CUT! Take it from the top.",
 	Fell = "Missed your mark! Back to places.",
 	FakeExit = "It's only paint!",
+	LookHint = "Look at the mannequin and it freezes. Stare too long and it moves closer!",
+	StareLunge = "You stared too long. It moved closer!",
+	MirrorCracked = "Crack! Your reflection is gone... for now.",
 	SavingDisabled = "Your progress couldn't load, so saving is paused this visit.",
 }
 

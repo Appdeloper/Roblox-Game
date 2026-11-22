@@ -138,7 +138,13 @@ return function(placePath, check)
 	print("\n== Smoke: server sim — leaving mid-chase, bad remotes")
 	leave(ben)
 	tick(0.2)
-	check(#mannequins:GetChildren() == 1, "leaving mid-chase removes your mannequin")
+	local bensLeft = 0
+	for _, m in mannequins:GetChildren() do
+		if m:GetAttribute("OwnerUserId") == ben.UserId then
+			bensLeft += 1
+		end
+	end
+	check(bensLeft == 0 and #mannequins:GetChildren() >= 1, "leaving mid-chase removes your mannequins only")
 	check(analyticsCount("quit_stage", ben.UserId) == 1, "analytics: quit_stage on disconnect")
 	local before = remotes.count("StageStarted", ana.UserId)
 	remotes.fromClient("RequestLobby", ana, "extra", 1)
