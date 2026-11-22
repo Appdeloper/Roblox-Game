@@ -70,6 +70,20 @@ return function(h, check)
 			table.insert(offTheme, d:GetFullName())
 		end
 	end
+	-- Environment storytelling actually reached the world (guards the wiring).
+	local counts = {}
+	for _, d in root:GetDescendants() do
+		counts[d.Name] = (counts[d.Name] or 0) + 1
+	end
+	local Lore = h.require(place:GetService("ReplicatedStorage").Shared.Lore)
+	check((counts.LoreBoard or 0) >= 6, "lore boards placed (playbills, cast list, schedule, notices)")
+	check((counts.CountdownBoard or 0) == 1, "opening-night countdown board")
+	check((counts.CostumeTag or 0) == #Lore.CostumeTags, "one costume tag per cast member")
+	check((counts.PromptBook or 0) == 1, "prompt book on its stand")
+	check((counts.ScriptPage or 0) >= 15, "script pages scattered around")
+	check((counts.ScuffMark or 0) >= 15, "scuff marks dragged toward the painted doors")
+	check((counts.Footprint or 0) >= 10, "footprints in the dust")
+
 	check(#offTheme == 0, "every map part uses a Theme surface" .. (if #offTheme > 0 then ": " .. offTheme[1] else ""))
 	return map
 end
