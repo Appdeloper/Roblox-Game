@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Quality = require(script.Parent.Parent.Quality)
 
 local Curtains = {}
 
@@ -41,6 +42,12 @@ end
 local function startIdle(entry: Entry)
 	if entry.idle then
 		entry.idle:Cancel()
+		entry.idle = nil
+	end
+	if not Quality.settings.CurtainSway then
+		-- Hang still: no tween at all on the lowest setting.
+		entry.part.CFrame = posed(entry, 0)
+		return
 	end
 	local amplitude = Config.Effects.CurtainSwayDegrees
 	entry.part.CFrame = posed(entry, -amplitude)
@@ -80,6 +87,12 @@ function Curtains.init()
 		register(part)
 	end
 	CollectionService:GetInstanceAddedSignal("Curtain"):Connect(register)
+	-- Switching quality starts or stops every curtain.
+	Quality.Changed:Connect(function()
+		for _, entry in entries do
+			startIdle(entry)
+		end
+	end)
 	CollectionService:GetInstanceRemovedSignal("Curtain"):Connect(function(part)
 		local entry = entries[part :: BasePart]
 		if entry then
@@ -94,6 +107,9 @@ end
 --- Fabric kicks as something rushes past. Only strips within `radius` react, and only
 --- while they are not already rippling, so running along a wall stays cheap.
 function Curtains.ripple(position: Vector3, radius: number, strength: number)
+	if not Quality.settings.CurtainSway then
+		return
+	end
 	local now = os.clock()
 	local amplitude = Config.Effects.CurtainSwayDegrees * (3 + 4 * strength)
 	for _, entry in entries do

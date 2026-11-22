@@ -101,14 +101,22 @@ function StageLight.lampDie(position: Vector3): boolean
 	end
 	local light = nearest :: Light
 	table.insert(extinguished, { light = light, brightness = light.Brightness })
+	local myGeneration = generation
 	AudioController.playAt("LampBuzz", host :: BasePart)
+	-- Disabling it (not just dimming) is what keeps it dead: the ambient flicker loop
+	-- skips disabled lights, so nothing resurrects a lamp the story just put out.
 	if ClientState.reducedScares then
 		TweenService:Create(light, TweenInfo.new(1.2), { Brightness = 0 }):Play()
+		task.delay(1.2, function()
+			if myGeneration == generation then
+				light.Brightness = 0
+				light.Enabled = false
+			end
+		end)
 		return true
 	end
 	-- Two stutters, then out.
 	local full = light.Brightness
-	local myGeneration = generation
 	task.spawn(function()
 		for _ = 1, 2 do
 			if myGeneration ~= generation then
@@ -124,6 +132,12 @@ function StageLight.lampDie(position: Vector3): boolean
 		end
 		if myGeneration == generation then
 			TweenService:Create(light, TweenInfo.new(0.35), { Brightness = 0 }):Play()
+			task.delay(0.35, function()
+				if myGeneration == generation then
+					light.Brightness = 0
+					light.Enabled = false
+				end
+			end)
 		end
 	end)
 	return true
@@ -157,6 +171,7 @@ function StageLight.clear()
 		-- The lamp belongs to the map, but a map rebuild could have taken it away.
 		pcall(function()
 			entry.light.Brightness = entry.brightness
+			entry.light.Enabled = true
 		end)
 	end
 	table.clear(extinguished)

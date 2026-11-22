@@ -34,7 +34,7 @@ function ProfileSchema.default(): ProfileData
 		OwnedSkins = {},
 		EquippedSkin = Config.DefaultTicketSkin,
 		TrailEnabled = false,
-		Settings = { ReducedScares = false },
+		Settings = { ReducedScares = false, Quality = Config.Quality.Default },
 		ProcessedReceipts = {},
 	}
 end
@@ -84,7 +84,14 @@ function ProfileSchema.migrate(raw: any): ProfileData?
 			data.EquippedSkin = raw.EquippedSkin
 		end
 		data.TrailEnabled = raw.TrailEnabled == true
-		data.Settings.ReducedScares = type(raw.Settings) == "table" and raw.Settings.ReducedScares == true
+		local settings = if type(raw.Settings) == "table" then raw.Settings else {}
+		data.Settings.ReducedScares = settings.ReducedScares == true
+		-- Added after v2 shipped: older profiles simply fall back to Auto.
+		if type(settings.Quality) == "string" and Config.Quality.Levels[settings.Quality] ~= nil then
+			data.Settings.Quality = settings.Quality
+		elseif settings.Quality == "Auto" then
+			data.Settings.Quality = "Auto"
+		end
 		if type(raw.ProcessedReceipts) == "table" then
 			for id, t in raw.ProcessedReceipts do
 				if type(id) == "string" and type(t) == "number" then
@@ -147,7 +154,7 @@ function ProfileSchema.merge(stored: ProfileData, mine: ProfileData, deltas: Del
 		OwnedSkins = union(stored.OwnedSkins, mine.OwnedSkins),
 		EquippedSkin = mine.EquippedSkin,
 		TrailEnabled = mine.TrailEnabled,
-		Settings = { ReducedScares = mine.Settings.ReducedScares },
+		Settings = { ReducedScares = mine.Settings.ReducedScares, Quality = mine.Settings.Quality },
 		ProcessedReceipts = pruneReceipts(receipts),
 	}
 end
