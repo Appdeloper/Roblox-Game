@@ -32,6 +32,9 @@ Assets.Sounds = {
 	BackdropRumble = { Id = 0, Volume = 0.5, Looped = false, Note = "PLACEHOLDER: rope + pulley rumble" },
 	ShadowBow = { Id = 0, Volume = 0.5, Looped = false, Note = "PLACEHOLDER: soft violin swell" },
 	UiClick = { Id = 0, Volume = 0.4, Looped = false, Note = "PLACEHOLDER: ticket punch click" },
+	FloorCreak = { Id = 0, Volume = 0.5, Looped = false, Note = "PLACEHOLDER: single floorboard creak underfoot" },
+	RiggingCreak = { Id = 0, Volume = 0.4, Looped = false, Note = "PLACEHOLDER: rope + timber creak overhead" },
+	LampBuzz = { Id = 0, Volume = 0.3, Looped = false, Note = "PLACEHOLDER: filament buzz / pop as a lamp dies" },
 }
 
 Assets.Images = {

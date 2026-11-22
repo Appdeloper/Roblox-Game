@@ -183,6 +183,68 @@ return function(placePath, check)
 		c.find("Encore").Activated:Fire()
 	end)
 	check(r.sent("RequestStart") == 2, "Encore sends RequestStart")
+	-- ── Living environment ────────────────────────────────────────────────────────────────
+	print("\n== Smoke: living environment")
+	local Workspace = h.place:GetService("Workspace")
+	local serverTags = h.game:GetService("CollectionService")
+
+	local creaky = serverTags:GetTagged("Creaky")[1]
+	check(creaky ~= nil, "loose floorboards exist to creak")
+	if creaky then
+		c.character.humanoid.MoveDirection = roblox.Vector3.new(1, 0, 0)
+		c.character.root.CFrame = creaky.CFrame * roblox.CFrame.new(0, 3, 0)
+		c.tick(0.4)
+		local host = Workspace:FindFirstChild("DustPuffHost")
+		check(
+			host ~= nil and (host.CFrame.Position - creaky.CFrame.Position).Magnitude < 6,
+			"stepping on a loose board puffs dust where you stepped"
+		)
+	end
+
+	local curtain = serverTags:GetTagged("Curtain")[1]
+	check(curtain ~= nil, "curtains exist to ripple")
+	if curtain then
+		local Curtains = c.require(h.place:GetService("StarterPlayer").StarterPlayerScripts.Client.World.Curtains)
+		local before = Curtains.rippled
+		-- Arrive next to it at a run: two logic ticks far apart = high speed.
+		c.character.root.CFrame = curtain.CFrame * roblox.CFrame.new(0, 0, 40)
+		c.tick(0.2)
+		c.character.root.CFrame = curtain.CFrame * roblox.CFrame.new(0, 0, 6)
+		c.tick(0.4)
+		check(Curtains.rippled > before, "running past a curtain makes it ripple")
+		-- Standing still must not keep kicking the fabric.
+		local settled = Curtains.rippled
+		c.tick(1.5)
+		check(Curtains.rippled == settled, "standing still leaves the curtains alone")
+	end
+
+	local lampPart = serverTags:GetTagged("FlickerLamp")[1]
+	check(lampPart ~= nil, "lamps exist to flicker")
+	if lampPart then
+		local light = lampPart:FindFirstChildWhichIsA("Light")
+		local original = light.Brightness
+		local dipped = false
+		for _ = 1, 40 do
+			c.tick(0.5)
+			if light.Brightness < original then
+				dipped = true
+				break
+			end
+		end
+		check(dipped, "lamps flicker on their own")
+	end
+
+	local swinging = serverTags:GetTagged("SwingProp")[1]
+	check(swinging ~= nil, "counterweight sandbags hang from the rigging")
+	if swinging then
+		local before = swinging.CFrame
+		-- Pendulums are skipped far from the camera, so look at it.
+		c.camera.CFrame = roblox.CFrame.new(swinging.CFrame.Position)
+		c.tick(1.5)
+		check(swinging.CFrame ~= before, "sandbags swing")
+	end
+	c.character.humanoid.MoveDirection = roblox.Vector3.zero
+
 	step("returned to lobby + notify", function()
 		r.fromServer("ReturnedToLobby")
 		r.fromServer("Notify", "Hello!")

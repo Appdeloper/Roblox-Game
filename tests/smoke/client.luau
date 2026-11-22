@@ -129,6 +129,7 @@ function Client.membrane(makeSignal)
 			child:Destroy()
 		end
 	end
+	function special.Emit() end
 	function special.GetPivot(proxy)
 		local real = rawget(proxy, "__real")
 		return if real:IsA("Model") and real.PrimaryPart then real.PrimaryPart.CFrame else real.CFrame
@@ -207,7 +208,7 @@ function Client.membrane(makeSignal)
 		return proxy
 	end
 
-	return { wrap = wrap, unwrap = unwrap, isProxy = isProxy }
+	return { wrap = wrap, unwrap = unwrap, isProxy = isProxy, camera = fakeCamera }
 end
 
 --- Builds the client environment on top of a server harness `h` (whose place has the map).
@@ -459,12 +460,16 @@ function Client.boot(h, Fakes)
 	end
 
 	return {
+		-- The CLIENT's module cache: tests must use this, not the server harness's, or they
+		-- get a second copy of the module with its own state.
+		require = requireModule,
 		runMain = runMain,
 		remotes = remotesFake,
 		find = find,
 		tick = tick,
 		character = character,
 		stubs = stubs,
+		camera = m.camera,
 		wrap = m.wrap,
 	}
 end
