@@ -12,5 +12,6 @@ require("./timeformat.spec")(T)
 require("./signal.spec")(T)
 require("./layout.spec")(T)
 require("./lore.spec")(T)
+require("./lookrule.spec")(T)
 
 T.finish()

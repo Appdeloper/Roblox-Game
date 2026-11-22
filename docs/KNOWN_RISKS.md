@@ -73,6 +73,19 @@ the character along each stage's route from a client script and reading the Outp
 DataStores, even with API access on: publish once, then retest), purchases, mobile emulator layout,
 and the look of stages 2 and 3 (Studio closed before those screenshots were taken).
 
+## Mannequin overhaul (Phase 2A): verified and open
+
+Verified in Studio: looking at the mannequin freezes it (`Pose = Frozen`), the HUD stare meter fills,
+at 2.2 s `StareLunge` fires and it closes in; the stage 2 Mirror appears and cracks before the slide
+mat; stage 3 spawns two Understudies. Open, needs eyes and hands:
+
+| Risk | What you'd see | Where to fix |
+| --- | --- | --- |
+| Head-follow axis on the block rig | The head turns away from you, or tilts instead of turning | `MannequinAnimator.lookAngles` (swap the sign of `yaw`) |
+| Look cone on phones | Freezing feels too easy or too hard to trigger | `Config.Mannequin.Look.MaxAngleDegrees` |
+| Mirror spacing | The reflection appears too late, or crowds the roofs | `Config.Mirrors[2]` (`From`, `Plane`), `Mirror.VanishGap` |
+| Three chasers in stage 3 | Too punishing for younger players | `Config.Mannequin.UnderstudyDelays` (fewer or later) |
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.

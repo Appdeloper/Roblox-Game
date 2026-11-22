@@ -36,6 +36,7 @@ local Curtains = require(Client.World.Curtains)
 local DoorEffects = require(Client.World.DoorEffects)
 local Hazards = require(Client.World.Hazards)
 local MannequinAnimator = require(Client.World.MannequinAnimator)
+local LookWatcher = require(Client.World.LookWatcher)
 local Scares = require(Client.World.Scares)
 
 -- Quality first: other controllers read its settings as they start up.
@@ -68,6 +69,7 @@ if not Workspace:WaitForChild("Map", 60) then
 end
 
 MannequinAnimator.init()
+LookWatcher.init()
 DoorEffects.init()
 Hazards.init()
 Scares.init()

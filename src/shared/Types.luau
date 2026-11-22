@@ -96,6 +96,8 @@ export type StageInfo = {
 	exitZone: ZoneInfo?,
 	scareZone: ZoneInfo?,
 	doors: { DoorInfo },
+	-- Walkable route as mannequin-root-height points, entrance to exit (Mirror uses it).
+	routePath: { Vector3 }?,
 	-- Stage 3 only.
 	exitLeftZone: ZoneInfo?,
 	exitRightZone: ZoneInfo?,

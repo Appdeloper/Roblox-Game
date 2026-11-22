@@ -13,6 +13,7 @@ export type Trail = typeof(setmetatable(
 	{} :: {
 		times: { number },
 		frames: { CFrame },
+		tags: { string },
 		head: number,
 	},
 	Trail
@@ -21,12 +22,13 @@ export type Trail = typeof(setmetatable(
 local COMPACT_AFTER = 256
 
 function Trail.new(): Trail
-	return setmetatable({ times = {}, frames = {}, head = 1 }, Trail)
+	return setmetatable({ times = {}, frames = {}, tags = {}, head = 1 }, Trail)
 end
 
 function Trail.clear(self: Trail)
 	table.clear(self.times)
 	table.clear(self.frames)
+	table.clear(self.tags)
 	self.head = 1
 end
 
@@ -42,13 +44,15 @@ function Trail.lastTime(self: Trail): number?
 	return self.times[#self.times]
 end
 
-function Trail.push(self: Trail, t: number, cf: CFrame)
+--- `tag` is the player's movement pose at that moment ("Run", "Jump", …), replayed by the rig.
+function Trail.push(self: Trail, t: number, cf: CFrame, tag: string?)
 	local last = self.times[#self.times]
 	if last and t <= last then
 		return -- never go back in time (keeps binary search valid)
 	end
 	table.insert(self.times, t)
 	table.insert(self.frames, cf)
+	table.insert(self.tags, tag or "")
 end
 
 --- Index of the last sample with time <= t (nil if t is before the first sample).
@@ -103,6 +107,12 @@ function Trail.nearestTime(self: Trail, point: Vector3, since: number, radius: n
 	return bestTime
 end
 
+--- The pose tag recorded at or just before `t` ("" if none).
+function Trail.tagAt(self: Trail, t: number): string
+	local i = self:indexAt(t) or self.head
+	return self.tags[i] or ""
+end
+
 --- Drops samples older than `before`, always keeping at least one at or before it so
 --- sample(before) still interpolates correctly.
 function Trail.prune(self: Trail, before: number)
@@ -114,9 +124,11 @@ function Trail.prune(self: Trail, before: number)
 		local n = #self.times - self.head + 1
 		table.move(self.times, self.head, #self.times, 1)
 		table.move(self.frames, self.head, #self.frames, 1)
+		table.move(self.tags, self.head, #self.tags, 1)
 		for i = n + 1, #self.times do
 			self.times[i] = nil :: any
 			self.frames[i] = nil :: any
+			self.tags[i] = nil :: any
 		end
 		self.head = 1
 	end
