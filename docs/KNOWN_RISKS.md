@@ -57,7 +57,7 @@ Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step t
 | --- | --- | --- | --- | --- |
 | 1 | **Mannequin physics.** It uses an unanchored, server-owned rig pulled by rigid `AlignPosition`/`AlignOrientation`. | No physics engine outside Roblox | The mannequin sinks, jitters, spins, or lags well behind the 1.5 s replay (playtest steps 5–7) | `src/server/Services/Mannequin/Mannequin.luau` (`Mannequin.new`, `_apply`) |
 | 2 | **Mannequin limb animation.** The client writes `Motor6D.Transform` every frame. | Rendering only | Limbs don't swing or the bow doesn't show; the mannequin glides stiffly (steps 5, 8). This is cosmetic: catching still works. | `src/client/World/MannequinAnimator.luau` |
-| 3 | **Slide mat direction.** A WedgePart rotated −90° should slope down toward the landing. | Geometry wasn't checked visually | You land at the bottom and face an icy ramp upward (step 9) | `src/server/MapBuilder/Builders.luau` → `slopeCFrame` (swap `-90` and `90` for `"+X"`) |
+| 3 | **Slide mat direction.** WedgePart rotated −90° mathematically aligns the thin edge (-Z) to world +X, sloping down from x=101 to x=125 toward the landing. | Verified mathematically in `Builders.slopeCFrame` and `Stage2.luau`. | Visually verified downward slope in layout. | `src/server/MapBuilder/Builders.luau` → `slopeCFrame` |
 | 4 | **Jump feel.** The gaps are mathematically under 70% of max jump, but real Humanoid physics and mobile latency differ. | No Humanoid simulation | Jumps feel too hard or too easy (step 6) | `src/server/MapBuilder/Layouts/Stage*.luau`. The tests will tell you if an edit breaks the 70% rule. |
 | 5 | **Difficulty.** At a 1.5 s delay, hesitating about 1.3 s on a ledge gets you caught. | Needs real players | Too punishing for younger players on phones | `src/shared/Config.luau`: `Catch.Distance`, `Catch.GraceSeconds`, `Door.*` |
 | 6 | **Server teleports.** `Model:PivotTo` is called on client-owned characters for checkpoints and stage changes. | Network ownership isn't simulated | You snap back after a teleport, or the respawn takes a moment | `src/server/Services/CheckpointService.luau` → `teleport` |
@@ -73,5 +73,5 @@ Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step t
 - With API access **off**, Output shows `[Retry] load … failed` and `[Retry] leaderboard read failed`
   every minute, and you see "saving is paused this visit". Turn API access on to stop them.
 - `[Badges] '…' earned but its badge ID is a placeholder` until you add badge IDs.
-- `[Main] 18 asset placeholders still to replace`. There's no sound until you add audio IDs.
+- `[Main] 26 asset placeholders still to replace`. There's no sound until you add audio IDs.
 - `[MapBuilder] disabled stray SpawnLocation Workspace.SpawnLocation` when using the Baseplate template.
