@@ -140,7 +140,8 @@ docs/                    ARCHITECTURE, TESTING, LAUNCH_CHECKLIST
 .github/workflows/ci.yml format + lint + tests + build + smoke on every push
 ```
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it fits together.
+Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the code fits together, and
+[docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for how the world is built and what it is trying to say.
 
 ---
 
