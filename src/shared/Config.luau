@@ -284,6 +284,18 @@ Config.Audio = {
 	SfxVolume = 0.7,
 }
 
+Config.Performance = {
+	-- Hard ceiling for everything under Workspace.Map. Checked by the smoke tests so the
+	-- map can never quietly grow past what a phone can draw.
+	MaxParts = 12000,
+	-- Where we expect to sit; a big gap means there is room for more detail.
+	TargetParts = 6000,
+	-- Real lights are the expensive part on a phone, so each room gets a hard cap.
+	MaxLightsPerStage = 30,
+	-- Particle emitters per stage (dust, smoke).
+	MaxEmittersPerStage = 6,
+}
+
 Config.Effects = {
 	ShakeIntensity = 0.35,
 	ShakeSeconds = 0.35,

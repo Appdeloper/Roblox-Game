@@ -72,6 +72,19 @@ local function shopfronts(ctx: Ctx)
 	end
 end
 
+--- The painted moon on the flats, chimneys smoking along the roofline, and two painted
+--- backdrop cloths hung on the audience side (tagged Curtain so they sway later).
+local function skyline(ctx: Ctx)
+	SetPieces.paintedMoon(ctx.set, onFacade(ctx, 72, 46), 5, ctx.rng)
+	-- Chimneys sit on the facade roofline, never on the roofs the player runs across.
+	for _, x in { 30, 64, 112 } do
+		SetPieces.chimney(ctx.set, CFrame.new(L(ctx, x, 58, 13)), 2, 1.5)
+	end
+	for _, x in { 40, 112 } do
+		SetPieces.stripCurtain(ctx.set, "StreetBackdrop", L(ctx, x, 45, -21), Vector3.new(22, 22, 1.1), 1.6)
+	end
+end
+
 local function rigging(ctx: Ctx)
 	-- Battens only over the audience side (z < -10): nothing hangs above the roofs.
 	SetPieces.rigging(ctx.set, ctx.rng, ctx.origin.X, ctx.origin.X + 176, {
@@ -84,7 +97,20 @@ function Street.build(ctx: Ctx)
 	upstairs(ctx)
 	paintedWindows(ctx)
 	shopfronts(ctx)
+	skyline(ctx)
 	rigging(ctx)
+	-- Signature fill: warm amber windows against an indigo night street.
+	for _, x in { 34, 110 } do
+		local fill = Builders.part({
+			name = "StreetFill",
+			size = Vector3.one,
+			cframe = CFrame.new(L(ctx, x, 40, -14)),
+			parent = ctx.set,
+			surface = "Invisible",
+			decor = true,
+		})
+		Builders.pointLight(fill, Theme.Colors.WarmSpot, 60, 0.6)
+	end
 end
 
 return Street

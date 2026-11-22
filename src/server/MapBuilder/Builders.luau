@@ -31,6 +31,13 @@ function Builders.v(t: { number }): Vector3
 	return Vector3.new(t[1], t[2], t[3])
 end
 
+--- Base transparency of a Theme surface (0 when it defines none).
+function Builders.surfaceTransparency(name: string): number
+	local surface = (Theme.Surfaces :: any)[name]
+	assert(surface, "Unknown Theme surface: " .. tostring(name))
+	return surface.Transparency or 0
+end
+
 --- Applies a Theme surface (see Theme.apply).
 function Builders.applySurface(part: BasePart, name: string)
 	Theme.apply(part, name)

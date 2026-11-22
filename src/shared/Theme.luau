@@ -137,6 +137,17 @@ Theme.Surfaces = {
 	SpillGlow = s(255, 206, 140, M.Neon, { Transparency = 1 }),
 	ExitSign = s(120, 210, 160, M.Neon),
 
+	-- Volumetric-looking light (big, faint, Neon so it glows without a real light source)
+	MoonShaft = s(120, 196, 206, M.Neon, { Transparency = 0.9 }),
+	WarmBeam = s(255, 206, 142, M.Neon, { Transparency = 0.88 }),
+	PaintedMoon = s(226, 238, 228, M.Neon),
+	MoonRing = s(150, 176, 182, M.SmoothPlastic),
+	Smoke = s(188, 196, 200, M.SmoothPlastic, { Transparency = 0.6 }),
+
+	-- Aged variants: a fraction of the seats are faded and dusty, so rows are not uniform
+	VelvetDusty = s(104, 40, 48, M.Fabric),
+	CarpetWorn = s(88, 26, 34, M.Carpet),
+
 	-- Hazards & atmosphere
 	Fog = s(90, 150, 160, M.SmoothPlastic, { Transparency = 0.82 }),
 	Backdrop = s(70, 92, 140, M.Fabric),

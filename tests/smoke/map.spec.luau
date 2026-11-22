@@ -23,7 +23,11 @@ return function(h, check)
 		end
 	end
 	print(string.format("       %d parts built", parts))
-	check(parts > 200 and parts < 3000, "part count in a mobile-friendly range")
+	local budget = h.require(place:GetService("ReplicatedStorage").Shared.Config).Performance
+	check(
+		parts > 200 and parts <= budget.MaxParts,
+		string.format("part count within the %d budget (%d)", budget.MaxParts, parts)
+	)
 	check(#map.stages == 3, "three stages returned")
 	for i, stage in map.stages do
 		check(stage.entrance ~= nil and stage.mannequinHome ~= nil, "stage " .. i .. " has entrance + home")
@@ -83,6 +87,50 @@ return function(h, check)
 	check((counts.ScriptPage or 0) >= 15, "script pages scattered around")
 	check((counts.ScuffMark or 0) >= 15, "scuff marks dragged toward the painted doors")
 	check((counts.Footprint or 0) >= 10, "footprints in the dust")
+
+	-- Each act has its own look: the signature pieces must actually be there.
+	local function countIn(stageName: string, names: { string }): number
+		local model = root:FindFirstChild(stageName)
+		local total = 0
+		if model then
+			for _, d in model:GetDescendants() do
+				if table.find(names, d.Name) then
+					total += 1
+				end
+			end
+		end
+		return total
+	end
+	check(
+		countIn("Stage1_Auditorium", { "LightShaft", "LightPool" }) >= 6,
+		"Act I: moonlight shafts through high windows"
+	)
+	check(countIn("Stage1_Auditorium", { "AisleCarpet" }) >= 8, "Act I: torn aisle carpet in pieces")
+	check(countIn("Stage2_PaintedStreet", { "PaintedMoon", "MoonCrater" }) >= 5, "Act II: a painted moon on the flats")
+	check(countIn("Stage2_PaintedStreet", { "Chimney" }) == 3, "Act II: smoking chimneys on the roofline")
+	check(countIn("Stage3_CurtainCall", { "BeamSegment" }) >= 10, "Act III: two beams narrowing toward the exits")
+	check(countIn("Stage3_CurtainCall", { "Confetti" }) >= 80, "Act III: confetti and torn paper on the floor")
+
+	-- Lights and emitters are the expensive part on a phone.
+	for _, stageName in { "Stage1_Auditorium", "Stage2_PaintedStreet", "Stage3_CurtainCall" } do
+		local model = root:FindFirstChild(stageName)
+		local lights, emitters = 0, 0
+		for _, d in model:GetDescendants() do
+			if d:IsA("Light") then
+				lights += 1
+			elseif d:IsA("ParticleEmitter") then
+				emitters += 1
+			end
+		end
+		check(
+			lights <= budget.MaxLightsPerStage,
+			string.format("%s: %d lights (cap %d)", stageName, lights, budget.MaxLightsPerStage)
+		)
+		check(
+			emitters <= budget.MaxEmittersPerStage,
+			string.format("%s: %d particle emitters (cap %d)", stageName, emitters, budget.MaxEmittersPerStage)
+		)
+	end
 
 	check(#offTheme == 0, "every map part uses a Theme surface" .. (if #offTheme > 0 then ": " .. offTheme[1] else ""))
 	return map
