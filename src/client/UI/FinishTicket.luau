@@ -81,11 +81,21 @@ local function mainSide(paper: Frame, ticket: Types.TicketData, p: Palette)
 		p.Border,
 		Theme.Fonts.Bold
 	)
-	text(main, "TimeLabel", "ESCAPE TIME", UDim2.new(0.6, 0, 0, 22), UDim2.fromOffset(0, 40), p.Ink, Theme.Fonts.Body)
+	local endless = ticket.mode == "Endless"
+	local modeName = ({ Daily = "DAILY RUN", Endless = "ENDLESS", Coop = "CO-OP" } :: any)[ticket.mode or ""]
+	text(
+		main,
+		"TimeLabel",
+		if endless then "STAGES CLEARED" elseif modeName then modeName .. " · ESCAPE TIME" else "ESCAPE TIME",
+		UDim2.new(0.8, 0, 0, 22),
+		UDim2.fromOffset(0, 40),
+		p.Ink,
+		Theme.Fonts.Body
+	)
 	text(
 		main,
 		"Time",
-		TimeFormat.clock(ticket.escapeTime),
+		if endless then tostring(ticket.stagesCleared or 0) else TimeFormat.clock(ticket.escapeTime),
 		UDim2.new(0.75, 0, 0, 76),
 		UDim2.fromOffset(0, 62),
 		p.Ink,
@@ -246,6 +256,53 @@ local function buildTicket(ticket: Types.TicketData): Frame
 	return frame
 end
 
+-- Optional extras wired from Main (keeps this module free of world code).
+export type Extras = { hasReplay: () -> boolean, replay: () -> (), share: () -> (), invite: () -> () }
+local extras: Extras? = nil
+
+function FinishTicket.setExtras(e: Extras)
+	extras = e
+end
+
+local function shareRow(): Frame?
+	local e = extras
+	if not e then
+		return nil
+	end
+	local row = Widgets.frame(
+		"ShareButtons",
+		holder,
+		UDim2.fromOffset(560, 64),
+		UDim2.new(0.5, 0, 0.45, 262),
+		Theme.Colors.Black,
+		1
+	)
+	row.AnchorPoint = Vector2.new(0.5, 0)
+	local hasReplay = e.hasReplay()
+	local buttonsSpec = {
+		{ name = "ShareTicket", text = "📸 Share ticket", run = e.share },
+		{ name = "InviteFriends", text = "👥 Invite friends", run = e.invite },
+	}
+	if hasReplay then
+		table.insert(buttonsSpec, 1, { name = "NearMissReplay", text = "😱 Near-miss replay", run = e.replay })
+	end
+	for i, spec in buttonsSpec do
+		Widgets.button({
+			name = spec.name,
+			parent = row,
+			text = spec.text,
+			size = UDim2.new(1 / #buttonsSpec, -8, 1, 0),
+			position = UDim2.new((i - 1) / #buttonsSpec, 4, 0, 0),
+			color = Theme.Colors.UiPanel,
+			textColor = Theme.Colors.Paper,
+		}, function()
+			AudioController.play("UiClick")
+			task.spawn(spec.run)
+		end)
+	end
+	return row
+end
+
 local function buttons(): Frame
 	local row =
 		Widgets.frame("Buttons", holder, UDim2.fromOffset(560, 84), UDim2.new(0.5, 0, 0.45, 170), Theme.Colors.Black, 1)
@@ -290,6 +347,7 @@ function FinishTicket.show(ticket: Types.TicketData)
 	layer.Visible = true
 	local frame = buildTicket(ticket)
 	local row = buttons()
+	local share = shareRow()
 	AudioController.play("FinishFanfare")
 	-- Slide up from below with a tilt, settle slightly askew like a real ticket.
 	frame.Position = UDim2.fromScale(0.5, 1.4)
@@ -301,8 +359,14 @@ function FinishTicket.show(ticket: Types.TicketData)
 		Enum.EasingStyle.Back
 	)
 	row.Visible = false
+	if share then
+		share.Visible = false
+	end
 	task.delay(Config.UI.TweenSlow, function()
 		row.Visible = true
+		if share then
+			share.Visible = true
+		end
 	end)
 end
 

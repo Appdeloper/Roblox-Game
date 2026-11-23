@@ -22,6 +22,23 @@ local timerPill: Frame
 local timerText: TextLabel
 local retakePill: Frame
 local retakeText: TextLabel
+local modePill: Frame
+local modeText: TextLabel
+local goalPill: Frame
+local goalText: TextLabel
+
+local MODE_NAMES = { Story = "STORY", Daily = "☀ DAILY RUN", Endless = "∞ ENDLESS", Coop = "👥 CO-OP" }
+
+--- "STORY · 3/6", "☀ DAILY RUN · 2/4", "∞ ENDLESS · stage 7 · ♥♥♡"
+local function modeLine(info: any): string
+	local name = MODE_NAMES[info.mode or "Story"] or "STORY"
+	if info.mode == "Endless" then
+		local lives = info.lives or 0
+		local hearts = string.rep("♥", lives) .. string.rep("♡", math.max(0, Config.Modes.Endless.Lives - lives))
+		return string.format("%s · stage %d · %s", name, info.step or 1, hearts)
+	end
+	return string.format("%s · %d/%d", name, info.step or info.stage, info.steps or Config.Game.StageCount)
+end
 local frozenTime: number? = nil
 local accumulator = 0
 local UPDATE_INTERVAL = 0.1
@@ -38,6 +55,8 @@ local function refreshVisibility()
 	local running = ClientState.phase == "Running"
 	timerPill.Visible = running or frozenTime ~= nil
 	retakePill.Visible = running
+	modePill.Visible = running and ClientState.stageInfo ~= nil
+	goalPill.Visible = running and ClientState.stageInfo ~= nil
 end
 
 local function bumpRetakes()
@@ -79,6 +98,28 @@ function Hud.init(onSettings: () -> ())
 		font = Theme.Fonts.Bold,
 		color = Theme.Colors.Paper,
 	})
+	modePill = pill("Mode", hud, UDim2.fromOffset(260, 40), UDim2.fromOffset(10, 70), Vector2.zero)
+	modeText = Widgets.label({
+		name = "Text",
+		parent = modePill,
+		text = "",
+		size = UDim2.new(1, -20, 1, -10),
+		position = UDim2.fromOffset(10, 5),
+		font = Theme.Fonts.Bold,
+		color = Theme.Colors.PaperShade,
+	})
+	-- The goal for this stage, always on screen (so nobody is ever lost).
+	goalPill = pill("Goal", hud, UDim2.fromOffset(420, 40), UDim2.fromOffset(10, 116), Vector2.zero)
+	goalText = Widgets.label({
+		name = "Text",
+		parent = goalPill,
+		text = "",
+		size = UDim2.new(1, -20, 1, -10),
+		position = UDim2.fromOffset(10, 5),
+		font = Theme.Fonts.Body,
+		color = Theme.Colors.Paper,
+		align = Enum.TextXAlignment.Left,
+	})
 	Widgets.button({
 		name = "SettingsButton",
 		parent = hud,
@@ -93,6 +134,13 @@ function Hud.init(onSettings: () -> ())
 	ClientState.Changed:Connect(function(key)
 		if key == "retakes" then
 			bumpRetakes()
+		elseif key == "stageInfo" then
+			local info = ClientState.stageInfo
+			if info then
+				modeText.Text = modeLine(info)
+				goalText.Text = "🎯 " .. (info.hint or "Reach the glowing EXIT")
+			end
+			refreshVisibility()
 		elseif key == "phase" then
 			if ClientState.phase == "Running" then
 				frozenTime = nil

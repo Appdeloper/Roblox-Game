@@ -91,6 +91,7 @@ end
 
 local function grantPass(player: Player, passKey: string)
 	local pass = (Config.Monetization.GamePasses :: any)[passKey]
+	DataService.setPass(player, passKey)
 	if passKey == "SpotlightTrail" then
 		local profile = DataService.get(player)
 		local wasOwned = profile ~= nil and profile.ownsSpotlightTrail
@@ -168,7 +169,12 @@ function MonetizationService.processReceipt(receipt: any): Enum.ProductPurchaseD
 	end
 	local purchaseId = tostring(receipt.PurchaseId)
 	if not DataService.hasReceipt(player, purchaseId) then
-		DataService.grantSkin(player, product.GrantsSkin)
+		if product.GrantsSkin then
+			DataService.grantSkin(player, product.GrantsSkin)
+		end
+		if product.GrantsCosmetic then
+			DataService.grantProduct(player, key)
+		end
 		DataService.recordReceipt(player, purchaseId)
 		Analytics.track("purchase", player, { product = key })
 	end
@@ -179,6 +185,11 @@ function MonetizationService.processReceipt(receipt: any): Enum.ProductPurchaseD
 end
 
 -- ── Lifecycle ─────────────────────────────────────────────────────────────────────────────
+
+--- Re-applies the Spotlight Trail (CosmeticsService calls this when the wardrobe switches it).
+function MonetizationService.applyTrail(player: Player)
+	applyTrail(player)
+end
 
 function MonetizationService.init()
 	MarketplaceService.ProcessReceipt = MonetizationService.processReceipt

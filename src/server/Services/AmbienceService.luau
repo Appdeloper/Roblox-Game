@@ -50,6 +50,24 @@ local STAGE_PLACEMENTS: { { Placement } } = {
 		{ layer = "Piano", offset = { 120, 10, -22 } },
 		{ layer = "Applause", offset = { 60, -3, 20 } },
 	},
+	{
+		{ layer = "Wind", offset = { 70, 62, 0 } },
+		{ layer = "Wood", offset = { 40, 50, 18 } },
+		{ layer = "Piano", offset = { 67, -2, 0 } },
+		{ layer = "Drip", offset = { 110, 30, -18 } },
+	},
+	{
+		{ layer = "Wood", offset = { 60, 20, 20 } },
+		{ layer = "Drip", offset = { 100, 4, -20 } },
+		{ layer = "Piano", offset = { 20, 14, 18 } },
+		{ layer = "Wind", offset = { 120, 30, 0 } },
+	},
+	{
+		{ layer = "Applause", offset = { 80, 6, 26 } },
+		{ layer = "Applause", offset = { 80, 6, -26 } },
+		{ layer = "Piano", offset = { 40, 12, -20 } },
+		{ layer = "Wood", offset = { 110, 40, 0 } },
+	},
 }
 
 local LOBBY_PLACEMENTS: { Placement } = {

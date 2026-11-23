@@ -11,6 +11,7 @@ local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local Types = require(ReplicatedStorage.Shared.Types)
 
 local Client = script.Parent
@@ -24,6 +25,7 @@ local ClientState = require(Client.ClientState)
 local Quality = require(Client.Quality)
 local DebugOverlay = require(Client.UI.DebugOverlay)
 local MobileJump = require(Client.Input.MobileJump)
+local JumpAssist = require(Client.Input.JumpAssist)
 local FinishTicket = require(Client.UI.FinishTicket)
 local Hud = require(Client.UI.Hud)
 local LobbyPanel = require(Client.UI.LobbyPanel)
@@ -36,6 +38,12 @@ local Curtains = require(Client.World.Curtains)
 local DoorEffects = require(Client.World.DoorEffects)
 local Hazards = require(Client.World.Hazards)
 local MannequinAnimator = require(Client.World.MannequinAnimator)
+local LookWatcher = require(Client.World.LookWatcher)
+local Movers = require(Client.World.Movers)
+local TrophyShelf = require(Client.World.TrophyShelf)
+local ClipMode = require(Client.UI.ClipMode)
+local NearMiss = require(Client.World.NearMiss)
+local HowToPlay = require(Client.UI.HowToPlay)
 local Scares = require(Client.World.Scares)
 
 -- Quality first: other controllers read its settings as they start up.
@@ -50,6 +58,7 @@ TitleCard.init()
 SettingsPanel.init()
 Hud.init(SettingsPanel.toggle)
 MobileJump.init()
+JumpAssist.init()
 FinishTicket.init(function()
 	Hud.unfreeze()
 	LobbyPanel.setHidden(false)
@@ -68,6 +77,48 @@ if not Workspace:WaitForChild("Map", 60) then
 end
 
 MannequinAnimator.init()
+LookWatcher.init()
+Movers.init()
+TrophyShelf.init()
+ClipMode.init()
+NearMiss.init()
+HowToPlay.init()
+FinishTicket.setExtras({
+	hasReplay = NearMiss.has,
+	replay = function()
+		-- Step out of the ticket for the replay, then bring it back.
+		local layer = UIRoot.get("Modal"):FindFirstChild("FinishLayer")
+		if layer and layer:IsA("GuiObject") then
+			layer.Visible = false
+		end
+		NearMiss.play()
+		if layer and layer:IsA("GuiObject") then
+			layer.Visible = true
+		end
+	end,
+	share = function()
+		-- The ticket alone on screen, then the platform's capture/share sheet.
+		local row = UIRoot.get("Modal"):FindFirstChild("Buttons", true)
+		local shareRow = UIRoot.get("Modal"):FindFirstChild("ShareButtons", true)
+		for _, r in { row, shareRow } do
+			if r and r:IsA("GuiObject") then
+				r.Visible = false
+			end
+		end
+		local wasClip = ClipMode.isOn()
+		ClipMode.set(true)
+		task.wait(0.3)
+		ClipMode.snapshot()
+		task.wait(1)
+		ClipMode.set(wasClip)
+		for _, r in { row, shareRow } do
+			if r and r:IsA("GuiObject") then
+				r.Visible = true
+			end
+		end
+	end,
+	invite = ClipMode.inviteFriends,
+})
 DoorEffects.init()
 Hazards.init()
 Scares.init()
@@ -79,6 +130,11 @@ DebugOverlay.init()
 -- ── Run flow ──────────────────────────────────────────────────────────────────────────────
 
 Remotes.get("RunStarted").OnClientEvent:Connect(function(startedAt: number)
+	-- A new show always starts with a clear screen (no ticket or card left on top of it).
+	FinishTicket.close()
+	HowToPlay.close()
+	Hud.unfreeze()
+	LobbyPanel.setHidden(false)
 	ClientState.set("runStartedAt", startedAt)
 	ClientState.set("phase", "Running")
 end)
@@ -136,6 +192,13 @@ Remotes.get("Fell").OnClientEvent:Connect(function(retakes: number)
 	Captions.show(Config.Text.Fell, 1.6)
 end)
 
+Remotes.get("Spotted").OnClientEvent:Connect(function(retakes: number)
+	ClientState.set("retakes", retakes)
+	AudioController.play("FellSting")
+	CameraEffects.flash(Theme.Colors.WarmSpot)
+	Captions.show(Config.Text.Spotted, 1.6)
+end)
+
 Remotes.get("ReturnedToLobby").OnClientEvent:Connect(function()
 	Scares.stop()
 	DoorEffects.resetAll()
@@ -158,9 +221,8 @@ Remotes.get("DoorOutran").OnClientEvent:Connect(function()
 	Captions.show("You outran the painted door!", 2)
 end)
 
-Remotes.get("FakeExit").OnClientEvent:Connect(function()
-	local info = ClientState.stageInfo
-	Hazards.onFakeExit(if info then info.realExit else nil)
+Remotes.get("FakeExit").OnClientEvent:Connect(function(exitName: string)
+	Hazards.onFakeExit(exitName)
 	CameraEffects.shake(0.2, 0.25)
 	Captions.show(Config.Text.FakeExit, 2)
 end)
