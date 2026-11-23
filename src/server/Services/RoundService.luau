@@ -248,7 +248,7 @@ function RoundService.startRun(player: Player, mode: Modes.Mode?, party: Party?)
 		run.dailyDay = day
 		CheckpointService.begin(player, Modes.dailySequence(day, Config.Game.StageCount, Config.Modes.Daily.Length))
 	elseif chosen == "Endless" then
-		local seed = os.time() + player.UserId
+		local seed = RoundService.endlessSeed(player)
 		CheckpointService.begin(player, Modes.endlessSequence(seed, Config.Game.StageCount, 1), function(step)
 			return Modes.endlessSequence(seed, Config.Game.StageCount, step)[step]
 		end)
@@ -556,6 +556,11 @@ local function requestCoop(player: Player)
 			Remotes.get("Notify"):FireClient(other, message)
 		end
 	end
+end
+
+--- The shuffle seed for a new Endless run (replaceable so tests are deterministic).
+function RoundService.endlessSeed(player: Player): number
+	return os.time() + player.UserId
 end
 
 --- Starts a run in `mode` (Coop gathers a party first).
