@@ -17,7 +17,15 @@ local Types = require(ReplicatedStorage.Shared.Types)
 local CheckpointService = {}
 
 export type Progress = {
+	-- The stage the player is in now (an index into the map's stages).
 	stage: number,
+	-- The run's stage list (Story: 1..6; Daily/Endless: chosen by shared/Modes) and the
+	-- position in it. Endless extends `sequence` as it goes (`extend`).
+	sequence: { number },
+	step: number,
+	extend: ((step: number) -> number?)?,
+	-- Stages cleared so far this run (the Endless score).
+	cleared: number,
 	retakes: number,
 	-- Retakes taken in the current stage only (analytics).
 	stageRetakes: number,
@@ -35,8 +43,25 @@ function CheckpointService.init(map: Types.MapInfo)
 	end)
 end
 
-function CheckpointService.begin(player: Player): Progress
-	local p: Progress = { stage = 1, retakes = 0, stageRetakes = 0, stageStartedAt = Clock.now() }
+--- Starts a run over `sequence` (default: every stage in order). `extend(step)` may supply
+--- the stage for steps past the end (Endless).
+function CheckpointService.begin(player: Player, sequence: { number }?, extend: ((step: number) -> number?)?): Progress
+	local seq = sequence or {}
+	if #seq == 0 then
+		for i = 1, Config.Game.StageCount do
+			seq[i] = i
+		end
+	end
+	local p: Progress = {
+		stage = seq[1],
+		sequence = seq,
+		step = 1,
+		extend = extend,
+		cleared = 0,
+		retakes = 0,
+		stageRetakes = 0,
+		stageStartedAt = Clock.now(),
+	}
 	progress[player] = p
 	return p
 end
@@ -54,13 +79,23 @@ function CheckpointService.stageInfo(player: Player): Types.StageInfo?
 	return if p then stages[p.stage] else nil
 end
 
---- Moves to the next stage. Returns false when the run is already on the last stage.
+--- Moves to the next stage in the run. Returns false when the run is on its last stage.
 function CheckpointService.advance(player: Player): boolean
 	local p = progress[player]
-	if not p or p.stage >= Config.Game.StageCount then
+	if not p then
 		return false
 	end
-	p.stage += 1
+	p.cleared += 1
+	local nextStep = p.step + 1
+	if not p.sequence[nextStep] and p.extend then
+		p.sequence[nextStep] = (p.extend :: (number) -> number?)(nextStep) :: number
+	end
+	local nextStage = p.sequence[nextStep]
+	if not nextStage then
+		return false
+	end
+	p.step = nextStep
+	p.stage = nextStage
 	p.stageRetakes = 0
 	p.stageStartedAt = Clock.now()
 	return true

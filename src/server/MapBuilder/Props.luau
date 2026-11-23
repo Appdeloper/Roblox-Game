@@ -322,6 +322,38 @@ function Props.stageSpot(parent: Instance, position: Vector3, target: Vector3, c
 end
 
 --- Simple hanging sign with text on its front face.
+--- A 📸 PHOTO SPOT pad painted flat on top of `floor` at its local offset (x, z). Clients
+--- offer "Strike a pose" when you stand on it; `cameraOffset` (world, from the pad) is where
+--- the camera goes. Flat paint: never an obstacle.
+function Props.photoSpot(parent: Instance, floor: BasePart, x: number, z: number, cameraOffset: Vector3): BasePart
+	local top = floor.CFrame * CFrame.new(x, floor.Size.Y / 2 + 0.03, z)
+	local pad = Builders.part({
+		name = "PhotoSpot",
+		size = Vector3.new(4, 0.05, 4),
+		cframe = CFrame.new(top.Position),
+		parent = parent,
+		surface = "GlowTape",
+		decor = true,
+		tag = "PhotoSpot",
+	})
+	pad:SetAttribute("CameraOffset", cameraOffset)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Top
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 40
+	gui.LightInfluence = 0.3
+	gui.Parent = pad
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.TextScaled = true
+	label.Font = Theme.Fonts.Bold
+	label.TextColor3 = Theme.Colors.Ink
+	label.Text = "📸 PHOTO SPOT"
+	label.Parent = gui
+	return pad
+end
+
 function Props.sign(parent: Instance, cframe: CFrame, size: Vector3, text: string, textColor: Color3, surface: string)
 	local board = Builders.part({
 		name = "Sign",

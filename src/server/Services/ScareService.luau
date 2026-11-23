@@ -24,10 +24,12 @@ local function play(player: Player, stage: number)
 		MannequinService.bow(player, cfg.MannequinBowDelay, cfg.MannequinBowSeconds)
 	elseif stage == 2 then
 		MannequinService.holdForScare(player, Config.Scares.Stage2.CatchPause)
-	elseif stage == 3 then
-		MannequinService.holdForScare(player, Config.Scares.Stage3.CatchPause)
 	else
-		return
+		local cfg = (Config.Scares :: any)["Stage" .. stage]
+		if not cfg then
+			return
+		end
+		MannequinService.holdForScare(player, cfg.CatchPause)
 	end
 	Remotes.get("Scare"):FireClient(player, stage)
 end
