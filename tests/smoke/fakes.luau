@@ -134,6 +134,13 @@ function Fakes.character(makeSignal, cf, realRoot)
 	function character:GetPivot()
 		return root.CFrame
 	end
+	local attributes = {}
+	function character:SetAttribute(key, value)
+		attributes[key] = value
+	end
+	function character:GetAttribute(key)
+		return attributes[key]
+	end
 	return character
 end
 

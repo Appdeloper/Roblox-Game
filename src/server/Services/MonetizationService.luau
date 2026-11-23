@@ -180,6 +180,11 @@ end
 
 -- ── Lifecycle ─────────────────────────────────────────────────────────────────────────────
 
+--- Re-applies the Spotlight Trail (CosmeticsService calls this when the wardrobe switches it).
+function MonetizationService.applyTrail(player: Player)
+	applyTrail(player)
+end
+
 function MonetizationService.init()
 	MarketplaceService.ProcessReceipt = MonetizationService.processReceipt
 

@@ -12,6 +12,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local AudioController = require(script.Parent.Parent.Audio.AudioController)
 local UIRoot = require(script.Parent.UIRoot)
+local ClientState = require(script.Parent.Parent.ClientState)
 local Widgets = require(script.Parent.Widgets)
 
 local TitleCard = {}
@@ -75,6 +76,26 @@ local function buildCard(hud: ScreenGui)
 	end
 end
 
+--- Your playbill background (Wardrobe → Playbill) dyes the title-card curtains.
+local function applyPlaybill()
+	local profile = ClientState.profile :: any
+	local id = profile and profile.equipped and profile.equipped.Playbill
+	local item = id and (Config.Cosmetics.Playbill :: any)[id]
+	local base = if item then Color3.fromRGB(item.Color[1], item.Color[2], item.Color[3]) else Theme.Colors.Curtain
+	local deep = base:Lerp(Color3.new(0, 0, 0), 0.4)
+	for _, curtain in { curtainLeft, curtainRight } do
+		curtain.BackgroundColor3 = base
+		local folds = curtain:FindFirstChildOfClass("UIGradient")
+		if folds then
+			folds.Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, base),
+				ColorSequenceKeypoint.new(0.5, deep),
+				ColorSequenceKeypoint.new(1, base),
+			})
+		end
+	end
+end
+
 local function buildSlate(hud: ScreenGui)
 	slate =
 		Widgets.frame("RetakeSlate", hud, UDim2.fromOffset(240, 70), UDim2.new(0.5, 0, 0, 84), Theme.Colors.Ink, 0.1)
@@ -113,6 +134,7 @@ function TitleCard.show(stageAct: string, stageTitle: string, stageHint: string)
 	card.Visible = true
 	card.BackgroundTransparency = 0.2
 	setTextTransparency(0)
+	applyPlaybill()
 	curtainLeft.Position = UDim2.fromScale(0, 0)
 	curtainRight.Position = UDim2.fromScale(0.5, 0)
 	AudioController.play("TitleWhoosh")

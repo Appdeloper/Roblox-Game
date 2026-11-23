@@ -81,11 +81,21 @@ local function mainSide(paper: Frame, ticket: Types.TicketData, p: Palette)
 		p.Border,
 		Theme.Fonts.Bold
 	)
-	text(main, "TimeLabel", "ESCAPE TIME", UDim2.new(0.6, 0, 0, 22), UDim2.fromOffset(0, 40), p.Ink, Theme.Fonts.Body)
+	local endless = ticket.mode == "Endless"
+	local modeName = ({ Daily = "DAILY RUN", Endless = "ENDLESS", Coop = "CO-OP" } :: any)[ticket.mode or ""]
+	text(
+		main,
+		"TimeLabel",
+		if endless then "STAGES CLEARED" elseif modeName then modeName .. " · ESCAPE TIME" else "ESCAPE TIME",
+		UDim2.new(0.8, 0, 0, 22),
+		UDim2.fromOffset(0, 40),
+		p.Ink,
+		Theme.Fonts.Body
+	)
 	text(
 		main,
 		"Time",
-		TimeFormat.clock(ticket.escapeTime),
+		if endless then tostring(ticket.stagesCleared or 0) else TimeFormat.clock(ticket.escapeTime),
 		UDim2.new(0.75, 0, 0, 76),
 		UDim2.fromOffset(0, 62),
 		p.Ink,

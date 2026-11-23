@@ -26,6 +26,36 @@ export type RouteBox = {
 	collapse: boolean?,
 	-- Slide only: the direction its surface slopes DOWN toward ("+X" | "-X" | "+Z" | "-Z").
 	slopeToward: string?,
+	-- Prop Room: the prop shrinks and grows (Motion.pulse). The validator judges it at full size.
+	pulse: MotionSpec?,
+	-- Prop Room: a conveyor belt; velocity (studs/s) it carries whoever stands on it.
+	conveyor: Vec?,
+}
+
+-- Mirrors shared/Motion.Spec (kept here so layouts stay require-free).
+export type MotionSpec = {
+	period: number,
+	phase: number?,
+	amplitude: number?,
+	min: number?,
+	hold: number?,
+	aim: number?,
+	halfWidth: number?,
+}
+
+-- Moving hazards (animated on every client from server time; see shared/Motion).
+--   Pendulum  a sandbag on a rope; `center` is the hinge, swings across `axis`
+--   Slider    a shelf sliding back and forth along `axis` around `center`
+--   Spinner   a rotating light rig at `center`; its beam lands on `gate` (judged by the server)
+export type MoverLayout = {
+	id: string,
+	kind: "Pendulum" | "Slider" | "Spinner",
+	center: Vec,
+	size: Vec,
+	axis: "X" | "Z",
+	motion: MotionSpec,
+	ropeLength: number?,
+	gate: Box?,
 }
 
 export type Placement = { pos: Vec, facing: Vec }
@@ -40,6 +70,13 @@ export type DoorLayout = {
 	path: { Vec },
 	exitStep: Vec,
 	pathSpeed: number?,
+}
+
+export type ExitLayout = {
+	name: string,
+	door: Placement,
+	zone: Box,
+	canBeReal: boolean,
 }
 
 export type Solid = Box & {
@@ -69,8 +106,11 @@ export type Layout = {
 	-- Stage 2
 	backdrop: { panel: Box, trigger: Box } | nil,
 	windowWalk: { from: Vec, to: Vec } | nil,
-	-- Stage 3
-	exits: { left: Placement, right: Placement, leftZone: Box, rightZone: Box } | nil,
+	-- Stages with a choice of exits (3, 6): each looks like a door; one of those marked
+	-- canBeReal is picked per run, the rest are painted fakes.
+	exits: { ExitLayout } | nil,
+	-- Stages 4–6: moving hazards.
+	movers: { MoverLayout } | nil,
 }
 
 return {}

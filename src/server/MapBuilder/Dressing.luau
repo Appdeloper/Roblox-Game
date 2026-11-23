@@ -14,6 +14,7 @@ local LayoutTypes = require(script.Parent.LayoutTypes)
 local Builders = require(script.Parent.Builders)
 local Props = require(script.Parent.Props)
 local Auditorium = require(script.Parent.Set.Auditorium)
+local Backstage = require(script.Parent.Set.Backstage)
 local CurtainCall = require(script.Parent.Set.CurtainCall)
 local Story = require(script.Parent.Set.Story)
 local Street = require(script.Parent.Set.Street)
@@ -209,6 +210,21 @@ function Dressing.stage3(model: Model, layout: Layout, origin: Vector3, route: {
 	dust(model, layout, origin)
 end
 
-Dressing.byStage = { Dressing.stage1, Dressing.stage2, Dressing.stage3 }
+--- Acts IV–VI share one shape: a set builder, a moon window and dust.
+local function backstageStage(index: number, build: (Backstage.Ctx) -> ())
+	return function(model: Model, layout: Layout, origin: Vector3, _route: { [string]: BasePart })
+		local set = Builders.folder("Dressing", model)
+		build({ set = set, origin = origin, rng = rngFor(index) })
+		moonWindow(set, origin + Vector3.new(-5.6, layout.room.max[2] - 10, 0), Vector3.xAxis, 140)
+		dust(model, layout, origin)
+	end
+end
+
+Dressing.stage4 = backstageStage(4, Backstage.flies)
+Dressing.stage5 = backstageStage(5, Backstage.propRoom)
+Dressing.stage6 = backstageStage(6, Backstage.openingNight)
+
+Dressing.byStage =
+	{ Dressing.stage1, Dressing.stage2, Dressing.stage3, Dressing.stage4, Dressing.stage5, Dressing.stage6 }
 
 return Dressing

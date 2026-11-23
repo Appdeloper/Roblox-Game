@@ -23,11 +23,14 @@ Lore.Play = {
 
 Lore.MannequinName = "PINE"
 
--- Acts match the three stages, so a playbill doubles as a map of the run.
+-- Acts match the six stages, so a playbill doubles as a map of the run.
 Lore.Acts = {
 	{ Numeral = "I", Title = "THE EMPTY AUDITORIUM" },
 	{ Numeral = "II", Title = "THE PAINTED STREET" },
 	{ Numeral = "III", Title = "CURTAIN CALL" },
+	{ Numeral = "IV", Title = "THE FLIES" },
+	{ Numeral = "V", Title = "THE PROP ROOM" },
+	{ Numeral = "VI", Title = "OPENING NIGHT" },
 }
 
 export type Line = {
@@ -89,6 +92,27 @@ Lore.Notices = {
 		Lines = {
 			{ text = "WET PAINT — ACT II FLATS" },
 			{ text = "the moon is not dry yet" },
+		} :: { Line },
+	},
+	Flies = {
+		Heading = "FLY CREW",
+		Lines = {
+			{ text = "NEVER STAND UNDER A MOVING BATTEN" },
+			{ text = "lights rehearse on their own at night" },
+		} :: { Line },
+	},
+	Props = {
+		Heading = "PROPS TABLE",
+		Lines = {
+			{ text = "EVERY PROP BACK IN ITS PLACE" },
+			{ text = "the mannequin is NOT a prop", accent = true },
+		} :: { Line },
+	},
+	Call = {
+		Heading = "OPENING NIGHT CALL",
+		Lines = {
+			{ text = "FULL CAST ON STAGE BY 7:00" },
+			{ text = "understudy will not be needed", struck = true },
 		} :: { Line },
 	},
 }
