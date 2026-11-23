@@ -94,6 +94,27 @@ Lore.Notices = {
 			{ text = "the moon is not dry yet" },
 		} :: { Line },
 	},
+	Flies = {
+		Heading = "FLY CREW",
+		Lines = {
+			{ text = "NEVER STAND UNDER A MOVING BATTEN" },
+			{ text = "lights rehearse on their own at night" },
+		} :: { Line },
+	},
+	Props = {
+		Heading = "PROPS TABLE",
+		Lines = {
+			{ text = "EVERY PROP BACK IN ITS PLACE" },
+			{ text = "the mannequin is NOT a prop", accent = true },
+		} :: { Line },
+	},
+	Call = {
+		Heading = "OPENING NIGHT CALL",
+		Lines = {
+			{ text = "FULL CAST ON STAGE BY 7:00" },
+			{ text = "understudy will not be needed", struck = true },
+		} :: { Line },
+	},
 }
 
 --- Costume tags hung on the wardrobe rail. The mannequin's own tag is last and is the one

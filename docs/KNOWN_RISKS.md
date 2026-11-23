@@ -127,6 +127,18 @@ tabs exist. The sim covers stubs, trophies, unlocks, equipping, the Copycat skin
 | Trail look | Colour/lifetime judged without seeing it | `CosmeticsService.buildTrail` |
 | Trophy shelf readability | Small cups; might be hard to see from the stage | `client/World/TrophyShelf.luau` sizes |
 
+## Environment for Acts IV–VI (Phase 2E): verified and open
+
+Acts IV–VI now have the same environment language as Acts I–III: nervous work lamps
+(`FlickerLamp`, which flicker harder as your mannequin closes in), swaying drapes and house
+curtains (`Curtain`), moonlight/warm beams with dust, and lore notices (the fly crew, the props
+table, and the opening-night call sheet with the understudy line struck through). The clearance
+and readability specs pass, and there are 3,890 parts.
+
+**Not verified by eye:** Studio's screen capture returned a blank 3D view whenever the Studio
+window wasn't in front, so stages 2–6 have no screenshots yet. Keep the Studio window visible and
+take them with the Phase 3 screenshot pass, or by hand (see `docs/VISUAL_CHECKLIST.md`).
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.

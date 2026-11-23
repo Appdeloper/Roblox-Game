@@ -11,9 +11,12 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Lore = require(ReplicatedStorage.Shared.Lore)
 local Theme = require(ReplicatedStorage.Shared.Theme)
 local Builders = require(script.Parent.Parent.Builders)
+local LoreProps = require(script.Parent.Parent.LoreProps)
 local Props = require(script.Parent.Parent.Props)
+local SetPieces = require(script.Parent.Parent.SetPieces)
 
 export type Ctx = { set: Instance, origin: Vector3, rng: Random }
 
@@ -32,6 +35,33 @@ local function decor(ctx: Ctx, name: string, size: Vector3, cframe: CFrame, surf
 		surface = surface,
 		decor = true,
 	})
+end
+
+--- A notice pinned to a wall (`normal` points into the room).
+local function notice(ctx: Ctx, x: number, y: number, z: number, normal: Vector3, which: string, tilt: number)
+	local pos = L(ctx, x, y, z)
+	local spec = (Lore.Notices :: any)[which]
+	LoreProps.board(ctx.set, CFrame.lookAt(pos, pos + normal), Vector2.new(9, 4.5), {
+		heading = spec.Heading,
+		lines = spec.Lines,
+		style = LoreProps.Styles.Notice,
+		tilt = tilt,
+	})
+end
+
+--- A caged work lamp that gets nervous when your mannequin is near (client: World/Ambient).
+local function workLamp(ctx: Ctx, pos: Vector3)
+	local lamp = Builders.part({
+		name = "WorkLamp",
+		size = Vector3.new(1, 1.2, 1),
+		cframe = CFrame.new(pos),
+		parent = ctx.set,
+		surface = "WarmGlow",
+		decor = true,
+		tag = "FlickerLamp",
+	})
+	Builders.pointLight(lamp, Theme.Colors.WarmSpot, 24, 1.4)
+	decor(ctx, "LampCage", Vector3.new(1.3, 0.2, 1.3), CFrame.new(pos + Vector3.new(0, 0.7, 0)), "Iron")
 end
 
 -- ── Act IV: The Flies ────────────────────────────────────────────────────────────────────
@@ -72,6 +102,14 @@ function Backstage.flies(ctx: Ctx)
 		Theme.Colors.Paper,
 		"DarkWood"
 	)
+	notice(ctx, 40, 36, 22.9, -Vector3.zAxis, "Flies", 2)
+	for _, x in { 30, 66, 100, 124 } do
+		workLamp(ctx, L(ctx, x, 52, -11))
+	end
+	-- Old drapes hung up here out of the way: they ripple as you run past.
+	SetPieces.stripCurtain(ctx.set, "FlyDrape", L(ctx, 84, 52, -20), Vector3.new(16, 22, 0.6))
+	-- A shaft of moonlight through the grid down to the stage far below, with dust in it.
+	SetPieces.lightShaft(ctx.set, L(ctx, 58, 66, -18), L(ctx, 44, -2, -14), 5, "MoonShaft")
 end
 
 -- ── Act V: The Prop Room ─────────────────────────────────────────────────────────────────
@@ -117,6 +155,12 @@ function Backstage.propRoom(ctx: Ctx)
 		Theme.Colors.Paper,
 		"DarkWood"
 	)
+	notice(ctx, 63, 20, 24.4, -Vector3.zAxis, "Props", -2)
+	for _, x in { 20, 56, 90, 120 } do
+		workLamp(ctx, L(ctx, x, 30, 10))
+	end
+	SetPieces.stripCurtain(ctx.set, "PropDrape", L(ctx, 30, 16, 24.2), Vector3.new(14, 22, 0.6))
+	SetPieces.lightShaft(ctx.set, L(ctx, 110, 38, -21), L(ctx, 98, 0, -20), 4.5, "MoonShaft")
 end
 
 -- ── Act VI: Opening Night ────────────────────────────────────────────────────────────────
@@ -163,6 +207,17 @@ function Backstage.openingNight(ctx: Ctx)
 	for _, z in { -16, 16 } do
 		Props.stageSpot(ctx.set, L(ctx, 96, 44, z), L(ctx, 120, 9, 0), Theme.Colors.WarmSpot, 70)
 	end
+	-- Velvet house curtains drawn back to the proscenium (they sway as you pass).
+	for _, z in { -27.5, 27.5 } do
+		SetPieces.stripCurtain(ctx.set, "HouseCurtain", L(ctx, 96, 24, z), Vector3.new(10, 40, 0.6))
+	end
+	notice(ctx, 128.6, 22, -24, -Vector3.xAxis, "Call", 3)
+	for _, x in { 30, 70, 110 } do
+		workLamp(ctx, L(ctx, x, 30, -22))
+	end
+	-- Two warm beams from the gallery onto the doors: the exit choice is lit, not given away.
+	SetPieces.lightShaft(ctx.set, L(ctx, 96, 46, -24), L(ctx, 124, 9, -8), 5, "WarmBeam")
+	SetPieces.lightShaft(ctx.set, L(ctx, 96, 46, 24), L(ctx, 124, 9, 8), 5, "WarmBeam")
 end
 
 return Backstage
