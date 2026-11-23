@@ -50,6 +50,9 @@ title **Opening Night**.
 Everything is built from Luau in this repo: the map, the mannequin rig, the UI and the lighting.
 There's no hand-made `.rbxl` to keep in sync.
 
+> **Launching?** Start with **[docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md)** (IDs by file and
+> line, store page, thumbnails, 10 Reel ideas) and **[STATUS.md](STATUS.md)**.
+>
 > **New to Rojo, or setting up from scratch on a PC?** Follow
 > **[docs/PC_SYNC_GUIDE.md](docs/PC_SYNC_GUIDE.md)** (step by step), then
 > **[docs/FIRST_PLAYTEST.md](docs/FIRST_PLAYTEST.md)**, and check
@@ -186,7 +189,8 @@ Stage geometry lives in `src/server/MapBuilder/Layouts/StageN.luau`. If an edit 
 
 ## Known limitations
 
-- **Not playtested in Studio by the author.** All logic is exercised by the Lune smoke tests:
+- **Playtested in Studio through its MCP server** (every stage, every mode), but not yet by hand on
+  real devices. All logic is also exercised by the Lune smoke tests:
   full runs, catches, DataStore merges, receipts, and every UI screen. Physics feel, camera,
   readability on real phones and audio balance still need hands-on testing. Start with
   [docs/TESTING.md](docs/TESTING.md).
@@ -205,5 +209,5 @@ Stage geometry lives in `src/server/MapBuilder/Layouts/StageN.luau`. If an edit 
   server logs the award.
 - `Lighting.Technology` is set to **ShadowMap** in `default.project.json` because it can't be
   scripted. Change it there if you want Future lighting on high-end devices.
-- `Workspace.StreamingEnabled` is **off**. The whole map is about 370 parts, which is small, and
+- `Workspace.StreamingEnabled` is **off**. The whole place is about 4,000 parts, well under budget, and
   clients find doors and hazards by tag.
