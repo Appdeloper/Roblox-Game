@@ -2,7 +2,7 @@
 
 A spooky-fun parkour escape through a haunted school theatre, for Roblox (ages 9–17, mobile first).
 
-You wake up on a rehearsal stage. Step through the **STAGE DOOR** and escape three stages while a
+You wake up on a rehearsal stage. Step through the **STAGE DOOR** and escape six stages while a
 wooden mannequin copies your every move **1.5 seconds late**. Stand still and it catches up. Pass a
 **painted door** (purple, with a brass ★) and the mannequin takes a shortcut through the scenery.
 Watch for the handle turning and the light under the door. Get caught and it's "CUT! Take it from
@@ -13,6 +13,29 @@ the top": back to the stage entrance, plus one retake.
 | **1 · The Empty Auditorium** | Hop tipped-over seat rows, climb prop trunks onto the stage | Your shadow takes a bow… then the mannequin finishes it behind you |
 | **2 · The Painted Street** | Climb the scenery ladder, cross four shop roofs, drop onto the slide mat, slip under the descending backdrop | The mannequin walks past the upstairs windows; a brass handle by the landing starts turning |
 | **3 · Curtain Call** | Run down a collapsing cardboard staircase to two exits: one painted, one real (light beneath it) | One polite knock… then applause from the empty seats |
+| **4 · The Flies** | Cross narrow catwalks high above the stage while rotating light rigs sweep them, dodge a swinging sandbag, climb the rope ladder | A light rig drops on its chain and its spot finds you |
+| **5 · The Prop Room** | Jump crates that shrink and grow, run a conveyor belt of costumes going the wrong way, slip past sliding shelves | Every costume on the rail turns to look at you |
+| **6 · Opening Night** | The whole cast chases you across a collapsing set to five exit doors. One is real | House lights up: the audience is all mannequins, and they stand |
+
+### Game modes
+
+| Mode | How it plays | Board |
+| --- | --- | --- |
+| **Story** | The six stages in order (START THE SHOW, or walk through the stage door) | ★ Best Escapes (fastest time) |
+| **☀ Daily Run** | Four stages picked by the date, the same for every player that day, always ending on Opening Night. Only your first finish each day counts | Today's Daily Run (fastest first finish) |
+| **∞ Endless** | Stages come shuffled and never stop. The mannequin gets a little faster every stage. 3 lives | Endless (most stages cleared) |
+| **👥 Co-op** | Story for up to 4 friends. Tap Co-op within 10 s of each other. A clear moves everyone on; a caught player is *downed* until a teammate stands next to them for 1.5 s; if everyone's down, the cast takes it from the top | — |
+
+### Progression (all cosmetic)
+
+- **Trophies** (11) on your own trophy shelf in the lobby, each also a Roblox badge: First Escape,
+  Opening Night, Spotted the Door, Stare Down, Mirror Mirror, Full House, Daily Double, Daily
+  Devotee, Long Run, Cast Party, Revival.
+- **Ticket book**: a stub for every act cleared and every mode finished.
+- **Daily visits**: come back on consecutive days to build a streak (days 2, 3 and 7 unlock
+  wardrobe items).
+- **Wardrobe** tabs: ticket skins, trails, mannequin skins (your Copycat's wood), playbill
+  backgrounds (the stage title cards), and your Collection.
 
 At the end you get a **theatre ticket** with your escape time and retakes. Zero retakes earns the
 title **Opening Night**.
@@ -67,7 +90,7 @@ rojo serve
 
 In Studio, open **Plugins → Rojo → Connect** (default `localhost:34872`). Code edits now sync into
 Studio live. Press **Play**: the server builds the whole map on boot. Watch Output for
-`[Main] Don't Look Backstage ready: 3 stages`.
+`[Main] Don't Look Backstage ready: 6 stages`.
 
 ### 5. Run the checks (same as CI)
 
@@ -107,9 +130,9 @@ Studio, the server prints how many asset placeholders remain.
 | --- | --- | --- |
 | 24 sound effects — 19 one-shots/loops (heartbeat, creaks, doors, knock, applause, stings) plus 5 looping 3D ambience layers (drip, wind, timber, piano, far applause) | `src/shared/Assets.luau` → `Assets.Sounds.*.Id` | Upload your own audio, or use free Creator Store audio you're licensed to use. Creator Dashboard → Development Items → Audio |
 | Dust particle texture, vignette image (optional) | `src/shared/Assets.luau` → `Assets.Images.*.Id` | Upload a decal/image (built-in fallbacks are used while `0`) |
-| Badges: First Escape, Opening Night, Spotted the Door | `src/shared/Config.luau` → `Config.Badges` | Creator Dashboard → your experience → Engagement → Badges → Create |
-| Game passes: Spotlight Trail, Velvet Curtain Border | `Config.Monetization.GamePasses.*.Id` | Creator Dashboard → Monetization → Passes |
-| Developer products: Golden / Moonlit Ticket Skin | `Config.Monetization.Products.*.Id` | Creator Dashboard → Monetization → Developer Products |
+| Badges: First Escape, Opening Night, Spotted the Door, + 8 trophy badges (Stare Down … Revival) | `src/shared/Config.luau` → `Config.Badges` | Creator Dashboard → your experience → Engagement → Badges → Create |
+| Game passes: Spotlight Trail, Velvet Curtain Border, Playbill Collection | `Config.Monetization.GamePasses.*.Id` | Creator Dashboard → Monetization → Passes |
+| Developer products: Golden / Moonlit Ticket Skin, Sparkler Trail, Marble Mannequin | `Config.Monetization.Products.*.Id` | Creator Dashboard → Monetization → Developer Products |
 
 Prices, names and icons are set on the Creator Dashboard. The display names in `Config` are only
 used in-game.

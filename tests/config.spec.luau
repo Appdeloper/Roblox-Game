@@ -56,7 +56,37 @@ return function(T)
 			end
 		end
 		for key, product in Config.Monetization.Products do
-			T.expect(Config.TicketSkins[product.GrantsSkin] ~= nil, key .. " grants unknown skin")
+			local p = product :: any
+			if p.GrantsSkin then
+				T.expect(Config.TicketSkins[p.GrantsSkin] ~= nil, key .. " grants unknown skin")
+			else
+				local items = (Config.Cosmetics :: any)[p.GrantsCosmetic[1]]
+				T.expect(items and items[p.GrantsCosmetic[2]] ~= nil, key .. " grants unknown cosmetic")
+			end
+		end
+	end)
+
+	T.test("everything for sale is cosmetic", function()
+		-- No pass or product may touch gameplay: they only grant skins or cosmetics.
+		for key, pass in Config.Monetization.GamePasses do
+			for field in pass :: any do
+				T.expect(
+					field == "Id" or field == "DisplayName" or field == "Description" or field == "GrantsSkin",
+					key .. " has a non-cosmetic field " .. field
+				)
+			end
+		end
+		for key, product in Config.Monetization.Products do
+			for field in product :: any do
+				T.expect(
+					field == "Id"
+						or field == "DisplayName"
+						or field == "Description"
+						or field == "GrantsSkin"
+						or field == "GrantsCosmetic",
+					key .. " has a non-cosmetic field " .. field
+				)
+			end
 		end
 	end)
 

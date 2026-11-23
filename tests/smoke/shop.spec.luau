@@ -18,6 +18,8 @@ return function(placePath, check)
 	local passes, products = Config.Monetization.GamePasses, Config.Monetization.Products
 	passes.SpotlightTrail.Id, passes.VelvetCurtainBorder.Id = 201, 202
 	products.GoldenTicketSkin.Id, products.MoonlitTicketSkin.Id = 301, 302
+	products.SparklerTrail.Id, products.MarbleMannequin.Id = 303, 304
+	passes.PlaybillCollection.Id = 203
 	local Decision = roblox.Enum.ProductPurchaseDecision
 
 	local function snapshot(player)
@@ -44,10 +46,10 @@ return function(placePath, check)
 	check(type(market.ProcessReceipt) == "function", "ProcessReceipt callback installed")
 
 	-- Pass owner joins.
-	market.owned[201], market.owned[202] = true, true
+	market.owned[201], market.owned[202], market.owned[203] = true, true, true
 	local ana = sim.join("ShopAna", true)
 	sim.tick(1)
-	market.owned[201], market.owned[202] = nil, nil
+	market.owned[201], market.owned[202], market.owned[203] = nil, nil, nil
 	local snap = snapshot(ana)
 	check(snap and snap.ownsSpotlightTrail and snap.trailEnabled, "Spotlight Trail pass detected and switched on")
 	check(snap and table.find(snap.ownedSkins, "VelvetCurtain") ~= nil, "Velvet Curtain pass unlocks its ticket skin")
@@ -80,6 +82,17 @@ return function(placePath, check)
 	check(purchases(ana.UserId) == 2, "outage + retry credits exactly once")
 
 	check(receipt(ana, 999, "p-3") == Decision.NotProcessedYet, "unknown product is never granted")
+	check(receipt(ana, 303, "p-5") == Decision.PurchaseGranted, "cosmetic product granted")
+	check(table.find(snapshot(ana).unlocked.Trail, "Sparkler") ~= nil, "the Sparkler trail unlocks")
+	check(receipt(ana, 303, "p-5") == Decision.PurchaseGranted, "a retried receipt answers granted again")
+	check(
+		store.data[Config.Data.KeyPrefix .. ana.UserId].Products.SparklerTrail == true,
+		"the product is saved on the profile"
+	)
+	check(
+		table.find(snapshot(ana).unlocked.Playbill, "Starlight") ~= nil,
+		"the Playbill Collection pass unlocks its playbills"
+	)
 	local gone = { UserId = 123456 }
 	local answer = nil
 	h.sched.task.spawn(function()
