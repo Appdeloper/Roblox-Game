@@ -184,7 +184,8 @@ function Backstage.openingNight(ctx: Ctx)
 		local x = 60 + row * 6
 		for i = -6, 6 do
 			local z = i * 3.4
-			if math.abs(z) > 4 then
+			-- Keep the middle of the house empty so the run over the risers reads clearly.
+			if math.abs(z) >= 10 then
 				local seat = L(ctx, x - 40, 1 + row * 1.2, z)
 				decor(ctx, "Seat", Vector3.new(1.6, 1, 2.6), CFrame.new(seat), "Velvet")
 				audienceMember(ctx, seat + Vector3.new(0, 0.5, 0))

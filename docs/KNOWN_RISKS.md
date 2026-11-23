@@ -164,6 +164,25 @@ back). The near-miss replay, share and invite calls are wrapped in `pcall`.
 | Share sheet | `CaptureService` prompts only appear on real devices | `client/UI/ClipMode.luau` → `snapshot` |
 | Photo-spot camera angles | Picked from the layout, not by eye | `CameraOffset` in `Dressing.luau` / `Lobby.luau` |
 
+## Quality and performance (Phase 3)
+
+Measured in Studio (play mode, server view): **3,961 BaseParts** (budget 12,000), **99 lights**,
+**12 particle emitters** for the whole place (lobby + six stages). Quality is Low/Medium/High
+with **Auto = Low on touch devices** (`client/Quality.luau`, `Config.Quality`). Screenshots of the
+lobby and every stage are in [screenshots/](screenshots/).
+
+`tests/smoke/hardening.spec.luau` proves the following:
+- Garbage into **every** client→server remote doesn't crash the server or change anything. That covers wrong types, extra arguments, NaN, infinity, 5,000-character strings, tables and Vector3s.
+- You can't freeze another player's mannequin.
+- Unknown modes are ignored.
+- Spam is rate-limited.
+- Dying mid-run keeps the run.
+- An empty server holds no mannequins or loops.
+- A rejoining player starts in the lobby.
+
+Not yet checked on a real phone: frame rate on low-end devices and the Low preset's look.
+Studio's Device Emulator (Test → Device) is the next step; Auto picks Low there.
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.
