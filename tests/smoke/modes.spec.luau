@@ -67,6 +67,20 @@ return function(placePath, check)
 	-- ── Endless ────────────────────────────────────────────────────────────────────────────
 	do
 		local eve = join("Eve")
+		-- A fixed shuffle that doesn't open on the light rigs (the sim walker waits for beams,
+		-- and waiting in Endless costs lives), so the test never depends on the clock.
+		local RoundService = h.require(sim.SSS.Services.RoundService)
+		local seed = 1
+		while true do
+			local seq = Modes.endlessSequence(seed, Config.Game.StageCount, 4)
+			if not table.find(seq, 4) then
+				break
+			end
+			seed += 1
+		end
+		RoundService.endlessSeed = function()
+			return seed
+		end
 		tick(Config.Run.StartCooldown + 0.1)
 		remotes.fromClient("RequestMode", eve, "Endless")
 		tick(0.1)
