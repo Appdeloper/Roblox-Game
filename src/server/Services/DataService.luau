@@ -37,6 +37,7 @@ export type Profile = {
 	saveQueued: boolean,
 	-- Transient flags (not persisted), e.g. gamepass ownership checked on join.
 	ownsSpotlightTrail: boolean,
+	passes: { [string]: boolean },
 }
 
 export type RunRecord = { bestTime: number?, isNewBest: boolean }
@@ -84,12 +85,7 @@ end
 
 local function unlockedCosmetics(profile: Profile): { [string]: { string } }
 	local out = {}
-	local facts = {
-		titles = profile.data.Titles,
-		trophies = profile.data.Trophies,
-		bestStreak = profile.data.BestStreak,
-		passes = { SpotlightTrail = profile.ownsSpotlightTrail },
-	}
+	local facts = DataService.facts(profile)
 	for category, items in Config.Cosmetics :: any do
 		local list = {}
 		for id in items do
@@ -140,13 +136,20 @@ function DataService.snapshot(player: Player): Types.ProfileSnapshot?
 	}
 end
 
+local function passesOf(profile: Profile): { [string]: boolean }
+	local passes = table.clone(profile.passes)
+	passes.SpotlightTrail = profile.ownsSpotlightTrail or passes.SpotlightTrail
+	return passes
+end
+
 --- What a profile has earned, in the shape shared/Progression checks.
 function DataService.facts(profile: Profile): Progression.Facts
 	return {
 		titles = profile.data.Titles,
 		trophies = profile.data.Trophies,
 		bestStreak = profile.data.BestStreak,
-		passes = { SpotlightTrail = profile.ownsSpotlightTrail },
+		passes = passesOf(profile),
+		products = profile.data.Products,
 	}
 end
 
@@ -234,6 +237,7 @@ local function load(player: Player)
 		saving = false,
 		saveQueued = false,
 		ownsSpotlightTrail = false,
+		passes = {},
 	}
 	profiles[player] = profile
 	local ds = getStore()
@@ -365,6 +369,24 @@ function DataService.grantSkin(player: Player, skinId: string)
 	local profile = profiles[player]
 	if profile and (Config.TicketSkins :: any)[skinId] then
 		profile.data.OwnedSkins[skinId] = true
+		DataService.push(player)
+	end
+end
+
+--- A Game Pass this player owns (checked on join / bought this session). Transient.
+function DataService.setPass(player: Player, passKey: string)
+	local profile = profiles[player]
+	if profile and not profile.passes[passKey] then
+		profile.passes[passKey] = true
+		DataService.push(player)
+	end
+end
+
+--- A cosmetic developer product, bought once and kept (Products set, merged as a union).
+function DataService.grantProduct(player: Player, productKey: string)
+	local profile = profiles[player]
+	if profile and (Config.Monetization.Products :: any)[productKey] then
+		profile.data.Products[productKey] = true
 		DataService.push(player)
 	end
 end

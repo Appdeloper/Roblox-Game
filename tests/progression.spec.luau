@@ -24,6 +24,13 @@ return function(T)
 					T.expect(Config.Trophies[u.Key] ~= nil, id .. " trophy")
 				elseif u.Kind == "GamePass" then
 					T.expect(Config.Monetization.GamePasses[u.Key] ~= nil, id .. " pass")
+				elseif u.Kind == "Product" then
+					local product = Config.Monetization.Products[u.Key]
+					T.expect(product ~= nil, id .. " product")
+					T.expect(
+						product.GrantsCosmetic[1] == category and product.GrantsCosmetic[2] == id,
+						id .. " product grants it"
+					)
 				elseif u.Kind == "Streak" then
 					T.expect(type(u.Key) == "number" and u.Key >= 1, id .. " streak")
 				else
@@ -63,6 +70,24 @@ return function(T)
 			"a pass can't be earned by streak"
 		)
 		T.expect(not Progression.ownsCosmetic(Config.Cosmetics, "Trail", "Nope", facts()), "unknown id")
+		T.expect(
+			Progression.ownsCosmetic(
+				Config.Cosmetics,
+				"Trail",
+				"Sparkler",
+				facts({ products = { SparklerTrail = true } })
+			),
+			"a bought product unlocks its cosmetic"
+		)
+		T.expect(
+			Progression.ownsCosmetic(
+				Config.Cosmetics,
+				"Playbill",
+				"Starlight",
+				facts({ passes = { PlaybillCollection = true } })
+			),
+			"a game pass unlocks its playbills"
+		)
 	end)
 
 	T.test("daily streak", function()

@@ -130,9 +130,9 @@ Studio, the server prints how many asset placeholders remain.
 | --- | --- | --- |
 | 24 sound effects — 19 one-shots/loops (heartbeat, creaks, doors, knock, applause, stings) plus 5 looping 3D ambience layers (drip, wind, timber, piano, far applause) | `src/shared/Assets.luau` → `Assets.Sounds.*.Id` | Upload your own audio, or use free Creator Store audio you're licensed to use. Creator Dashboard → Development Items → Audio |
 | Dust particle texture, vignette image (optional) | `src/shared/Assets.luau` → `Assets.Images.*.Id` | Upload a decal/image (built-in fallbacks are used while `0`) |
-| Badges: First Escape, Opening Night, Spotted the Door | `src/shared/Config.luau` → `Config.Badges` | Creator Dashboard → your experience → Engagement → Badges → Create |
-| Game passes: Spotlight Trail, Velvet Curtain Border | `Config.Monetization.GamePasses.*.Id` | Creator Dashboard → Monetization → Passes |
-| Developer products: Golden / Moonlit Ticket Skin | `Config.Monetization.Products.*.Id` | Creator Dashboard → Monetization → Developer Products |
+| Badges: First Escape, Opening Night, Spotted the Door, + 8 trophy badges (Stare Down … Revival) | `src/shared/Config.luau` → `Config.Badges` | Creator Dashboard → your experience → Engagement → Badges → Create |
+| Game passes: Spotlight Trail, Velvet Curtain Border, Playbill Collection | `Config.Monetization.GamePasses.*.Id` | Creator Dashboard → Monetization → Passes |
+| Developer products: Golden / Moonlit Ticket Skin, Sparkler Trail, Marble Mannequin | `Config.Monetization.Products.*.Id` | Creator Dashboard → Monetization → Developer Products |
 
 Prices, names and icons are set on the Creator Dashboard. The display names in `Config` are only
 used in-game.

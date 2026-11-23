@@ -9,7 +9,7 @@
 	  Titles, OwnedSkins       union
 	  ProcessedReceipts        union, newest MaxReceiptHistory kept
 	  EquippedSkin, TrailEnabled, Settings   this session's latest choice
-	  Trophies, Stubs          union
+	  Trophies, Stubs, Products   union
 	  Equipped (cosmetics)     this session's latest choice
 	  LastDay / Streak         the later day wins (with its streak); BestStreak highest
 	So a slow or stale server can never erase progress written by another one.
@@ -40,6 +40,7 @@ function ProfileSchema.default(): ProfileData
 		Settings = { ReducedScares = false, Quality = Config.Quality.Default },
 		Trophies = {},
 		Stubs = {},
+		Products = {},
 		Equipped = table.clone(Config.DefaultCosmetics) :: any,
 		LastDay = nil,
 		Streak = 0,
@@ -104,6 +105,7 @@ function ProfileSchema.migrate(raw: any): ProfileData?
 		if version >= 3 then
 			data.Trophies = copySet(raw.Trophies)
 			data.Stubs = copySet(raw.Stubs)
+			data.Products = copySet(raw.Products)
 			local equipped = if type(raw.Equipped) == "table" then raw.Equipped else {}
 			for category, default in Config.DefaultCosmetics do
 				local id = equipped[category]
@@ -179,6 +181,7 @@ function ProfileSchema.merge(stored: ProfileData, mine: ProfileData, deltas: Del
 		Settings = { ReducedScares = mine.Settings.ReducedScares, Quality = mine.Settings.Quality },
 		Trophies = union(stored.Trophies, mine.Trophies),
 		Stubs = union(stored.Stubs, mine.Stubs),
+		Products = union(stored.Products, mine.Products),
 		Equipped = table.clone(mine.Equipped),
 		LastDay = if (mine.LastDay or -1) >= (stored.LastDay or -1) then mine.LastDay else stored.LastDay,
 		Streak = if (mine.LastDay or -1) >= (stored.LastDay or -1) then mine.Streak else stored.Streak,

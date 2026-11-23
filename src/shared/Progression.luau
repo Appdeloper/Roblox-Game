@@ -13,6 +13,8 @@ export type Facts = {
 	trophies: { [string]: boolean },
 	bestStreak: number,
 	passes: { [string]: boolean },
+	-- Developer products bought (Config.Monetization.Products keys).
+	products: { [string]: boolean }?,
 }
 
 local Progression = {}
@@ -29,6 +31,8 @@ function Progression.unlocked(unlock: Unlock, facts: Facts): boolean
 		return facts.bestStreak >= (unlock.Key :: number)
 	elseif kind == "GamePass" then
 		return facts.passes[unlock.Key :: string] == true
+	elseif kind == "Product" then
+		return facts.products ~= nil and (facts.products :: any)[unlock.Key :: string] == true
 	end
 	return false
 end

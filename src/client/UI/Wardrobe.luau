@@ -174,6 +174,17 @@ local function cosmeticAction(category: string, id: string, item: any): CardActi
 			end,
 		}
 	end
+	if item.Unlock.Kind == "Product" then
+		local product = (Config.Monetization.Products :: any)[item.Unlock.Key]
+		return {
+			text = "Buy (Robux)",
+			color = Theme.Colors.Brass,
+			enabled = true,
+			run = function()
+				prompt("Product", product.Id)
+			end,
+		}
+	end
 	if item.Unlock.Kind == "GamePass" then
 		local pass = (Config.Monetization.GamePasses :: any)[item.Unlock.Key]
 		return {

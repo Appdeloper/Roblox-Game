@@ -366,7 +366,8 @@ Config.Stubs = {
 
 -- Cosmetics earned by playing (none of them change gameplay). Unlock.Kind:
 --   "Free" | "Title" (Config.Titles key) | "Trophy" (Config.Trophies key) |
---   "Streak" (best daily streak >= Key) | "GamePass" (Config.Monetization.GamePasses key)
+--   "Streak" (best daily streak >= Key) | "GamePass" (Config.Monetization.GamePasses key) |
+--   "Product" (Config.Monetization.Products key: bought once, kept forever)
 -- Colours are RGB 0..255.
 Config.Cosmetics = {
 	Trail = {
@@ -395,6 +396,12 @@ Config.Cosmetics = {
 			Color = { 120, 214, 224 },
 			Unlock = { Kind = "Trophy", Key = "EndlessTen" },
 		},
+		Sparkler = {
+			Order = 6,
+			DisplayName = "Sparkler",
+			Color = { 255, 200, 80 },
+			Unlock = { Kind = "Product", Key = "SparklerTrail" },
+		},
 	},
 	MannequinSkin = {
 		Pine = { Order = 1, DisplayName = "Pine", Color = { 196, 160, 118 }, Unlock = { Kind = "Free" } },
@@ -422,6 +429,12 @@ Config.Cosmetics = {
 			Color = { 236, 232, 224 },
 			Unlock = { Kind = "Streak", Key = 7 },
 		},
+		Marble = {
+			Order = 6,
+			DisplayName = "Marble",
+			Color = { 214, 218, 226 },
+			Unlock = { Kind = "Product", Key = "MarbleMannequin" },
+		},
 	},
 	Playbill = {
 		Classic = { Order = 1, DisplayName = "Classic", Color = { 150, 24, 36 }, Unlock = { Kind = "Free" } },
@@ -442,6 +455,18 @@ Config.Cosmetics = {
 			DisplayName = "Velvet",
 			Color = { 96, 32, 110 },
 			Unlock = { Kind = "Trophy", Key = "CastParty" },
+		},
+		Starlight = {
+			Order = 5,
+			DisplayName = "Starlight",
+			Color = { 30, 60, 110 },
+			Unlock = { Kind = "GamePass", Key = "PlaybillCollection" },
+		},
+		Gaslight = {
+			Order = 6,
+			DisplayName = "Gaslight",
+			Color = { 120, 96, 40 },
+			Unlock = { Kind = "GamePass", Key = "PlaybillCollection" },
 		},
 	},
 }
@@ -467,6 +492,11 @@ Config.Monetization = {
 			Description = "A red velvet curtain frame for your finish ticket.",
 			GrantsSkin = "VelvetCurtain",
 		},
+		PlaybillCollection = {
+			Id = 0,
+			DisplayName = "Playbill Collection",
+			Description = "Two extra playbill backgrounds for your stage title cards.",
+		},
 	},
 	Products = {
 		GoldenTicketSkin = {
@@ -480,6 +510,18 @@ Config.Monetization = {
 			DisplayName = "Moonlit Ticket Skin",
 			Description = "A teal, moon-silver finish ticket.",
 			GrantsSkin = "Moonlit",
+		},
+		SparklerTrail = {
+			Id = 0,
+			DisplayName = "Sparkler Trail",
+			Description = "A fizzing golden trail. Cosmetic only.",
+			GrantsCosmetic = { "Trail", "Sparkler" },
+		},
+		MarbleMannequin = {
+			Id = 0,
+			DisplayName = "Marble Mannequin",
+			Description = "Your Copycat in cool white marble. Cosmetic only.",
+			GrantsCosmetic = { "MannequinSkin", "Marble" },
 		},
 	},
 }

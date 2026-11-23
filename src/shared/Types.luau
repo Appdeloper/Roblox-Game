@@ -77,6 +77,8 @@ export type ProfileData = {
 	-- v3: progression.
 	Trophies: { [string]: boolean },
 	Stubs: { [string]: boolean },
+	-- Developer products bought for cosmetics (Config.Monetization.Products keys).
+	Products: { [string]: boolean },
 	Equipped: { Trail: string, MannequinSkin: string, Playbill: string },
 	LastDay: number?,
 	Streak: number,
