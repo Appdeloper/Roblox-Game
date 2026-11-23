@@ -108,9 +108,17 @@ return {
 	scareZone = { center = { 98, 11, 0 }, size = { 10, 10, 40 } },
 
 	exits = {
-		left = { pos = { 135.9, 6, -8 }, facing = { -1, 0, 0 } },
-		right = { pos = { 135.9, 6, 8 }, facing = { -1, 0, 0 } },
-		leftZone = { center = { 133, 10, -8 }, size = { 5, 8, 6 } },
-		rightZone = { center = { 133, 10, 8 }, size = { 5, 8, 6 } },
+		{
+			name = "Left",
+			door = { pos = { 135.9, 6, -8 }, facing = { -1, 0, 0 } },
+			zone = { center = { 133, 10, -8 }, size = { 5, 8, 6 } },
+			canBeReal = true,
+		},
+		{
+			name = "Right",
+			door = { pos = { 135.9, 6, 8 }, facing = { -1, 0, 0 } },
+			zone = { center = { 133, 10, 8 }, size = { 5, 8, 6 } },
+			canBeReal = true,
+		},
 	},
 }

@@ -23,11 +23,14 @@ Lore.Play = {
 
 Lore.MannequinName = "PINE"
 
--- Acts match the three stages, so a playbill doubles as a map of the run.
+-- Acts match the six stages, so a playbill doubles as a map of the run.
 Lore.Acts = {
 	{ Numeral = "I", Title = "THE EMPTY AUDITORIUM" },
 	{ Numeral = "II", Title = "THE PAINTED STREET" },
 	{ Numeral = "III", Title = "CURTAIN CALL" },
+	{ Numeral = "IV", Title = "THE FLIES" },
+	{ Numeral = "V", Title = "THE PROP ROOM" },
+	{ Numeral = "VI", Title = "OPENING NIGHT" },
 }
 
 export type Line = {

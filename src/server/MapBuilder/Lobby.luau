@@ -21,6 +21,8 @@ export type LobbyInfo = {
 	spawn: CFrame,
 	startPrompt: ProximityPrompt,
 	leaderboardGui: SurfaceGui,
+	-- Mode boards: "Daily" and "Endless".
+	modeBoards: { [string]: SurfaceGui },
 }
 
 local ROOM_MIN = Vector3.new(-30, 0, -22)
@@ -94,12 +96,18 @@ local function ghostLight(parent: Instance, o: Vector3)
 	Builders.pointLight(bulb, Theme.Colors.WarmSpot, 40, 1.8)
 end
 
-local function leaderboardBoard(parent: Instance, o: Vector3): SurfaceGui
+local function leaderboardBoard(
+	parent: Instance,
+	o: Vector3,
+	cframe: CFrame?,
+	heading: string?,
+	size: Vector3?
+): SurfaceGui
 	local pos = o + Vector3.new(-29.6, 12, 2)
 	local board = Builders.part({
 		name = "LeaderboardBoard",
-		size = Vector3.new(20, 14, 0.4),
-		cframe = CFrame.lookAt(pos, pos + Vector3.xAxis),
+		size = size or Vector3.new(20, 14, 0.4),
+		cframe = cframe or CFrame.lookAt(pos, pos + Vector3.xAxis),
 		parent = parent,
 		surface = "Chalkboard",
 	})
@@ -118,7 +126,7 @@ local function leaderboardBoard(parent: Instance, o: Vector3): SurfaceGui
 	title.Font = Theme.Fonts.Title
 	title.TextScaled = true
 	title.TextColor3 = Theme.Colors.Paper
-	title.Text = "★ BEST ESCAPES ★"
+	title.Text = heading or "★ BEST ESCAPES ★"
 	title.Parent = gui
 
 	local list = Instance.new("Frame")
@@ -237,8 +245,45 @@ function Lobby.build(parent: Instance, origin: Vector3): LobbyInfo
 	local spawn = rehearsalStage(model, origin)
 	ghostLight(model, origin)
 	local gui = leaderboardBoard(model, origin)
+	-- The mode boards hang on the side walls, high enough to read over the crowd.
+	local dailyPos = origin + Vector3.new(-16, 13, -21.6)
+	local endlessPos = origin + Vector3.new(-16, 13, 21.6)
+	local modeBoards = {
+		Daily = leaderboardBoard(
+			model,
+			origin,
+			CFrame.lookAt(dailyPos, dailyPos + Vector3.zAxis),
+			"☀ TODAY'S DAILY RUN ☀",
+			Vector3.new(16, 11, 0.4)
+		),
+		Endless = leaderboardBoard(
+			model,
+			origin,
+			CFrame.lookAt(endlessPos, endlessPos - Vector3.zAxis),
+			"∞ ENDLESS: MOST STAGES ∞",
+			Vector3.new(16, 11, 0.4)
+		),
+	}
 	local startPrompt = stageDoor(model, origin)
 	wardrobe(model, origin)
+	-- The trophy shelf: each player's client fills it with their own trophies.
+	local shelf = Builders.part({
+		name = "TrophyShelf",
+		size = Vector3.new(16, 0.6, 2.4),
+		cframe = CFrame.new(origin + Vector3.new(16, 7, 20.6)),
+		parent = model,
+		surface = "DarkWood",
+		tag = "TrophyShelf",
+	})
+	Props.sign(
+		model,
+		CFrame.lookAt(origin + Vector3.new(16, 5.6, 21.75), origin + Vector3.new(16, 5.6, 0)),
+		Vector3.new(9, 1.2, 0.2),
+		"YOUR TROPHIES",
+		Theme.Colors.Brass,
+		"DarkWood"
+	)
+	local _ = shelf
 	titleSign(model, origin)
 	Story.lobby({
 		set = Builders.folder("Story", model),
@@ -258,6 +303,7 @@ function Lobby.build(parent: Instance, origin: Vector3): LobbyInfo
 		spawn = spawn.CFrame * CFrame.new(0, Config.Map.SpawnHeight, 0),
 		startPrompt = startPrompt,
 		leaderboardGui = gui,
+		modeBoards = modeBoards,
 	}
 end
 

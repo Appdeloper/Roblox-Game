@@ -20,6 +20,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 local Signal = require(ReplicatedStorage.Shared.Signal)
 local Types = require(ReplicatedStorage.Shared.Types)
+local Modes = require(ReplicatedStorage.Shared.Modes)
+local Progression = require(ReplicatedStorage.Shared.Progression)
 local ProfileSchema = require(script.Parent.ProfileSchema)
 local RemoteGuard = require(script.Parent.RemoteGuard)
 local Retry = require(script.Parent.Retry)
@@ -42,6 +44,10 @@ export type RunRecord = { bestTime: number?, isNewBest: boolean }
 local DataService = {}
 
 DataService.ProfileLoaded = Signal.new() :: Signal.Signal<Player, Profile>
+-- Fired when a player's equipped cosmetics change (trail / mannequin skin / playbill).
+DataService.CosmeticsChanged = Signal.new() :: Signal.Signal<Player>
+-- Fired on the first visit of a UTC day, with the streak. (player, streak)
+DataService.DailyVisit = Signal.new() :: Signal.Signal<Player, number>
 
 local profiles: { [Player]: Profile } = {}
 local store: DataStore? = nil
@@ -66,6 +72,36 @@ local function getStore(): DataStore?
 end
 
 -- ── Snapshot for the client ───────────────────────────────────────────────────────────────
+
+local function sortedKeys(set: { [string]: boolean }): { string }
+	local out = {}
+	for key in set do
+		table.insert(out, key)
+	end
+	table.sort(out)
+	return out
+end
+
+local function unlockedCosmetics(profile: Profile): { [string]: { string } }
+	local out = {}
+	local facts = {
+		titles = profile.data.Titles,
+		trophies = profile.data.Trophies,
+		bestStreak = profile.data.BestStreak,
+		passes = { SpotlightTrail = profile.ownsSpotlightTrail },
+	}
+	for category, items in Config.Cosmetics :: any do
+		local list = {}
+		for id in items do
+			if Progression.ownsCosmetic(Config.Cosmetics, category, id, facts) then
+				table.insert(list, id)
+			end
+		end
+		table.sort(list)
+		out[category] = list
+	end
+	return out
+end
 
 function DataService.snapshot(player: Player): Types.ProfileSnapshot?
 	local profile = profiles[player]
@@ -95,7 +131,89 @@ function DataService.snapshot(player: Player): Types.ProfileSnapshot?
 		reducedScares = data.Settings.ReducedScares,
 		quality = data.Settings.Quality,
 		savingEnabled = profile.loaded and not profile.loadFailed,
+		trophies = sortedKeys(data.Trophies),
+		stubs = sortedKeys(data.Stubs),
+		equipped = table.clone(data.Equipped) :: any,
+		unlocked = unlockedCosmetics(profile),
+		streak = data.Streak,
+		bestStreak = data.BestStreak,
 	}
+end
+
+--- What a profile has earned, in the shape shared/Progression checks.
+function DataService.facts(profile: Profile): Progression.Facts
+	return {
+		titles = profile.data.Titles,
+		trophies = profile.data.Trophies,
+		bestStreak = profile.data.BestStreak,
+		passes = { SpotlightTrail = profile.ownsSpotlightTrail },
+	}
+end
+
+function DataService.ownsCosmetic(player: Player, category: string, id: string): boolean
+	local profile = profiles[player]
+	return profile ~= nil and Progression.ownsCosmetic(Config.Cosmetics, category, id, DataService.facts(profile))
+end
+
+--- Equips a cosmetic if it's unlocked. Returns true if it changed.
+function DataService.equipCosmetic(player: Player, category: string, id: string): boolean
+	local profile = profiles[player]
+	if not profile or not DataService.ownsCosmetic(player, category, id) then
+		return false
+	end
+	if (profile.data.Equipped :: any)[category] == id then
+		return false
+	end
+	(profile.data.Equipped :: any)[category] = id
+	DataService.CosmeticsChanged:Fire(player)
+	DataService.push(player)
+	return true
+end
+
+--- Records a trophy. Returns true the first time.
+function DataService.grantTrophy(player: Player, key: string): boolean
+	local profile = profiles[player]
+	if not profile or not (Config.Trophies :: any)[key] or profile.data.Trophies[key] then
+		return false
+	end
+	profile.data.Trophies[key] = true
+	DataService.push(player)
+	DataService.saveAsync(player)
+	return true
+end
+
+--- Adds a stub to the ticket book. Returns true the first time.
+function DataService.grantStub(player: Player, key: string): boolean
+	local profile = profiles[player]
+	if not profile or not (Config.Stubs :: any)[key] or profile.data.Stubs[key] then
+		return false
+	end
+	profile.data.Stubs[key] = true
+	DataService.push(player)
+	return true
+end
+
+--- The daily visit: updates the streak once per UTC day and announces any streak reward.
+local function dailyLogin(player: Player, profile: Profile)
+	local today = Modes.dayNumber(os.time())
+	local data = profile.data
+	local s = Progression.login(data.LastDay, data.Streak, data.BestStreak, today)
+	local improved = s.best > data.BestStreak
+	data.LastDay, data.Streak, data.BestStreak = s.lastDay, s.streak, s.best
+	if not s.isNewDay then
+		return
+	end
+	local message = if s.streak > 1
+		then string.format("Day %d in a row at the theatre! 🎟", s.streak)
+		else "Welcome back to the theatre! Come back tomorrow to start a streak."
+	if improved then
+		for _, unlock in Progression.newlyUnlocked(Config.Cosmetics, s.best) do
+			local item = (Config.Cosmetics :: any)[unlock.category][unlock.id]
+			message ..= string.format("  New in your wardrobe: %s!", item.DisplayName)
+		end
+	end
+	Remotes.get("Notify"):FireClient(player, message)
+	DataService.DailyVisit:Fire(player, s.streak)
 end
 
 function DataService.push(player: Player)
@@ -136,6 +254,7 @@ local function load(player: Player)
 		profile.loadFailed = true
 		Remotes.get("Notify"):FireClient(player, Config.Text.SavingDisabled)
 	end
+	dailyLogin(player, profile)
 	DataService.ProfileLoaded:Fire(player, profile)
 	DataService.push(player)
 end
@@ -276,9 +395,12 @@ end
 
 --- Fills the finish ticket from the profile (wired in Main as RoundService's ticket enricher).
 function DataService.enrichTicket(player: Player, result: any, ticket: Types.TicketData)
-	local record = DataService.recordRun(player, result.time, result.retakes, result.verified)
-	ticket.bestTime = record.bestTime
-	ticket.isNewBest = record.isNewBest
+	-- Best time and escapes are Story records (co-op is the story with friends).
+	if result.mode == nil or result.mode == "Story" or result.mode == "Coop" then
+		local record = DataService.recordRun(player, result.time, result.retakes, result.verified)
+		ticket.bestTime = record.bestTime
+		ticket.isNewBest = record.isNewBest
+	end
 	local profile = profiles[player]
 	if profile and ProfileSchema.ownsSkin(profile.data, profile.data.EquippedSkin) then
 		ticket.skin = profile.data.EquippedSkin
@@ -290,6 +412,15 @@ end
 local SETTINGS: { [string]: boolean } = { ReducedScares = true }
 
 local function connectRemotes()
+	RemoteGuard.connect(
+		"EquipCosmetic",
+		RemoteGuard.args("string", "string"),
+		function(player, category: string, id: string)
+			if (Config.Cosmetics :: any)[category] then
+				DataService.equipCosmetic(player, category, id)
+			end
+		end
+	)
 	RemoteGuard.connect(
 		"SetSetting",
 		RemoteGuard.args("string", "boolean"),
