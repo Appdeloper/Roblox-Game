@@ -243,6 +243,8 @@ function Lobby.build(parent: Instance, origin: Vector3): LobbyInfo
 	local model = Builders.model("Lobby_RehearsalRoom", parent)
 	StageBuilder.room(model, origin + ROOM_MIN, origin + ROOM_MAX)
 	local spawn = rehearsalStage(model, origin)
+	-- On the rehearsal stage, under the title banner.
+	Props.photoSpot(model, spawn, 6, 0, Vector3.new(0, 6, 16))
 	ghostLight(model, origin)
 	local gui = leaderboardBoard(model, origin)
 	-- The mode boards hang on the side walls, high enough to read over the crowd.

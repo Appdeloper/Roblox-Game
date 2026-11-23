@@ -75,6 +75,10 @@ function Dressing.stage1(model: Model, layout: Layout, origin: Vector3, route: {
 	-- Footlights along the stage lip (inside the proscenium pillars); warm spots above.
 	-- Two runs with a deliberate gap where the prop trunks meet the stage: the missing
 	-- footlights read as "this is the way up" and keep the climb visually clear.
+	-- Centre stage, with the empty house behind you.
+	if route.Stage then
+		Props.photoSpot(set, route.Stage, 6, -12, Vector3.new(-14, 7, 6))
+	end
 	Props.footlights(set, origin + Vector3.new(102.2, 21.4, -19), origin + Vector3.new(102.2, 21.4, -1), 11, 4)
 	Props.footlights(set, origin + Vector3.new(102.2, 21.4, 15), origin + Vector3.new(102.2, 21.4, 19), 4, 3)
 	for _, z in { -14, 14 } do
@@ -191,6 +195,10 @@ end
 
 function Dressing.stage3(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 	local set = Builders.folder("Dressing", model)
+	-- In front of the two doors: which one is real? (the photo doesn't tell)
+	if route.MainStage then
+		Props.photoSpot(set, route.MainStage, 6, -14, Vector3.new(-12, 6, 4))
+	end
 	local story = Builders.folder("Story", model)
 	CurtainCall.build({ set = set, origin = origin, rng = rngFor(3), route = route })
 	Story.byStage[3]({ set = story, origin = origin, rng = rngFor(3 + 10) })
@@ -212,8 +220,13 @@ end
 
 --- Acts IV–VI share one shape: a set builder, a moon window and dust.
 local function backstageStage(index: number, build: (Backstage.Ctx) -> ())
-	return function(model: Model, layout: Layout, origin: Vector3, _route: { [string]: BasePart })
+	return function(model: Model, layout: Layout, origin: Vector3, route: { [string]: BasePart })
 		local set = Builders.folder("Dressing", model)
+		-- Each act's last platform gets a photo spot, facing back over the stage you crossed.
+		local last = route[layout.route[#layout.route].id]
+		if last then
+			Props.photoSpot(set, last, 2, -4, Vector3.new(10, 6, 8))
+		end
 		build({ set = set, origin = origin, rng = rngFor(index) })
 		moonWindow(set, origin + Vector3.new(-5.6, layout.room.max[2] - 10, 0), Vector3.xAxis, 140)
 		dust(model, layout, origin)

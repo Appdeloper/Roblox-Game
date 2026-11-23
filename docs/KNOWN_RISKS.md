@@ -152,6 +152,18 @@ from earlier work: high-contrast walkable surfaces (readability spec), no decor 
 | Ledge forgiveness | You pop up onto ledges you clearly missed, or it never helps | `Config.Feel.LedgeReach` / `LedgeLift` |
 | Touch camera | Too close or too far on phones | `Config.Feel.TouchCamera` |
 
+## Viral tools (Phase 2H): verified and open
+
+Verified in Studio: six 📸 photo spots are built, and standing on the lobby one shows the
+**Strike a pose** button. The client smoke spec covers Clip Mode (HUD hidden, ⏺ exit, everything
+back). The near-miss replay, share and invite calls are wrapped in `pcall`.
+
+| Needs hands-on testing | Why | Where to fix |
+| --- | --- | --- |
+| Near-miss replay framing | Camera orbit judged without seeing it | `client/World/NearMiss.luau` (`play`), `Config.Viral` |
+| Share sheet | `CaptureService` prompts only appear on real devices | `client/UI/ClipMode.luau` → `snapshot` |
+| Photo-spot camera angles | Picked from the layout, not by eye | `CameraOffset` in `Dressing.luau` / `Lobby.luau` |
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.

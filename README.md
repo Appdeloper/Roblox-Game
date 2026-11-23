@@ -26,6 +26,13 @@ the top": back to the stage entrance, plus one retake.
 | **∞ Endless** | Stages come shuffled and never stop. The mannequin gets a little faster every stage. 3 lives | Endless (most stages cleared) |
 | **👥 Co-op** | Story for up to 4 friends. Tap Co-op within 10 s of each other. A clear moves everyone on; a caught player is *downed* until a teammate stands next to them for 1.5 s; if everyone's down, the cast takes it from the top | — |
 
+### Recording and sharing
+
+- **🎥 Clip Mode** hides the HUD and Roblox menus for clean recordings (tap ⏺ to come back).
+- **😱 Near-miss replay**: your closest escape, replayed in slow motion from the finish ticket.
+- **📸 Share ticket / Invite friends** on the finish ticket.
+- **📸 Photo spots** in the lobby and on five stages: stand on one and *Strike a pose*.
+
 ### Progression (all cosmetic)
 
 - **Trophies** (11) on your own trophy shelf in the lobby, each also a Roblox badge: First Escape,
