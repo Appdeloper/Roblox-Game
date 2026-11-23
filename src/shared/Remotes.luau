@@ -22,27 +22,33 @@ Remotes.ServerToClient = {
 	"StageStarted", -- (info: StageStartInfo)
 	"Caught", -- (retakes: number)
 	"Fell", -- (retakes: number)
+	"Spotted", -- (retakes: number) a light-rig beam caught you
 	"DoorWarning", -- (doorId: string, warningSeconds: number)
 	"DoorOpened", -- (doorId: string)
 	"DoorOutran", -- (doorId: string)
 	"Scare", -- (stage: number)
 	"MannequinPose", -- (pose: string) for local-only polish (heartbeat spikes)
-	"FakeExit", -- ()
+	"FakeExit", -- (exitName: string) the painted exit you ran into
 	"RunFinished", -- (ticket: TicketData)
 	"ReturnedToLobby", -- ()
 	"Leaderboard", -- (entries: { LeaderboardEntry })
 	"Notify", -- (message: string)
+	"StareLunge", -- (mannequinName: string) stared too long: lights flicker, it lunges
+	"MirrorCracked", -- (mannequinName: string) the reflection shattered
 }
 
 -- Client → server (all validated server-side)
 Remotes.ClientToServer = {
 	"RequestStart", -- ()
 	"RequestLobby", -- ()
+	"RequestMode", -- (mode: string) "Story" | "Daily" | "Endless" | "Coop"
 	"SetSetting", -- (key: string, value: boolean)
 	"SetQuality", -- (level: string) one of Config.Quality.Order, or "Auto"
 	"EquipSkin", -- (skinId: string)
+	"EquipCosmetic", -- (category: string, id: string) Trail | MannequinSkin | Playbill
 	"SetTrailEnabled", -- (enabled: boolean)
 	"ScareSkipped", -- (stage: number) analytics only
+	"LookState", -- (mannequinName: string) the mannequin you're looking at, "" for none
 }
 
 local cache: { [string]: RemoteEvent } = {}

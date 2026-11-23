@@ -28,7 +28,7 @@ Marketplace behaviour, or how scary something feels. The manual tests below cove
 3. Publish the place once (**File → Publish to Roblox**), then **Game Settings → Security →
    Enable Studio Access to API Services**. This is needed for DataStore tests 5 and 6.
 4. Open **View → Output**. You should see:
-   - `[Main] Don't Look Backstage ready: 3 stages`
+   - `[Main] Don't Look Backstage ready: 6 stages`
    - no `[MapBuilder] stage N layout:` warnings
    - `[Main] 18 asset placeholders still to replace` (until you add sound IDs)
 

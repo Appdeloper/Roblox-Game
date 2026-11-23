@@ -20,7 +20,7 @@ find it.
 | 1.2 | Screen edges | A soft dark **vignette**, strongest in the corners. Subtle — you should notice it only if you look. |
 | 1.3 | Depth | A light haze with distance. Far walls are slightly veiled, not crisp. |
 | 1.4 | The ghost light bulb | Blooms gently. A soft halo, not a starburst. |
-| 1.5 | Output | `[Main] Don't Look Backstage ready: 3 stages`, no red errors, no `[MapBuilder] stage N layout:` warnings. |
+| 1.5 | Output | `[Main] Don't Look Backstage ready: 6 stages`, no red errors, no `[MapBuilder] stage N layout:` warnings. |
 
 ## 2. The story props (still in the lobby)
 
