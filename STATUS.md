@@ -28,7 +28,15 @@ which contains PRs #1–#13 in order._
 
 No logic bugs were found by the automated checks. The real bugs will show up in Studio (Phase 1).
 
-## Untested in Studio (highest risk first)
+## Phase 1 Studio playtest (2026-11-22)
+
+A full run through all three stages works in Studio with a clean Output. The slide mat, mannequin
+following, painted doors, catch/respawn (no re-catch loop), checkpoints, fake/real exits, finish ticket
+and badge triggers are all confirmed. No code changes were needed. Details and what is still open are in
+[docs/KNOWN_RISKS.md](docs/KNOWN_RISKS.md#verified-in-roblox-studio-phase-1-2026-11-22). DataStores need the
+place to be published once before they can be tested.
+
+## Untested in Studio before Phase 1 (highest risk first)
 
 1. Mannequin physics (unanchored rig on AlignPosition/AlignOrientation): sinking, jitter, lag.
 2. Mannequin limb animation via `Motor6D.Transform`.

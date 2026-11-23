@@ -13,7 +13,7 @@ local Config = {}
 
 Config.Game = {
 	Name = "Don't Look Backstage",
-	StageCount = 3,
+	StageCount = 6,
 	-- Bump when you ship a change that should show in the lobby footer.
 	BuildLabel = "v1.0.0",
 }
@@ -43,6 +43,9 @@ Config.Map = {
 		{ 0, 400, 0 },
 		{ 0, 400, 260 },
 		{ 0, 400, 520 },
+		{ 0, 400, 780 },
+		{ 0, 400, 1040 },
+		{ 0, 400, 1300 },
 	},
 	SupportPostThickness = 0.8,
 	-- Seed for all set-dressing randomness (seat variety, plank shades, ropes, prop jitter).
@@ -70,6 +73,91 @@ Config.Mannequin = {
 	RootHeight = 3,
 	-- Other players' mannequins are faded on your screen to this transparency.
 	OtherPlayersTransparency = 0.75,
+	-- Inside this distance (and able to catch) it reaches for you with both arms.
+	ReachDistance = 9,
+	-- Understudy: extra mannequins replaying the same trail, each later than the last.
+	UnderstudyDelays = { 2.6, 3.8 },
+	-- Per-stage override (the finale fields the full cast).
+	UnderstudyDelaysByStage = {
+		[4] = { 3.0 },
+		[6] = { 2.2, 3.0, 3.8 },
+	},
+	-- Mirror: a reflection that walks the route toward you from a point ahead. It can't catch
+	-- you, but stare at it too long and it steps out of the glass and joins the chase.
+	Mirror = {
+		-- Seconds of lag on the reflection (it mirrors you a beat late).
+		Delay = 0.35,
+		-- It cracks and vanishes when you get this close (studs along the route) to the mirror point.
+		VanishGap = 4,
+	},
+	-- "Don't Look": watching a mannequin freezes it; staring too long makes it lunge.
+	Look = {
+		-- View cone used by the client to decide you're looking at it.
+		MaxAngleDegrees = 16,
+		MaxRange = 70,
+		-- Seconds of continuous looking before the lights flicker and it lunges.
+		StareSeconds = 2.2,
+		-- After a lunge it ignores your gaze for this long.
+		CooldownSeconds = 3,
+		-- Stare meter drained per second while you look away (1 = empties in a second).
+		DrainRate = 0.8,
+		-- A lunge skips this much of the trail (seconds), but never closer than MinGapSeconds behind you.
+		LungeSeconds = 0.6,
+		MinGapSeconds = 0.55,
+		-- The server ignores look reports for mannequins further away than this.
+		ServerRange = 90,
+	},
+}
+
+-- Which mannequin behaviours each stage uses. They escalate:
+--   Copycat    your mannequin copies you Delay seconds late (always on)
+--   Shortcut   it takes painted doors when you pass them (stages whose layout has doors)
+--   Mirror     a reflection walks toward you from ahead (stages with a mirror in Config.Mirrors)
+--   Understudy extra mannequins with longer delays (Config.Mannequin.UnderstudyDelays)
+Config.Behaviours = {
+	{ "Copycat", "Shortcut" },
+	{ "Copycat", "Shortcut", "Mirror" },
+	{ "Copycat", "Shortcut", "Understudy" },
+	{ "Copycat", "Understudy" },
+	{ "Copycat", "Mirror", "Understudy" },
+	-- Opening Night: the full cast at once.
+	{ "Copycat", "Shortcut", "Mirror", "Understudy" },
+}
+
+-- Mirror points as fractions of the stage's route length: it appears once you pass `From`
+-- and stands at the reflection of your progress across `Plane`.
+Config.Mirrors = {
+	[2] = { From = 0.06, Plane = 0.62 },
+	[5] = { From = 0.05, Plane = 0.6 },
+	[6] = { From = 0.05, Plane = 0.62 },
+}
+
+-- Game modes (rules in shared/Modes.luau).
+Config.Modes = {
+	Daily = {
+		-- Stages in a Daily Run (always ends on the finale).
+		Length = 4,
+		-- One OrderedDataStore per UTC day: StoreName .. "_" .. dayNumber.
+		StoreName = "DailyBest_v1",
+	},
+	Endless = {
+		-- Catches/falls you can take before the run ends.
+		Lives = 3,
+		-- The Copycat's delay starts at the story delay and shrinks every stage cleared.
+		BaseDelay = 1.5,
+		DelayStep = 0.06,
+		MinDelay = 0.9,
+		-- Best stages cleared (higher is better).
+		StoreName = "EndlessBest_v1",
+	},
+	Coop = {
+		MaxPlayers = 4,
+		-- Seconds after the first player picks Co-op before the show starts.
+		GatherSeconds = 10,
+		-- Stand this close to a downed teammate for this long to revive them.
+		ReviveRadius = 7,
+		ReviveSeconds = 1.5,
+	},
 }
 
 Config.Catch = {
@@ -130,9 +218,31 @@ Config.Scares = {
 		KnockToApplauseSeconds = 1.5,
 		ApplauseSeconds = 3.5,
 	},
+	-- The Flies: a light rig drops on its chain and its spot finds you.
+	Stage4 = {
+		CatchPause = 3.5,
+		DropSeconds = 0.6,
+		SpotSeconds = 2.4,
+	},
+	-- The Prop Room: every costume on the rail turns to look at you.
+	Stage5 = {
+		CatchPause = 3.5,
+		TurnSeconds = 1.2,
+		HoldSeconds = 2,
+	},
+	-- Opening Night: house lights up, the audience is mannequins, and they stand.
+	Stage6 = {
+		CatchPause = 4,
+		LightsUpSeconds = 0.8,
+		StandSeconds = 1.6,
+		ApplauseSeconds = 3,
+	},
 }
 
 Config.Hazards = {
+	-- A light-rig beam only counts once it has been on the gate this long (seconds), so a
+	-- crossing that looked clear on a laggy phone stays clear.
+	BeamLeniency = 0.15,
 	Backdrop = {
 		DescendSeconds = 3.4,
 		HoldSeconds = 1.6,
@@ -163,7 +273,7 @@ Config.Run = {
 
 Config.AntiCheat = {
 	-- Clears faster than these (seconds) are ignored for the leaderboard/badges.
-	MinStageSeconds = { 5, 6, 4 },
+	MinStageSeconds = { 5, 6, 4, 6, 6, 5 },
 	MinRunSeconds = 20,
 }
 
@@ -360,6 +470,12 @@ Config.Ambience = {
 			{ DecayTime = 1.3, Density = 0.5, Diffusion = 0.6, WetLevel = -10, DryLevel = 0 },
 			-- Boxy backstage timber.
 			{ DecayTime = 2.1, Density = 0.9, Diffusion = 0.85, WetLevel = -5, DryLevel = 0 },
+			-- High in the flies: airy, a long thin tail.
+			{ DecayTime = 2.8, Density = 0.6, Diffusion = 0.9, WetLevel = -4, DryLevel = 0 },
+			-- A cramped prop store full of soft costumes: short and muffled.
+			{ DecayTime = 0.9, Density = 1, Diffusion = 0.5, WetLevel = -12, DryLevel = 0 },
+			-- The full house: big, warm, applause-friendly.
+			{ DecayTime = 3, Density = 1, Diffusion = 1, WetLevel = -3, DryLevel = 0 },
 		},
 	},
 	-- Seconds to cross-fade between rooms, so reverb never changes with a click.
@@ -393,6 +509,21 @@ Config.Stages = {
 		Act = "ACT III",
 		Hint = "Run down the stairs. Only one exit is real.",
 	},
+	{
+		Title = "The Flies",
+		Act = "ACT IV",
+		Hint = "Cross the catwalks while the light rigs look away.",
+	},
+	{
+		Title = "The Prop Room",
+		Act = "ACT V",
+		Hint = "Jump while the crates are big. Don't ride the belt.",
+	},
+	{
+		Title = "Opening Night",
+		Act = "ACT VI",
+		Hint = "The whole cast is here. Find the one real exit!",
+	},
 }
 
 Config.Text = {
@@ -400,6 +531,10 @@ Config.Text = {
 	Caught = "CUT! Take it from the top.",
 	Fell = "Missed your mark! Back to places.",
 	FakeExit = "It's only paint!",
+	Spotted = "Caught in the spotlight! Back to places.",
+	LookHint = "Look at the mannequin and it freezes. Stare too long and it moves closer!",
+	StareLunge = "You stared too long. It moved closer!",
+	MirrorCracked = "Crack! Your reflection is gone... for now.",
 	SavingDisabled = "Your progress couldn't load, so saving is paused this visit.",
 }
 

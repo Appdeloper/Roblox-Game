@@ -8,7 +8,7 @@ copy the first red error line from Output.
 
 ### 1. The server builds the map
 **Do:** press **Play**.
-**Correct:** Output shows `[Main] Don't Look Backstage ready: 3 stages`, and no red errors and no
+**Correct:** Output shows `[Main] Don't Look Backstage ready: 6 stages`, and no red errors and no
 `[MapBuilder] stage N layout:` warnings. You stand on a wooden rehearsal stage under a single
 glowing bulb, and a card reads **"You wake up onstage. The house lights are off."**
 

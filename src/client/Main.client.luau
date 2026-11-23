@@ -11,6 +11,7 @@ local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Theme = require(ReplicatedStorage.Shared.Theme)
 local Types = require(ReplicatedStorage.Shared.Types)
 
 local Client = script.Parent
@@ -36,6 +37,8 @@ local Curtains = require(Client.World.Curtains)
 local DoorEffects = require(Client.World.DoorEffects)
 local Hazards = require(Client.World.Hazards)
 local MannequinAnimator = require(Client.World.MannequinAnimator)
+local LookWatcher = require(Client.World.LookWatcher)
+local Movers = require(Client.World.Movers)
 local Scares = require(Client.World.Scares)
 
 -- Quality first: other controllers read its settings as they start up.
@@ -68,6 +71,8 @@ if not Workspace:WaitForChild("Map", 60) then
 end
 
 MannequinAnimator.init()
+LookWatcher.init()
+Movers.init()
 DoorEffects.init()
 Hazards.init()
 Scares.init()
@@ -136,6 +141,13 @@ Remotes.get("Fell").OnClientEvent:Connect(function(retakes: number)
 	Captions.show(Config.Text.Fell, 1.6)
 end)
 
+Remotes.get("Spotted").OnClientEvent:Connect(function(retakes: number)
+	ClientState.set("retakes", retakes)
+	AudioController.play("FellSting")
+	CameraEffects.flash(Theme.Colors.WarmSpot)
+	Captions.show(Config.Text.Spotted, 1.6)
+end)
+
 Remotes.get("ReturnedToLobby").OnClientEvent:Connect(function()
 	Scares.stop()
 	DoorEffects.resetAll()
@@ -158,9 +170,8 @@ Remotes.get("DoorOutran").OnClientEvent:Connect(function()
 	Captions.show("You outran the painted door!", 2)
 end)
 
-Remotes.get("FakeExit").OnClientEvent:Connect(function()
-	local info = ClientState.stageInfo
-	Hazards.onFakeExit(if info then info.realExit else nil)
+Remotes.get("FakeExit").OnClientEvent:Connect(function(exitName: string)
+	Hazards.onFakeExit(exitName)
 	CameraEffects.shake(0.2, 0.25)
 	Captions.show(Config.Text.FakeExit, 2)
 end)

@@ -5,8 +5,8 @@
 	The player's character physics is client-owned, so local collision is what matters.
 
 	  Backdrop        stage 2: descends when you approach, holds, rises; loops while you wait.
-	  Collapse steps  stage 3: wobble when stepped on, drop after a delay, reset later.
-	  Exits           stage 3: light under the real door only; the fake one is flat paint.
+	  Collapse steps  stages 3 and 6: wobble when stepped on, drop after a delay, reset later.
+	  Exits           stages 3 and 6: light under the real door only; the fakes are flat paint.
 
 	Polled at ~15 Hz and only while you are in a stage that has these pieces.
 ]]
@@ -26,6 +26,8 @@ local DoorEffects = require(script.Parent.DoorEffects)
 local Hazards = {}
 
 local POLL_INTERVAL = 1 / 15
+-- Stages with a backdrop or collapsing steps (the only ones that need polling).
+local HAZARD_STAGES = { [2] = true, [3] = true, [6] = true }
 
 type Backdrop = {
 	part: BasePart,
@@ -38,6 +40,7 @@ type Backdrop = {
 
 type Step = {
 	part: BasePart,
+	stage: number?,
 	rest: CFrame,
 	state: "Idle" | "Wobbling" | "Fallen",
 	token: number,
@@ -124,7 +127,14 @@ local function addStep(part: Instance)
 			return
 		end
 	end
-	table.insert(steps, { part = part, rest = part.CFrame, state = "Idle", token = 0 })
+	local stage = part:GetAttribute("Stage")
+	table.insert(steps, {
+		part = part,
+		stage = if type(stage) == "number" then stage else 3,
+		rest = part.CFrame,
+		state = "Idle",
+		token = 0,
+	})
 end
 
 local function standingOn(step: Step, pos: Vector3): boolean
@@ -178,8 +188,8 @@ end
 
 -- ── Exits ─────────────────────────────────────────────────────────────────────────────────
 
-local function setupExits(realExit: string?)
-	for _, side in { "Left", "Right" } do
+local function setupExits(stage: number, realExit: string?)
+	for _, side in DoorEffects.exitNames(stage) do
 		local key = "Exit/" .. side
 		local isReal = realExit == side
 		DoorEffects.setGlow(key, isReal)
@@ -191,8 +201,7 @@ local function setupExits(realExit: string?)
 	end
 end
 
-function Hazards.onFakeExit(realExit: string?)
-	local fakeSide = if realExit == "Left" then "Right" else "Left"
+function Hazards.onFakeExit(fakeSide: string)
 	local door = DoorEffects.get("Exit/" .. fakeSide)
 	if door and door.panel then
 		AudioController.playAt("FakeExitBonk", door.panel)
@@ -210,9 +219,9 @@ local function poll()
 	local stage = ClientState.stage
 	if stage == 2 and backdrop and backdrop.state == "Idle" and Zone.contains(backdrop.trigger, pos) then
 		cycleBackdrop(backdrop)
-	elseif stage == 3 then
+	else
 		for _, step in steps do
-			if step.state == "Idle" and standingOn(step, pos) then
+			if step.state == "Idle" and step.stage == stage and standingOn(step, pos) then
 				collapse(step)
 			end
 		end
@@ -229,8 +238,8 @@ end
 
 function Hazards.onStageStarted(stage: number, realExit: string?)
 	Hazards.resetAll()
-	if stage == Config.Game.StageCount then
-		setupExits(realExit)
+	if realExit then
+		setupExits(stage, realExit)
 	end
 end
 
@@ -245,7 +254,7 @@ function Hazards.init()
 	CollectionService:GetInstanceAddedSignal("Backdrop"):Connect(setupBackdrop)
 	CollectionService:GetInstanceAddedSignal("CollapseStep"):Connect(addStep)
 	RunService.Heartbeat:Connect(function(dt)
-		if ClientState.phase ~= "Running" or (ClientState.stage ~= 2 and ClientState.stage ~= 3) then
+		if ClientState.phase ~= "Running" or not HAZARD_STAGES[ClientState.stage] then
 			return
 		end
 		accumulator += dt
