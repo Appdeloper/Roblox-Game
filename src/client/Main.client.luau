@@ -41,6 +41,8 @@ local MannequinAnimator = require(Client.World.MannequinAnimator)
 local LookWatcher = require(Client.World.LookWatcher)
 local Movers = require(Client.World.Movers)
 local TrophyShelf = require(Client.World.TrophyShelf)
+local ClipMode = require(Client.UI.ClipMode)
+local NearMiss = require(Client.World.NearMiss)
 local Scares = require(Client.World.Scares)
 
 -- Quality first: other controllers read its settings as they start up.
@@ -77,6 +79,44 @@ MannequinAnimator.init()
 LookWatcher.init()
 Movers.init()
 TrophyShelf.init()
+ClipMode.init()
+NearMiss.init()
+FinishTicket.setExtras({
+	hasReplay = NearMiss.has,
+	replay = function()
+		-- Step out of the ticket for the replay, then bring it back.
+		local layer = UIRoot.get("Modal"):FindFirstChild("FinishLayer")
+		if layer and layer:IsA("GuiObject") then
+			layer.Visible = false
+		end
+		NearMiss.play()
+		if layer and layer:IsA("GuiObject") then
+			layer.Visible = true
+		end
+	end,
+	share = function()
+		-- The ticket alone on screen, then the platform's capture/share sheet.
+		local row = UIRoot.get("Modal"):FindFirstChild("Buttons", true)
+		local shareRow = UIRoot.get("Modal"):FindFirstChild("ShareButtons", true)
+		for _, r in { row, shareRow } do
+			if r and r:IsA("GuiObject") then
+				r.Visible = false
+			end
+		end
+		local wasClip = ClipMode.isOn()
+		ClipMode.set(true)
+		task.wait(0.3)
+		ClipMode.snapshot()
+		task.wait(1)
+		ClipMode.set(wasClip)
+		for _, r in { row, shareRow } do
+			if r and r:IsA("GuiObject") then
+				r.Visible = true
+			end
+		end
+	end,
+	invite = ClipMode.inviteFriends,
+})
 DoorEffects.init()
 Hazards.init()
 Scares.init()

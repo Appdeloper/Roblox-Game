@@ -40,6 +40,15 @@ Config.Feel = {
 	TouchCamera = { MinZoom = 10, MaxZoom = 26, FieldOfView = 74 },
 }
 
+-- Recording and sharing tools (all client-side and cosmetic).
+Config.Viral = {
+	-- Seconds of the near miss kept for the replay, and the replay speed.
+	ReplaySeconds = 3,
+	ReplaySpeed = 0.35,
+	-- Countdown before a photo-spot snapshot.
+	PhotoCountdown = 3,
+}
+
 Config.Map = {
 	-- Spec: every jump gap must be under 70 % of the theoretical max jump distance.
 	MaxGapRatio = 0.7,
