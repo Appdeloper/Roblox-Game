@@ -59,8 +59,10 @@ grants more than a skin or cosmetic.
 
 ### Audio and images (`src/shared/Assets.luau`)
 
-- [ ] The 26 asset placeholders Studio reports at boot: sounds (one-shots, loops, 5 ambience
-      layers) and 2 optional images, all `Id = 0` now.
+- [x] All 24 sounds are filled from Roblox's own licensed library on the Creator Store
+      (Pro Sound Effects and Roblox uploads), and each was checked loading in Studio. Swap in
+      your own any time.
+- [ ] 2 optional images (dust mote, vignette) are still `Id = 0`; built-in fallbacks are used.
       Upload your own audio or use Creator Store audio you are licensed to use. Studio prints how
       many placeholders remain at boot.
 - [ ] Keep it gentle: the heartbeat and stings must never be startling at full volume.

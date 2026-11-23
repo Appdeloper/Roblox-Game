@@ -183,6 +183,21 @@ lobby and every stage are in [screenshots/](screenshots/).
 Not yet checked on a real phone: frame rate on low-end devices and the Low preset's look.
 Studio's Device Emulator (Test → Device) is the next step; Auto picks Low there.
 
+## Polish pass: see, hear, understand
+
+- **Sound:** all 24 sounds now use Roblox-licensed library audio, and every one preloads in Studio
+  (`ContentProvider:PreloadAsync`, all successful). The mix is judged by numbers, not ears: tune
+  `Volume` in `src/shared/Assets.luau` and `Config.Audio.SfxVolume`.
+- **Brighter:** the teal fill, exposure and colour went up, and the fog and vignette went down
+  (`Theme.Lighting`). It stays moody but you can always see the route.
+- **Easy to understand:** a "How to play" card on join (❔ reopens it), an always-on 🎯 goal line
+  for the current stage, and glowing EXIT beacons over every single-exit stage.
+- **Bugs fixed from the Studio bug hunt:**
+  - If a stage teleport lagged, the new stage's mannequin could start from the old room and
+    catch you. It now waits until you've really arrived (`Config.Mannequin.ArrivalRadius`).
+  - The finish ticket stayed on screen over a new run. Every new run now clears the screen.
+  - The mannequin emoji (🪆) rendered as a box on Roblox, so it was swapped for 🎭.
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.

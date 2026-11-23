@@ -43,6 +43,7 @@ local Movers = require(Client.World.Movers)
 local TrophyShelf = require(Client.World.TrophyShelf)
 local ClipMode = require(Client.UI.ClipMode)
 local NearMiss = require(Client.World.NearMiss)
+local HowToPlay = require(Client.UI.HowToPlay)
 local Scares = require(Client.World.Scares)
 
 -- Quality first: other controllers read its settings as they start up.
@@ -81,6 +82,7 @@ Movers.init()
 TrophyShelf.init()
 ClipMode.init()
 NearMiss.init()
+HowToPlay.init()
 FinishTicket.setExtras({
 	hasReplay = NearMiss.has,
 	replay = function()
@@ -128,6 +130,11 @@ DebugOverlay.init()
 -- ── Run flow ──────────────────────────────────────────────────────────────────────────────
 
 Remotes.get("RunStarted").OnClientEvent:Connect(function(startedAt: number)
+	-- A new show always starts with a clear screen (no ticket or card left on top of it).
+	FinishTicket.close()
+	HowToPlay.close()
+	Hud.unfreeze()
+	LobbyPanel.setHidden(false)
 	ClientState.set("runStartedAt", startedAt)
 	ClientState.set("phase", "Running")
 end)

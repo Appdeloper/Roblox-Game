@@ -378,7 +378,9 @@ function Mannequin._updateIdle(self: Mannequin, now: number, playerCF: CFrame?)
 		return
 	end
 	local moved = (playerCF.Position - stage.entrance.Position).Magnitude
-	if moved > Config.Mannequin.StartMoveDistance then
+	-- Only once the player has really arrived and stepped off: if a stage teleport lags (the
+	-- character is still in the previous room), it must not start recording from over there.
+	if moved > Config.Mannequin.StartMoveDistance and moved < Config.Mannequin.ArrivalRadius then
 		self.state = "Warmup"
 		self.nextSampleAt = now
 		self:_record(now, playerCF)
@@ -669,7 +671,8 @@ function Mannequin._updateMirrorIdle(self: Mannequin, now: number, playerCF: CFr
 	if not playerCF or not self.mirror then
 		return
 	end
-	if (playerCF.Position - stage.entrance.Position).Magnitude > Config.Mannequin.StartMoveDistance then
+	local moved = (playerCF.Position - stage.entrance.Position).Magnitude
+	if moved > Config.Mannequin.StartMoveDistance and moved < Config.Mannequin.ArrivalRadius then
 		self.state = "Mirror"
 		self.nextSampleAt = now
 		self:_record(now, playerCF, playerTag)

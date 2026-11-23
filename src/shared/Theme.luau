@@ -176,28 +176,30 @@ end
 --- Moonlit-teal mood. Applied by MapBuilder/LightingSetup (server) and scaled by Quality (client).
 Theme.Lighting = {
 	ClockTime = 0,
-	Brightness = 1.2,
-	Ambient = Color3.fromRGB(34, 62, 72), -- teal fill: every shadow leans teal
-	OutdoorAmbient = Color3.fromRGB(18, 40, 50),
-	EnvironmentDiffuseScale = 0.3,
+	Brightness = 2,
+	-- Teal fill, bright enough that nothing on the route sinks into black (it stays moody,
+	-- but you can always see where you're going).
+	Ambient = Color3.fromRGB(74, 104, 116), -- teal fill: every shadow leans teal
+	OutdoorAmbient = Color3.fromRGB(48, 74, 86),
+	EnvironmentDiffuseScale = 0.5,
 	EnvironmentSpecularScale = 0.35,
-	ExposureCompensation = 0.2,
+	ExposureCompensation = 0.55,
 	ShadowSoftness = 0.35,
 	-- Atmosphere = light moonlit fog inside the sealed rooms.
-	AtmosphereDensity = 0.3,
-	AtmosphereHaze = 1.4,
+	AtmosphereDensity = 0.22,
+	AtmosphereHaze = 0.9,
 	AtmosphereColor = Color3.fromRGB(40, 86, 98),
 	AtmosphereDecay = Color3.fromRGB(14, 38, 46),
 	-- Grade: lifts warm highlights while the teal ambient keeps the shadows cool.
 	GradeTint = Color3.fromRGB(255, 244, 228),
-	GradeContrast = 0.14,
-	GradeSaturation = 0.06,
-	GradeBrightness = 0.01,
+	GradeContrast = 0.1,
+	GradeSaturation = 0.18,
+	GradeBrightness = 0.05,
 	BloomIntensity = 0.45,
 	BloomSize = 24,
 	BloomThreshold = 1.5,
 	-- Client vignette (GUI): edge darkness 0..1 (0 = off).
-	VignetteStrength = 0.38,
+	VignetteStrength = 0.25,
 	VignetteColor = Color3.fromRGB(4, 14, 18),
 }
 

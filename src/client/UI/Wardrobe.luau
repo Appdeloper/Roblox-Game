@@ -30,7 +30,7 @@ local tabButtons: { [string]: TextButton } = {}
 local TABS = {
 	{ id = "Tickets", text = "🎟 Tickets" },
 	{ id = "Trail", text = "✨ Trails" },
-	{ id = "MannequinSkin", text = "🪆 Mannequin" },
+	{ id = "MannequinSkin", text = "🎭 Mannequin" },
 	{ id = "Playbill", text = "📜 Playbill" },
 	{ id = "Collection", text = "🏆 Collection" },
 }

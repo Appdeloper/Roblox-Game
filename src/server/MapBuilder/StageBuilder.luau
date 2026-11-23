@@ -477,6 +477,39 @@ local function buildMovers(ctx: Ctx): { Types.SpinnerInfo }
 	return spinners
 end
 
+--- A tall soft-glowing column over a stage's exit, visible from the whole room, with an
+--- EXIT sign on top: the one thing in every stage that says "this way". Doors with a choice
+--- (stages 3 and 6) already carry EXIT signs, so they get no beacon (it would give the answer away).
+local function buildExitBeacon(ctx: Ctx)
+	local zoneBox = ctx.layout.exitZone
+	if not zoneBox then
+		return
+	end
+	local base = w(ctx, zoneBox.center) - Vector3.new(0, zoneBox.size[2] / 2, 0)
+	local height = 24
+	local column = Builders.part({
+		name = "ExitBeacon",
+		size = Vector3.new(height, 3, 3),
+		cframe = CFrame.new(base + Vector3.new(0, height / 2, 0)) * CFrame.Angles(0, 0, math.rad(90)),
+		parent = ctx.model,
+		surface = "WarmBeam",
+		decor = true,
+		tag = "ExitBeacon",
+	})
+	column.Shape = Enum.PartType.Cylinder
+	column.Transparency = 0.72
+	local sign = Builders.part({
+		name = "ExitBeaconSign",
+		size = Vector3.new(6, 2, 0.3),
+		cframe = CFrame.lookAt(base + Vector3.new(0, 9, 0), base + Vector3.new(-1, 9, 0)),
+		parent = ctx.model,
+		surface = "ExitSign",
+		decor = true,
+	})
+	Builders.surfaceText(sign, Enum.NormalId.Front, "EXIT ➜", Theme.Colors.UiDark, Theme.Fonts.Bold)
+	Builders.pointLight(column, Theme.Colors.UiGood, 22, 1.2)
+end
+
 local function buildMarkers(ctx: Ctx)
 	local layout = ctx.layout
 	local spawn = placement(ctx, layout.spawn)
@@ -574,6 +607,7 @@ function StageBuilder.build(
 	buildBackdrop(ctx, routeParts)
 	buildExits(ctx)
 	local spinners = buildMovers(ctx)
+	buildExitBeacon(ctx)
 	buildMarkers(ctx)
 	if dress then
 		dress(model, layout, origin, routeParts)

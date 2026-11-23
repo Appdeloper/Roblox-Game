@@ -38,6 +38,20 @@ local function makeSound(key: string, parent: Instance): Sound?
 	return sound
 end
 
+--- Plays a sound and cleans it up when it ends. A sound that can't play (an asset that was
+--- moderated, or the offline test client) is simply dropped: audio is never load-bearing.
+local function playOnce(sound: Sound)
+	local ok = pcall(function()
+		sound.Ended:Once(function()
+			sound:Destroy()
+		end)
+		sound:Play()
+	end)
+	if not ok then
+		sound:Destroy()
+	end
+end
+
 function AudioController.init()
 	group = Instance.new("SoundGroup")
 	group.Name = "DLB_Sfx"
@@ -50,10 +64,7 @@ function AudioController.play(key: string)
 	local sound = makeSound(key, SoundService)
 	if sound then
 		sound.PlayOnRemove = false
-		sound.Ended:Once(function()
-			sound:Destroy()
-		end)
-		sound:Play()
+		playOnce(sound)
 	end
 end
 
@@ -63,10 +74,7 @@ function AudioController.playAt(key: string, part: BasePart)
 	if sound then
 		sound.RollOffMaxDistance = 120
 		sound.RollOffMinDistance = 8
-		sound.Ended:Once(function()
-			sound:Destroy()
-		end)
-		sound:Play()
+		playOnce(sound)
 	end
 end
 
@@ -79,7 +87,9 @@ function AudioController.startLoop(key: string, parent: Instance): Sound?
 	local sound = makeSound(key, parent)
 	if sound then
 		sound.Looped = true
-		sound:Play()
+		pcall(function()
+			sound:Play()
+		end)
 		loops[key] = sound
 	end
 	return sound

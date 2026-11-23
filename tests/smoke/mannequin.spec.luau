@@ -110,6 +110,19 @@ return function(h, map, check)
 		m:destroy()
 	end
 
+	-- 1b) A lagging stage teleport (player still far away in the last room) never starts it.
+	do
+		table.clear(log)
+		local m = Mannequin.new("TestA2", 11, folder, events())
+		m:reset(stage, 0)
+		local far = entrance * CFrame.new(150, 10, 0)
+		run(m, 0, 8, function()
+			return far
+		end)
+		check(m.state == "Idle" and count("caught") == 0, "a lagging teleport doesn't wake the mannequin")
+		m:destroy()
+	end
+
 	-- 2) Running: copies the player exactly Delay seconds late; 3) stopping gets you caught.
 	do
 		table.clear(log)

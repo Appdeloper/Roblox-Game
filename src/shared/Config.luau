@@ -90,6 +90,8 @@ Config.Mannequin = {
 	-- Recording only starts once the player walks this far from the stage entrance,
 	-- so nobody is caught while reading the title card.
 	StartMoveDistance = 3,
+	-- ...but only from within this radius of the entrance (a lagging teleport doesn't count).
+	ArrivalRadius = 40,
 	-- Hard cap on trail memory, regardless of pauses.
 	MaxTrailSeconds = 30,
 	-- Height of the rig's root above its feet (matches R6/R15 HumanoidRootPart height).

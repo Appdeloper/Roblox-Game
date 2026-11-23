@@ -24,6 +24,8 @@ local retakePill: Frame
 local retakeText: TextLabel
 local modePill: Frame
 local modeText: TextLabel
+local goalPill: Frame
+local goalText: TextLabel
 
 local MODE_NAMES = { Story = "STORY", Daily = "☀ DAILY RUN", Endless = "∞ ENDLESS", Coop = "👥 CO-OP" }
 
@@ -54,6 +56,7 @@ local function refreshVisibility()
 	timerPill.Visible = running or frozenTime ~= nil
 	retakePill.Visible = running
 	modePill.Visible = running and ClientState.stageInfo ~= nil
+	goalPill.Visible = running and ClientState.stageInfo ~= nil
 end
 
 local function bumpRetakes()
@@ -105,6 +108,18 @@ function Hud.init(onSettings: () -> ())
 		font = Theme.Fonts.Bold,
 		color = Theme.Colors.PaperShade,
 	})
+	-- The goal for this stage, always on screen (so nobody is ever lost).
+	goalPill = pill("Goal", hud, UDim2.fromOffset(420, 40), UDim2.fromOffset(10, 116), Vector2.zero)
+	goalText = Widgets.label({
+		name = "Text",
+		parent = goalPill,
+		text = "",
+		size = UDim2.new(1, -20, 1, -10),
+		position = UDim2.fromOffset(10, 5),
+		font = Theme.Fonts.Body,
+		color = Theme.Colors.Paper,
+		align = Enum.TextXAlignment.Left,
+	})
 	Widgets.button({
 		name = "SettingsButton",
 		parent = hud,
@@ -123,6 +138,7 @@ function Hud.init(onSettings: () -> ())
 			local info = ClientState.stageInfo
 			if info then
 				modeText.Text = modeLine(info)
+				goalText.Text = "🎯 " .. (info.hint or "Reach the glowing EXIT")
 			end
 			refreshVisibility()
 		elseif key == "phase" then
