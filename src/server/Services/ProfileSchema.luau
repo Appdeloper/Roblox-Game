@@ -9,6 +9,9 @@
 	  Titles, OwnedSkins       union
 	  ProcessedReceipts        union, newest MaxReceiptHistory kept
 	  EquippedSkin, TrailEnabled, Settings   this session's latest choice
+	  Trophies, Stubs          union
+	  Equipped (cosmetics)     this session's latest choice
+	  LastDay / Streak         the later day wins (with its streak); BestStreak highest
 	So a slow or stale server can never erase progress written by another one.
 ]]
 
@@ -35,6 +38,12 @@ function ProfileSchema.default(): ProfileData
 		EquippedSkin = Config.DefaultTicketSkin,
 		TrailEnabled = false,
 		Settings = { ReducedScares = false, Quality = Config.Quality.Default },
+		Trophies = {},
+		Stubs = {},
+		Equipped = table.clone(Config.DefaultCosmetics) :: any,
+		LastDay = nil,
+		Streak = 0,
+		BestStreak = 0,
 		ProcessedReceipts = {},
 	}
 end
@@ -91,6 +100,19 @@ function ProfileSchema.migrate(raw: any): ProfileData?
 			data.Settings.Quality = settings.Quality
 		elseif settings.Quality == "Auto" then
 			data.Settings.Quality = "Auto"
+		end
+		if version >= 3 then
+			data.Trophies = copySet(raw.Trophies)
+			data.Stubs = copySet(raw.Stubs)
+			local equipped = if type(raw.Equipped) == "table" then raw.Equipped else {}
+			for category, default in Config.DefaultCosmetics do
+				local id = equipped[category]
+				local items = (Config.Cosmetics :: any)[category]
+				data.Equipped[category] = if type(id) == "string" and items[id] then id else default
+			end
+			data.LastDay = number(raw.LastDay)
+			data.Streak = number(raw.Streak, 0) :: number
+			data.BestStreak = number(raw.BestStreak, 0) :: number
 		end
 		if type(raw.ProcessedReceipts) == "table" then
 			for id, t in raw.ProcessedReceipts do
@@ -155,6 +177,12 @@ function ProfileSchema.merge(stored: ProfileData, mine: ProfileData, deltas: Del
 		EquippedSkin = mine.EquippedSkin,
 		TrailEnabled = mine.TrailEnabled,
 		Settings = { ReducedScares = mine.Settings.ReducedScares, Quality = mine.Settings.Quality },
+		Trophies = union(stored.Trophies, mine.Trophies),
+		Stubs = union(stored.Stubs, mine.Stubs),
+		Equipped = table.clone(mine.Equipped),
+		LastDay = if (mine.LastDay or -1) >= (stored.LastDay or -1) then mine.LastDay else stored.LastDay,
+		Streak = if (mine.LastDay or -1) >= (stored.LastDay or -1) then mine.Streak else stored.Streak,
+		BestStreak = math.max(stored.BestStreak, mine.BestStreak),
 		ProcessedReceipts = pruneReceipts(receipts),
 	}
 end

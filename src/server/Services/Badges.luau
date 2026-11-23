@@ -58,7 +58,7 @@ end
 --- Wires badge triggers. `runFinished` / `doorOutran` are RoundService / MannequinService signals.
 function Badges.init(runFinished: any, doorOutran: any, grantTitle: (Player, string) -> ())
 	runFinished:Connect(function(player: Player, result: any)
-		if not result.verified then
+		if not result.verified or result.escaped == false then
 			return
 		end
 		Badges.award(player, "FirstEscape")
