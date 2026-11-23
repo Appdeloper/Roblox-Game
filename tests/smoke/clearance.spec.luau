@@ -89,7 +89,9 @@ return function(h, map, check)
 	-- Every part in the map, with the route parts themselves identified by name per stage.
 	local parts = {}
 	for _, d in mapRoot:GetDescendants() do
-		if d:IsA("BasePart") and not IGNORED_NAMES[d.Name] then
+		-- Moving hazards (light rigs, sandbags, shelves) are meant to be in the way, at times:
+		-- they're judged by timing (shared/Motion), not by clearance.
+		if d:IsA("BasePart") and not IGNORED_NAMES[d.Name] and d:GetAttribute("Hazard") ~= true then
 			local box = partBox(d)
 			-- A flat sheet lying on a surface (scuffs, footprints, dust, dropped pages) is
 			-- physically incapable of obstructing anyone, so it is never a blocker.
@@ -148,16 +150,12 @@ return function(h, map, check)
 			Config.Map.StageOrigins[stageIndex][3]
 		)
 		table.clear(exitVolumes)
-		for _, zone in
-			{
-				map.stages[stageIndex].exitZone,
-				map.stages[stageIndex].exitLeftZone,
-				map.stages[stageIndex].exitRightZone,
-			}
-		do
-			if zone then
-				table.insert(exitVolumes, boxOf(zone.cframe.Position, zone.size * 1.5))
-			end
+		local zones = { map.stages[stageIndex].exitZone }
+		for _, exit in map.stages[stageIndex].exits or {} do
+			table.insert(zones, exit.zone)
+		end
+		for _, zone in zones do
+			table.insert(exitVolumes, boxOf(zone.cframe.Position, zone.size * 1.5))
 		end
 		-- Route element ids are part names; allow them plus the shop bodies under roofs.
 		local allowed = {}
@@ -179,7 +177,7 @@ return function(h, map, check)
 			local from = centreOf(index - 1) or here
 			local to = centreOf(index + 1)
 			if not to then
-				local zone = layout.exitZone or (layout.exits and layout.exits.leftZone)
+				local zone = layout.exitZone or (layout.exits and layout.exits[1].zone)
 				to = if zone then origin + Vector3.new(zone.center[1], zone.center[2], zone.center[3]) else here
 			end
 			return from, to :: Vector3

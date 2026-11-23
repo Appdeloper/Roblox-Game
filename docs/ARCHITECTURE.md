@@ -17,7 +17,7 @@
 
 ```
 Remotes.init()                 create every RemoteEvent before clients look for them
-MapBuilder.build()             lobby + 3 stages + lighting → MapInfo (spawns, zones, door paths)
+MapBuilder.build()             lobby + 6 stages + lighting → MapInfo (spawns, zones, door paths)
 RemoteGuard.init()
 DataService.init()             profiles load on PlayerAdded
 MonetizationService.init()     ProcessReceipt, pass checks on ProfileLoaded
@@ -91,6 +91,31 @@ That player's client turns the exit door's handle, lights the strip under it and
 when the door opened, the server sends `DoorOutran`, which awards the *Spotted the Door* badge and
 the *Door Spotter* title.
 
+### The cast, poses and the "Don't Look" rule
+
+`MannequinService` keeps a **cast** per player, chosen from `Config.Behaviours[stage]`:
+
+| Role | What it does | Catches? |
+| --- | --- | --- |
+| **Copycat** (`Main`) | Replays your trail `Config.Mannequin.Delay` (1.5 s) late; takes painted doors | Yes |
+| **Understudy** (`Understudy1..n`) | Same trail with longer delays (`UnderstudyDelays`); never uses doors | Yes |
+| **Mirror** | Stands at the reflection of your route progress across a point ahead (`Config.Mirrors`, fractions of `StageInfo.routePath`), so it walks toward you on the real platforms. Cracks and vanishes `VanishGap` studs before the point | No, unless you stare it out of the glass |
+
+**Pose copy.** Every trail sample carries the player's movement tag (`Run`, `Jump`, `Fall`, `Climb`,
+`Idle`, read from the Humanoid state). The rig publishes the tag at its replay cursor as the `Pose`
+attribute, so it jumps where you jumped, 1.5 s later. `Reach` (inside `ReachDistance` and able to
+catch), `Frozen` and `Bow` override it. The client animates each pose on the Motor6D joints, and your
+own mannequins turn their head to follow you.
+
+**Don't Look** (`shared/LookRule.luau`, pure and unit-tested). The client reports which of its own
+mannequins the camera is looking at (`LookState`: a view cone plus a line-of-sight ray). The server
+ignores reports for other players' mannequins or anything beyond `Look.ServerRange`. While watched,
+a mannequin is frozen and its `Stare` attribute (0–1) fills; the HUD shows it as a meter. At
+`StareSeconds` it lunges: the Copycat skips `LungeSeconds` of trail (never closer than
+`MinGapSeconds`), the Mirror steps out of the glass and chases a full Copycat delay behind. The client
+flickers the guide lamps (`StareLunge`), and after a lunge your gaze is ignored for `CooldownSeconds`.
+An exploiter who always reports "looking" gains at most one freeze per cooldown.
+
 ## Map (`MapBuilder/`)
 
 - `Layouts/StageN.luau`: pure data in stage-local coordinates. It lists the route (each element has
@@ -136,7 +161,7 @@ readable place.
 
 | Server → client | Client → server (validated + rate limited) |
 | --- | --- |
-| ProfileUpdated, RunStarted, StageStarted, Caught, Fell, DoorWarning, DoorOpened, DoorOutran, Scare, FakeExit, RunFinished, ReturnedToLobby, Notify | RequestStart `()`, RequestLobby `()`, SetSetting `(string, boolean)` (whitelisted key), EquipSkin `(string)` (must be owned), SetTrailEnabled `(boolean)` (must own the pass), ScareSkipped `(number)` (analytics only) |
+| ProfileUpdated, RunStarted, StageStarted, Caught, Fell, DoorWarning, DoorOpened, DoorOutran, Scare, FakeExit, RunFinished, ReturnedToLobby, Notify, StareLunge, MirrorCracked | RequestStart `()`, RequestLobby `()`, SetSetting `(string, boolean)` (whitelisted key), EquipSkin `(string)` (must be owned), SetTrailEnabled `(boolean)` (must own the pass), ScareSkipped `(number)` (analytics only), LookState `(string)` (own mannequin name or "", in range) |
 
 `RemoteGuard` checks three things before a handler runs:
 

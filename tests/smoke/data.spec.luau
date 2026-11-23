@@ -116,7 +116,10 @@ return function(placePath, check)
 	end)
 	sim.tick(2)
 	check(closed, "BindToClose finishes within the timeout")
-	check(store.data[keyOf(dee)] and store.data[keyOf(dee)].Version == 2, "shutdown saved the migrated profile as v2")
+	check(
+		store.data[keyOf(dee)] and store.data[keyOf(dee)].Version == Config.Data.SchemaVersion,
+		"shutdown saved the migrated profile at the current version"
+	)
 	check(store.data[keyOf(dee)].Settings.ReducedScares == true, "settings persisted")
 
 	-- 9) Newer schema on disk is treated as a failed load (never downgraded).
