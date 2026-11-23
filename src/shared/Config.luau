@@ -26,6 +26,20 @@ Config.Movement = {
 	RespawnTime = 1.5,
 }
 
+-- Forgiving controls (client-side feel; the server still judges every outcome).
+Config.Feel = {
+	-- Jump this long after running off an edge and it still counts.
+	CoyoteSeconds = 0.12,
+	-- Press jump this long before landing and you jump the moment you land.
+	BufferSeconds = 0.15,
+	-- Ledge forgiveness: falling just short of a platform's edge (within LedgeReach studs out
+	-- and LedgeLift studs below its top) pops you up onto it.
+	LedgeReach = 0.9,
+	LedgeLift = 1.2,
+	-- Phones and tablets: a closer, steadier camera that keeps the route in view.
+	TouchCamera = { MinZoom = 10, MaxZoom = 26, FieldOfView = 74 },
+}
+
 Config.Map = {
 	-- Spec: every jump gap must be under 70 % of the theoretical max jump distance.
 	MaxGapRatio = 0.7,

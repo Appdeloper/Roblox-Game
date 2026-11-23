@@ -15,5 +15,6 @@ require("./lore.spec")(T)
 require("./lookrule.spec")(T)
 require("./modes.spec")(T)
 require("./progression.spec")(T)
+require("./jumpassist.spec")(T)
 
 T.finish()

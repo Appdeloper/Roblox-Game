@@ -139,6 +139,19 @@ and readability specs pass, and there are 3,890 parts.
 window wasn't in front, so stages 2–6 have no screenshots yet. Keep the Studio window visible and
 take them with the Phase 3 screenshot pass, or by hand (see `docs/VISUAL_CHECKLIST.md`).
 
+## Feel and fairness (Phase 2F): verified and open
+
+Coyote time (0.12 s), jump buffering (0.15 s) and the one-jump rule are pure functions with unit
+tests (`shared/JumpAssist.luau`). The client runs in Studio with a clean Output. Already in place
+from earlier work: high-contrast walkable surfaces (readability spec), no decor on the route
+(clearance spec), the big mobile jump button, and the Reduced Scares setting (no shake, no flashes).
+
+| Needs hands-on testing | What you'd notice | Where to tune |
+| --- | --- | --- |
+| Coyote/buffer windows | Jumps feel floaty or too strict | `Config.Feel.CoyoteSeconds` / `BufferSeconds` |
+| Ledge forgiveness | You pop up onto ledges you clearly missed, or it never helps | `Config.Feel.LedgeReach` / `LedgeLift` |
+| Touch camera | Too close or too far on phones | `Config.Feel.TouchCamera` |
+
 ## What is NOT verified, by priority
 
 Check these first. Each one names the [FIRST_PLAYTEST](FIRST_PLAYTEST.md) step that exposes it.
